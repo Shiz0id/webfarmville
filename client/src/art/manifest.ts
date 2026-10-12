@@ -29,6 +29,7 @@ import {
   KEEPSAKE_DECORATIONS,
   COLLECTION_LIST,
   NURSERY_DECORATIONS,
+  BABY_ANIMALS,
   FEED_ITEMS,
   FEED_MILL,
   VEHICLE_LIST,
@@ -141,6 +142,8 @@ export function expectedKeys(mod: string): string[] {
     collections: () => [...COLLECTION_LIST.flatMap((c) => c.items.map((i) => `icon:${i.id}`)), ...KEEPSAKE_DECORATIONS.map((d) => `deco:${d.id}`)],
     // Baby animals: the Nursery Barn (babies themselves reuse the grown-up sprite, drawn smaller).
     nursery: () => NURSERY_DECORATIONS.map((d) => `deco:${d.id}`),
+    // Baby animals: one sprite per animal that comes as a baby (drawn at full sprite scale).
+    babies: () => BABY_ANIMALS.map((a) => `baby:${a}`),
     // Feed Mill: the workshop (borrows a rosy-gold Windmill until painted) and its two feed sacks.
     feedmill: () => [`building:${FEED_MILL}`, ...FEED_ITEMS.map((i) => `icon:${i.id}`)],
     // Vehicles: a Garage card icon each (emoji until painted) and a 2x1 farm sprite for the drive-by

@@ -498,7 +498,9 @@ export class FarmScene extends Phaser.Scene {
         };
         const baby = obj.kind === 'animal' && isBaby(obj, now);
         if (baby) {
-          spec.scale = BABY_SCALE;
+          // Painted babies (chick, calf...) when there are some; otherwise a small grown-up.
+          if (hasArt(`baby:${obj.def}`)) spec.tex = `baby:${obj.def}`;
+          else spec.scale = BABY_SCALE;
           spec.progress = Math.max(0, Math.min(1, 1 - (obj.grownAt! - now) / babyGrowMs(def)));
           // While the cuddle bubble shows, the bubble says it all.
           if (!visiting && cuddleReadyAt(obj) <= now) delete spec.progress;
