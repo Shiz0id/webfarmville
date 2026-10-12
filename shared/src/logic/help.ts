@@ -2,6 +2,7 @@
 // one helping hand per cycle.
 
 import { CROPS } from '../content/crops';
+import { babyGrowMs } from '../content/nursery';
 import { ANIMALS, TREES } from '../content/producers';
 import { HELP_BOOST } from '../content/progression';
 import { GameError, type FarmObject, type FarmState } from '../types';
@@ -51,6 +52,13 @@ export function applyHelp(target: FarmState, objectId: string, now: number): { k
   if (obj.kind === 'tree' || obj.kind === 'animal') {
     const def = obj.kind === 'tree' ? TREES[obj.def] : ANIMALS[obj.def];
     const cycle = def.cycleSec * 1000;
+    if (obj.kind === 'animal' && obj.grownAt !== undefined && obj.grownAt > now) {
+      // Feeding a baby helps it grow up sooner.
+      obj.grownAt = Math.max(now, obj.grownAt - babyGrowMs(def) * HELP_BOOST);
+      obj.cycleStart = obj.grownAt;
+      obj.helped = true;
+      return { kind, name: def.name };
+    }
     obj.cycleStart = Math.max(obj.cycleStart - cycle * HELP_BOOST, now - cycle);
     obj.helped = true;
     return { kind, name: def.name };

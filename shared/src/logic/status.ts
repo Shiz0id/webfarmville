@@ -35,8 +35,10 @@ export interface ProducerStatus {
 export function producerStatus(obj: ProducerObject, now: number): ProducerStatus {
   const def = obj.kind === 'tree' ? TREES[obj.def] : ANIMALS[obj.def];
   const cycle = (def?.cycleSec ?? 3600) * 1000;
-  const readyAt = obj.cycleStart + cycle;
-  return { ready: now >= readyAt, progress: Math.max(0, Math.min(1, (now - obj.cycleStart) / cycle)), readyAt };
+  // A baby animal's first cycle only starts once it has grown up.
+  const start = Math.max(obj.cycleStart, obj.grownAt ?? 0);
+  const readyAt = start + cycle;
+  return { ready: now >= readyAt, progress: Math.max(0, Math.min(1, (now - start) / cycle)), readyAt };
 }
 
 export interface BuildingStatus {

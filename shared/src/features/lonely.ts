@@ -1,6 +1,7 @@
 // Lonely animals (FarmVille 1). Once a day (from level 3) the client invites a
 // lost little animal onto the farm. The player can adopt it (it settles on the
-// nearest free tile, keeps its name and brings a full first collection) or
+// nearest free tile as a baby, keeps its name and grows up into a producing
+// adult; see nursery.ts) or
 // walk it over to a villager, who thanks you with coins, XP, a mystery gift
 // and friendship.
 
@@ -19,6 +20,7 @@ import { ANIMALS } from '../content/producers';
 import { registerFeature } from '../logic/features';
 import { GameError, type FarmState, type ProducerObject } from '../types';
 import { befriend } from './friends';
+import { makeBaby } from './nursery';
 
 export interface LonelyState {
   /** The UTC day the last lonely animal arrived. */
@@ -103,8 +105,9 @@ registerFeature({
       if (!spot) throw new GameError('There is no room on your farm for another animal');
       const def = ANIMALS[l.animal];
       const id = `o${state.nextId++}`;
-      // Arrives with a little something to collect right away.
-      const obj: ProducerObject = { id, kind: 'animal', def: def.id, x: spot.x, y: spot.y, cycleStart: ctx.now - def.cycleSec * 1000, nick: l.name };
+      // Lonely animals are always little ones who still need to grow up.
+      const obj: ProducerObject = { id, kind: 'animal', def: def.id, x: spot.x, y: spot.y, cycleStart: ctx.now, nick: l.name };
+      makeBaby(obj, ctx.now);
       state.objects[id] = obj;
       l.done = 'adopted';
       kit.addXp(state, ADOPT_XP, events, { x: spot.x + 0.5, y: spot.y + 0.5 });

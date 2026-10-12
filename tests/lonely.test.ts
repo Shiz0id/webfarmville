@@ -5,6 +5,7 @@ import {
   LONELY_HOMES,
   LONELY_LEVEL,
   applyAction,
+  babyGrowMs,
   createFarm,
   heartsOf,
   lonelyDue,
@@ -50,7 +51,7 @@ describe('lonely animals', () => {
     expect(applyAction(s, { type: 'lonelyArrive' }, { now: T0 + DAY }).state.lonely?.day).toBe(utcDay(T0 + DAY));
   });
 
-  it('adopting settles the animal on the nearest free tile, named and ready to collect', () => {
+  it('adopting settles the animal on the nearest free tile, named, as a baby who grows up', () => {
     let s = applyAction(farmer(), { type: 'lonelyArrive' }, { now: T0 }).state;
     const { animal, name } = s.lonely!;
     // (2, 8) holds the starter chicken, so it settles right next to it.
@@ -60,11 +61,15 @@ describe('lonely animals', () => {
     const obj = s.objects[ev.id] as ProducerObject;
     expect(obj).toMatchObject({ kind: 'animal', def: animal, nick: name });
     expect(Math.max(Math.abs(obj.x - 2), Math.abs(obj.y - 8))).toBe(1);
-    expect(producerStatus(obj, T0).ready).toBe(true);
+    // Lonely animals arrive as babies: nothing to collect until they grow up.
+    expect(obj.grownAt).toBe(T0 + babyGrowMs(ANIMALS[animal]));
+    expect(producerStatus(obj, T0).ready).toBe(false);
     expect(s.lonely!.done).toBe('adopted');
     expect(s.stats.lonely).toBe(1);
     expect(() => applyAction(s, { type: 'rehomeLonely' }, { now: T0 })).toThrow('wandered off');
-    expect(applyAction(s, { type: 'collect', id: obj.id }, { now: T0 }).state.inventory[ANIMALS[animal].product]).toBeGreaterThan(0);
+    expect(() => applyAction(s, { type: 'collect', id: obj.id }, { now: T0 })).toThrow('Not ready');
+    const later = obj.grownAt! + ANIMALS[animal].cycleSec * 1000;
+    expect(applyAction(s, { type: 'collect', id: obj.id }, { now: later }).state.inventory[ANIMALS[animal].product]).toBeGreaterThan(0);
   });
 
   it('a villager can give it a home instead, and becomes a closer friend', () => {
