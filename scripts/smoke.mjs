@@ -40,7 +40,7 @@ await page.fill('input[placeholder="Farmer name"]', name);
 await page.fill('input[type=password]', 'password1');
 await page.click('button[type=submit]');
 await page.waitForSelector('.toolbar', { timeout: 30000 });
-await page.waitForTimeout(1500);
+await page.waitForTimeout(2500);
 await shot('01-farm');
 
 step('waiting for strawberries');
@@ -102,6 +102,12 @@ await page.keyboard.press('Escape');
 s = await state();
 step(`decorations: ${Object.values(s.objects).filter((o) => o.kind === 'deco').length}`);
 await shot('06-placed');
+
+step('orders');
+await page.click('button[aria-label="Orders"]', { force: true });
+await page.waitForTimeout(400);
+await shot('06b-orders');
+await page.keyboard.press('Escape');
 
 step('barn');
 await page.click('button[aria-label="Barn"]', { force: true });
