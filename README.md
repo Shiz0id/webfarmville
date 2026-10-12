@@ -131,6 +131,11 @@ All of the art is drawn in code at startup, so there are no image assets to down
 | `server/` | Express 5 + Node's built-in SQLite (`node:sqlite`): accounts, farms, neighbors, gifts |
 | `client/` | Phaser 3 + Vite + TypeScript, with a DOM overlay for the UI                         |
 
+All art, including the HUD icons, is drawn in code. The interface kit (jelly buttons, quilted panels, ribbon
+titles, leafy tabs, the mint and sunshine palette) takes its look from
+[Animal Island UI](https://github.com/guokaigdg/animal-island-ui) (MIT), restyled in plain CSS.
+Run `node scripts/ui-tour.mjs <dir> [WxH]` to screenshot the whole kit at any screen size.
+
 Requires **Node 22.13+**. Node's built-in SQLite prints an "experimental" warning, which is harmless.
 
 ## Getting started
