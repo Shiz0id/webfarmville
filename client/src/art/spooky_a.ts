@@ -1064,7 +1064,7 @@ function broomRack(p: Pen): void {
 }
 
 /** Black cauldron bubbling green, with fire under it and a ladle. */
-function bubblingCauldron(p: Pen): void {
+function bubblingCauldron(p: Pen, frame = 0): void {
   const { x, y } = p.center;
   p.shadow(x, y + 1, 16, 6, 0.22);
   p.glow(x, y - 3, 18, ORANGE, 0.5);
@@ -1086,14 +1086,36 @@ function bubblingCauldron(p: Pen): void {
   p.ellipse(x, y - 18, 10.5, 3.1, '#86f25a');
   p.ellipse(x - 3, y - 18.5, 3, 0.8, rgba('#ffffff', 0.6), null);
   p.glow(x, y - 19, 16, LIME, 0.5);
-  for (const [bx, by, br] of [
-    [x - 4, y - 23, 2.2],
-    [x + 3, y - 27, 1.6],
-    [x - 0.5, y - 32, 2.7],
-    [x + 5.5, y - 37, 1.2],
-  ]) {
+  // bubbles at different heights and sizes per frame; on frame 1 the smallest one pops
+  const BUBBLES: [number, number, number][][] = [
+    [
+      [x - 4, y - 23, 2.2],
+      [x + 3, y - 27, 1.6],
+      [x - 0.5, y - 32, 2.7],
+      [x + 5.5, y - 37, 1.2],
+    ],
+    [
+      [x - 4, y - 24.5, 2.0],
+      [x + 3, y - 29.5, 1.8],
+      [x - 0.5, y - 34.5, 2.9],
+    ],
+    [
+      [x - 4, y - 26, 2.4],
+      [x + 3, y - 30, 1.4],
+      [x - 0.5, y - 35, 2.2],
+      [x + 5.5, y - 39, 1.0],
+    ],
+  ];
+  for (const [bx, by, br] of BUBBLES[frame]) {
     p.circle(bx, by, br, '#b8ff8a', INK);
     p.circle(bx - br * 0.3, by - br * 0.3, br * 0.3, '#ffffff', null);
+  }
+  if (frame === 1) {
+    // the bubble that burst: a ring of specks
+    for (let k = 0; k < 6; k++) {
+      const a = (k / 6) * TAU;
+      p.circle(x + 5.5 + Math.cos(a) * 2.6, y - 37 + Math.sin(a) * 1.4, 0.45, '#b8ff8a', null);
+    }
   }
   thick(
     p,
@@ -1327,5 +1349,14 @@ export const sprites: SpriteSpec[] = SPOOKY_DECORATIONS.slice(0, 18).map((d) => 
   const entry = PAINT[d.id] ?? { height: 40, paint: fallback };
   return { key: `deco:${d.id}`, fw: d.w, fh: d.h, height: entry.height, paint: entry.paint };
 });
+
+/** Animation frames `key#1..key#n`: the base sprite's footprint and height, repainted with `paint(p, frame)`. */
+function animFrames(key: string, n: number, paint: (p: Pen, frame: number) => void): SpriteSpec[] {
+  const base = sprites.find((s) => s.key === key);
+  if (!base) return [];
+  return Array.from({ length: n }, (_, i) => ({ ...base, key: `${key}#${i + 1}`, paint: (p: Pen) => paint(p, i + 1) }));
+}
+
+sprites.push(...animFrames('deco:bubbling_cauldron', 2, bubblingCauldron));
 
 export const icons: IconSpec[] = [];

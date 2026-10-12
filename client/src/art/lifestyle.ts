@@ -1128,19 +1128,32 @@ function watermelonPicnic(p: Pen): void {
 
 /** Lawn sprinkler throwing arcs of water with droplets. */
 /** Lawn sprinkler with a chunky smiling head, sparkling water arcs and droplets landing on the grass. */
-function sprinkler(p: Pen): void {
+function sprinkler(p: Pen, frame = 0): void {
   const c = p.center;
   p.shadow(c.x, c.y + 1, 18, 7);
   p.ellipse(c.x, c.y + 1, 15, 6, rgba('#7cc8f0', 0.35), null);
   // base and stem
   p.cylinder(c.x, c.y, 7.5, 4, '#5fbde6');
   p.rect(c.x - 2.4, c.y - 14, 4.8, 11, '#5fbde6');
+  // each frame sweeps the spray a little around the head, and the droplets fall a step
+  const spin = [0, 0.16, -0.16][frame];
+  const fall = [0, 2.2, 4.4][frame];
   // water arcs out to both sides, each with a sparkle at its top
   for (const s of [-1, 1]) {
-    p.curve({ x: c.x + s * 3, y: c.y - 22 }, { x: c.x + s * 14, y: c.y - 42 }, { x: c.x + s * 27, y: c.y - 2 }, '#8fd8ff', 3);
-    p.curve({ x: c.x + s * 3, y: c.y - 22 }, { x: c.x + s * 14, y: c.y - 42 }, { x: c.x + s * 27, y: c.y - 2 }, '#ffffff', 0.9);
-    p.curve({ x: c.x + s * 3, y: c.y - 20 }, { x: c.x + s * 11, y: c.y - 30 }, { x: c.x + s * 21, y: c.y - 3 }, '#8fd8ff', 2.2);
-    sparkle(p, c.x + s * 13, c.y - 33, 2.2);
+    const o = { x: c.x + s * 3, y: c.y - 22 };
+    const turn = (q: Pt): Pt => {
+      const a = spin * s;
+      const dx = q.x - o.x;
+      const dy = q.y - o.y;
+      return { x: o.x + dx * Math.cos(a) - dy * Math.sin(a), y: o.y + dx * Math.sin(a) + dy * Math.cos(a) };
+    };
+    const ctrl = turn({ x: c.x + s * 14, y: c.y - 42 });
+    const end = turn({ x: c.x + s * 27, y: c.y - 2 });
+    p.curve(o, ctrl, end, '#8fd8ff', 3);
+    p.curve(o, ctrl, end, '#ffffff', 0.9);
+    p.curve(turn({ x: c.x + s * 3, y: c.y - 20 }), turn({ x: c.x + s * 11, y: c.y - 30 }), turn({ x: c.x + s * 21, y: c.y - 3 }), '#8fd8ff', 2.2);
+    const top = turn({ x: c.x + s * 13, y: c.y - 33 });
+    sparkle(p, top.x, top.y, 2.2);
   }
   // chunky head with a cute face, drawn over the arc roots
   p.circle(c.x, c.y - 17, 7, radial(p, c.x, c.y - 17, 8, '#fff09a', '#f4b43a'));
@@ -1157,8 +1170,8 @@ function sprinkler(p: Pen): void {
       [1.5, -11, 1.3],
       [0.5, -4, 1.1],
     ] as const) {
-      p.circle(t.x + dx, t.y + dy, r, '#bfeaff', O);
-      p.circle(t.x + dx - 0.4, t.y + dy - 0.4, 0.4, '#ffffff', null);
+      p.circle(t.x + dx, t.y + dy + fall, r, '#bfeaff', O);
+      p.circle(t.x + dx - 0.4, t.y + dy + fall - 0.4, 0.4, '#ffffff', null);
     }
   }
 }
@@ -1628,7 +1641,7 @@ function snowSled(p: Pen): void {
 }
 
 /** Fire pit ringed with stones, plaid blankets folded beside it, and a toasting marshmallow. */
-function firePit(p: Pen): void {
+function firePit(p: Pen, frame = 0): void {
   const c = p.center;
   p.shadow(c.x, c.y + 2, 24, 10);
   // plaid blankets folded on the ground
@@ -1643,7 +1656,7 @@ function firePit(p: Pen): void {
       p.line([p.iso(u, v + (0.3 * k) / 3, z), p.iso(u + 0.34, v + (0.3 * k) / 3, z)], rgba('#ffffff', 0.5), 1);
     }
   }
-  p.glow(c.x, c.y - 6, 26, '#ffb03a', 0.4);
+  p.glow(c.x, c.y - 6, [26, 27.5, 25][frame], '#ffb03a', [0.4, 0.46, 0.34][frame]);
   const stones: { x: number; y: number }[] = [];
   for (let k = 0; k < 8; k++) {
     const a = (k / 8) * TAU;
@@ -1657,8 +1670,9 @@ function firePit(p: Pen): void {
   thick(p, [{ x: c.x + 7, y: c.y - 2 }, { x: c.x - 6, y: c.y + 3 }], 4, '#9a6a44');
   p.circle(c.x + 8, c.y + 2, 1.6, '#e8c08a');
   p.circle(c.x - 8, c.y - 1, 1.6, '#e8c08a');
-  flame(p, c.x - 2, c.y, 9);
-  flame(p, c.x + 3, c.y + 1, 6, false);
+  // flames flicker: each frame changes the tongue heights and nudges them sideways
+  flame(p, c.x - 2 + [0, 0.6, -0.5][frame], c.y, [9, 10.4, 8][frame]);
+  flame(p, c.x + 3 + [0, -0.8, 0.6][frame], c.y + 1, [6, 5.2, 6.8][frame], false);
   for (const s of front) p.ball(s.x, s.y, 3.4, '#b9bdca');
   // a marshmallow on a toasting stick
   thick(p, [{ x: c.x + 12, y: c.y + 4 }, { x: c.x + 20, y: c.y - 12 }], 1.2, '#c79a5a');
@@ -1870,5 +1884,14 @@ export const sprites: SpriteSpec[] = LIFESTYLE_DECORATIONS.map((d) => {
   const art = ART[d.id] ?? { height: 28, paint: fallback };
   return { key: `deco:${d.id}`, fw: d.w, fh: d.h, height: art.height, paint: art.paint };
 });
+
+/** Animation frames `key#1..key#n`: the base sprite's footprint and height, repainted with `paint(p, frame)`. */
+function animFrames(key: string, n: number, paint: (p: Pen, frame: number) => void): SpriteSpec[] {
+  const base = sprites.find((s) => s.key === key);
+  if (!base) return [];
+  return Array.from({ length: n }, (_, i) => ({ ...base, key: `${key}#${i + 1}`, paint: (p: Pen) => paint(p, i + 1) }));
+}
+
+sprites.push(...animFrames('deco:sprinkler', 2, sprinkler), ...animFrames('deco:fire_pit', 2, firePit));
 
 export const icons: IconSpec[] = [];

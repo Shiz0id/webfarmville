@@ -445,7 +445,7 @@ function pumpkinTower(p: Pen): void {
   sparkle(p, x + 21, y - 58, 2.2);
 }
 
-function jackStringLights(p: Pen): void {
+function jackStringLights(p: Pen, frame = 0): void {
   const a = p.iso(0.22, 0.5);
   const b = p.iso(1.78, 0.5);
   const H = 46;
@@ -460,7 +460,11 @@ function jackStringLights(p: Pen): void {
   p.curve(ta, ctrl, tb, '#3d3550', 0.9);
   const lights: Pt[] = [];
   for (let i = 0; i < 7; i++) lights.push(qpt(ta, ctrl, tb, 0.14 + i * 0.12));
-  for (const q of lights) p.glow(q.x, q.y + 7, 11, '#ffd45c', 0.5);
+  // twinkle: on frame 1 alternate pumpkins flare and dim (frame 0 is the steady glow)
+  lights.forEach((q, i) => {
+    const g = frame === 0 ? [11, 0.5] : (i + frame) % 2 === 0 ? [14, 0.9] : [8, 0.15];
+    p.glow(q.x, q.y + 7, g[0], '#ffd45c', g[1]);
+  });
   for (const q of lights) {
     p.line([q, { x: q.x, y: q.y + 2.5 }], '#3d3550', 0.7);
     const cy = q.y + 7;
@@ -1373,5 +1377,14 @@ export const sprites: SpriteSpec[] = SPOOKY_DECORATIONS.slice(18).map((d) => {
   const art = ART[d.id] ?? { height: 26, paint: fallback };
   return { key: `deco:${d.id}`, fw: d.w, fh: d.h, height: art.height, paint: art.paint };
 });
+
+/** Animation frames `key#1..key#n`: the base sprite's footprint and height, repainted with `paint(p, frame)`. */
+function animFrames(key: string, n: number, paint: (p: Pen, frame: number) => void): SpriteSpec[] {
+  const base = sprites.find((s) => s.key === key);
+  if (!base) return [];
+  return Array.from({ length: n }, (_, i) => ({ ...base, key: `${key}#${i + 1}`, paint: (p: Pen) => paint(p, i + 1) }));
+}
+
+sprites.push(...animFrames('deco:jack_string_lights', 1, jackStringLights));
 
 export const icons: IconSpec[] = [];

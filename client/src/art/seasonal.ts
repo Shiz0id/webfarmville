@@ -1344,7 +1344,7 @@ function lemonadeStand(p: Pen): void {
   }
 }
 
-function tikiTorch(p: Pen): void {
+function tikiTorch(p: Pen, frame = 0): void {
   const { x, y } = p.center;
   p.shadow(x, y + 1, 10, 5);
   p.glow(x, y, 16, '#ffb347', 0.2);
@@ -1366,7 +1366,8 @@ function tikiTorch(p: Pen): void {
     p.line([{ x: x - 5 + i * 0.6, y: y - 47.5 + i * 3 }, { x: x + 5 - i * 0.6, y: y - 47.5 + i * 3 }], shade(hd, 0.35), 0.8);
   }
   p.ellipse(x, y - 50, 6, 1.8, '#4a3020');
-  flame(p, x, y - 50, 4.4);
+  // the flame gutters: a touch taller or shorter, leaning a little, per frame
+  flame(p, x + [0, 0.4, -0.4][frame], y - 50, [4.4, 5.1, 3.8][frame]);
   grassTufts(p, [
     { x: x - 6, y: y + 2 },
     { x: x + 6, y: y + 1 },
@@ -1758,9 +1759,9 @@ function autumnMaple(p: Pen): void {
 // ---------------------------------------------------------------------------
 // Halloween
 
-function jackOLantern(p: Pen): void {
+function jackOLantern(p: Pen, frame = 0): void {
   const { x, y } = p.center;
-  p.glow(x, y, 28, '#ffb347', 0.35);
+  p.glow(x, y, 28, '#ffb347', [0.35, 0.42][frame]);
   p.shadow(x, y + 1, 14, 6);
   const cy = y - 11;
   pumpkin(p, x, cy, 12, '#f28a2e');
@@ -1787,7 +1788,8 @@ function jackOLantern(p: Pen): void {
   c.closePath();
   fs(p, glowFill, '#8a3d12');
   p.rect(x - 1.2, cy + 3, 2.4, 2.4, '#f28a2e', null);
-  p.glow(x, cy + 1, 10, '#ffe27a', 0.3);
+  // candle flicker: frame 1 burns a little brighter with the face light shifted right
+  p.glow(x + [0, 0.6][frame], cy + 1, [10, 11][frame], '#ffe27a', [0.3, 0.42][frame]);
   p.ellipse(x - 8, cy + 4, 1.8, 1.1, rgba('#ff6f6f', 0.45), null);
   p.ellipse(x + 8, cy + 4, 1.8, 1.1, rgba('#ff6f6f', 0.45), null);
 }
@@ -2798,5 +2800,14 @@ export const sprites: SpriteSpec[] = DECORATION_LIST.filter((d) => d.event && !d
   const art = ART[d.id] ?? { h: 24, paint: fallback };
   return { key: `deco:${d.id}`, fw: d.w, fh: d.h, height: art.h, paint: art.paint };
 });
+
+/** Animation frames `key#1..key#n`: the base sprite's footprint and height, repainted with `paint(p, frame)`. */
+function animFrames(key: string, n: number, paint: (p: Pen, frame: number) => void): SpriteSpec[] {
+  const base = sprites.find((s) => s.key === key);
+  if (!base) return [];
+  return Array.from({ length: n }, (_, i) => ({ ...base, key: `${key}#${i + 1}`, paint: (p: Pen) => paint(p, i + 1) }));
+}
+
+sprites.push(...animFrames('deco:tiki_torch', 2, tikiTorch), ...animFrames('deco:jack_o_lantern', 1, jackOLantern));
 
 export const icons: IconSpec[] = [];

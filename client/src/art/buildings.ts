@@ -352,7 +352,7 @@ function farmhouse(p: Pen): void {
 // ---------------------------------------------------------------------------
 // Windmill
 
-function mill(p: Pen): void {
+function mill(p: Pen, frame = 0): void {
   groundPad(p);
   const cu = 1;
   const cv = 1;
@@ -432,7 +432,8 @@ function mill(p: Pen): void {
   const ctx = p.ctx;
   const L0 = 50;
   for (let i = 0; i < 4; i++) {
-    const ang = (i * Math.PI) / 2 + 0.38;
+    // each animation frame turns the sails a further 22.5 degrees
+    const ang = (i * Math.PI) / 2 + 0.38 + (frame * Math.PI) / 8;
     ctx.save();
     ctx.translate(hub.x, hub.y);
     ctx.rotate(ang);
@@ -1047,3 +1048,12 @@ export const sprites: SpriteSpec[] = BUILDING_LIST.map((b) => {
     paint: art?.paint ?? genericBuilding(b.id),
   };
 });
+
+/** Animation frames `key#1..key#n`: the base sprite's footprint and height, repainted with `paint(p, frame)`. */
+function animFrames(key: string, n: number, paint: (p: Pen, frame: number) => void): SpriteSpec[] {
+  const base = sprites.find((s) => s.key === key);
+  if (!base) return [];
+  return Array.from({ length: n }, (_, i) => ({ ...base, key: `${key}#${i + 1}`, paint: (p: Pen) => paint(p, i + 1) }));
+}
+
+sprites.push(...animFrames('building:mill', 3, mill));

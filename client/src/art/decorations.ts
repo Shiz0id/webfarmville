@@ -2335,7 +2335,7 @@ function fireflyJar(p: Pen): void {
   }
 }
 
-function stringLights(p: Pen): void {
+function stringLights(p: Pen, frame = 0): void {
   lineShadow(p, 0.1, 1.9, 0.5, 6, 0.1);
   const post = (u: number) => {
     const q = p.iso(u, 0.5);
@@ -2356,7 +2356,9 @@ function stringLights(p: Pen): void {
   for (let i = 1; i < 12; i++) {
     const q = qpt(a, c, b, i / 12);
     const col = cols[i % cols.length];
-    p.glow(q.x, q.y + 3, 8, col, 0.5);
+    // twinkle: on frame 1 the even bulbs flare and the odd ones dim (frame 0 is the steady glow)
+    const bright = frame === 0 ? [8, 0.5] : (i + frame) % 2 === 0 ? [10, 0.85] : [6, 0.2];
+    p.glow(q.x, q.y + 3, bright[0], col, bright[1]);
     p.line([q, { x: q.x, y: q.y + 1.2 }], '#3d3a36', 1);
     p.ellipse(q.x, q.y + 3, 1.6, 2.2, col, shade(col, -0.45));
     p.circle(q.x - 0.4, q.y + 2.4, 0.6, '#ffffff', null);
@@ -2364,9 +2366,9 @@ function stringLights(p: Pen): void {
   post(1.9);
 }
 
-function campfire(p: Pen): void {
+function campfire(p: Pen, frame = 0): void {
   const { x, y } = p.center;
-  p.glow(x, y - 6, 30, '#ffb04a', 0.35);
+  p.glow(x, y - 6, [30, 31.5, 28.5][frame], '#ffb04a', [0.35, 0.42, 0.3][frame]);
   p.ellipse(x, y, 12, 6, '#5a4a3a', null);
   const stones: Pt[] = [];
   for (let i = 0; i < 10; i++) {
@@ -2399,17 +2401,38 @@ function campfire(p: Pen): void {
       col,
       null,
     );
-  flame(x - 3, y - 2, 13, 4, '#f26a2a');
-  flame(x + 3.5, y - 2, 15, 4.5, '#f26a2a');
-  flame(x, y - 1, 19, 5.5, '#f8892e');
-  flame(x, y - 2, 13, 4, '#fbc53a');
-  flame(x, y - 2.5, 7, 2.3, '#fff3b0');
+  // tongue dx, dy, height, half-width per frame: each frame reshapes the fire a little
+  const TONGUES: [number, number, number, number][][] = [
+    [
+      [-3, -2, 13, 4],
+      [3.5, -2, 15, 4.5],
+      [0, -1, 19, 5.5],
+      [0, -2, 13, 4],
+      [0, -2.5, 7, 2.3],
+    ],
+    [
+      [-3.6, -2, 11, 3.8],
+      [3, -2, 17.5, 4.8],
+      [0.8, -1, 22, 5.9],
+      [0.5, -2, 15.5, 4.3],
+      [0.5, -2.5, 8, 2.5],
+    ],
+    [
+      [-2.5, -2, 14.5, 4.2],
+      [4.2, -2, 12.5, 4.1],
+      [-0.6, -1, 16.5, 5.1],
+      [-0.4, -2, 11, 3.8],
+      [-0.4, -2.5, 6, 2.2],
+    ],
+  ];
+  const TONGUE_COLS = ['#f26a2a', '#f26a2a', '#f8892e', '#fbc53a', '#fff3b0'];
+  TONGUES[frame].forEach(([dx, dy, h, w], i) => flame(x + dx, y + dy, h, w, TONGUE_COLS[i]));
   for (const [dx, dy] of [
     [-5, -22],
     [4, -26],
     [1, -30],
   ]) {
-    p.circle(x + dx, y + dy, 0.8, '#ffcf6a', null);
+    p.circle(x + dx + frame * 0.6, y + dy - frame * 1.5, 0.8, '#ffcf6a', null);
   }
   for (const s of front) p.ellipse(s.x, s.y - 1, 3.8, 2.7, radial(p, s.x, s.y - 1, 3.8, STONE), STONE_D);
 }
@@ -2560,7 +2583,7 @@ function wishingWell(p: Pen): void {
   }
 }
 
-function fountain(p: Pen): void {
+function fountain(p: Pen, frame = 0): void {
   const { x, y } = p.center;
   p.shadow(x, y + 3, 54, 26, 0.25);
   // outer basin
@@ -2576,7 +2599,7 @@ function fountain(p: Pen): void {
       g.addColorStop(1, '#4fa8d0');
       p.ellipse(x, y - 3.5, 44, 21, g, null);
       // ripples
-      for (const k of [18, 26, 34]) p.ellipse(x, y - 4, k, k / 2, null, rgba('#ffffff', 0.35));
+      for (const k of [18, 26, 34].map((r) => r + frame * 4)) p.ellipse(x, y - 4, k, k / 2, null, rgba('#ffffff', 0.35));
       // wishing coins
       for (const [dx, dy] of [
         [-24, 4],
@@ -2621,6 +2644,14 @@ function fountain(p: Pen): void {
   p.line([{ x, y: y - 54 }, { x, y: y - 62 }], rgba('#ffffff', 0.85), 1.6);
   for (const d of [-1, 1]) stream(x, y - 62, x + d * 9, y - 45);
   // translucent water curtains spilling from each tier
+  // per frame the streaks slide sideways and the drips sit at new heights on the curtain
+  const streakShift = [0, -0.6, 0.6][frame];
+  const dripAt = [1, 0.6, 0.85][frame];
+  const pointAt = (pts: Pt[], t: number): Pt => {
+    const i = Math.min(11, Math.floor(t));
+    const k = t - i;
+    return { x: pts[i].x + (pts[i + 1].x - pts[i].x) * k, y: pts[i].y + (pts[i + 1].y - pts[i].y) * k };
+  };
   const sheet = (rx0: number, ry0: number, cy0: number, rx1: number, ry1: number, cy1: number) => {
     const top: Pt[] = [];
     const bot: Pt[] = [];
@@ -2632,9 +2663,14 @@ function fountain(p: Pen): void {
     const g = p.vgrad(cy0, cy1 + ry1, 'rgba(235,250,255,0.75)', 'rgba(160,220,240,0.35)');
     p.poly([...top, ...bot.slice().reverse()], g, null);
     for (let i = 1; i < 12; i += 2) {
-      p.curve(top[i], { x: (top[i].x + bot[i].x) / 2 + (bot[i].x - top[i].x) * 0.3, y: top[i].y + 2 }, bot[i], rgba('#ffffff', 0.7), 0.8);
+      const a = pointAt(top, i + streakShift);
+      const b = pointAt(bot, i + streakShift);
+      p.curve(a, { x: (a.x + b.x) / 2 + (b.x - a.x) * 0.3, y: a.y + 2 }, b, rgba('#ffffff', 0.7), 0.8);
     }
-    for (let i = 2; i < 12; i += 3) p.ellipse(bot[i].x, bot[i].y, 3, 1.2, null, rgba('#ffffff', 0.75));
+    for (let i = 2; i < 12; i += 3) {
+      const d = frame === 0 ? bot[i] : { x: top[i].x + (bot[i].x - top[i].x) * dripAt, y: top[i].y + (bot[i].y - top[i].y) * dripAt };
+      p.ellipse(d.x, d.y, 3, 1.2, null, rgba('#ffffff', 0.75));
+    }
   };
   sheet(12.5, 6, y - 44, 16, 7.5, y - 28);
   sheet(23.5, 11.5, y - 28, 30, 14, y - 5);
@@ -3963,7 +3999,7 @@ function logPile(p: Pen): void {
   leafAt(p, x + 16, y + 2, 5, -1.0, LEAF_D);
 }
 
-function windchime(p: Pen): void {
+function windchime(p: Pen, frame = 0): void {
   const { x, y } = p.center;
   p.shadow(x - 6, y + 1, 7, 3, 0.28);
   tuft(p, x - 6, y + 2, 5);
@@ -3978,7 +4014,12 @@ function windchime(p: Pen): void {
   for (const dx of [-5, 5]) p.line([{ x: cx, y: top - 2 }, { x: cx + dx, y: top + 1 }], '#7a7f84', 0.5);
   // crown disc
   p.cylinder(cx, top + 2, 6, 1.6, WOOD_L);
-  // tubes
+  // tubes, striker and clapper hang from the crown and swing a little per frame
+  const swing = frame === 0 ? 0 : frame === 1 ? -0.14 : 0.14;
+  p.save();
+  p.ctx.translate(cx, top + 2);
+  p.ctx.rotate(swing);
+  p.ctx.translate(-cx, -(top + 2));
   const cols = ['#bfe0f0', '#f6c6d6', '#c8e8c0', '#f7e0a0', '#d8c8f0'];
   const lens = [12, 16, 19, 15, 11];
   for (let i = 0; i < 5; i++) {
@@ -3991,12 +4032,13 @@ function windchime(p: Pen): void {
   p.line([{ x: cx, y: top + 2 }, { x: cx, y: top + 24 }], '#7a7f84', 0.4);
   p.ellipse(cx, top + 13, 2.2, 0.8, WOOD_L, p.outline);
   p.heart(cx, top + 27, 3, '#f27a9a');
+  p.restore();
   // music notes
   p.text('♪', cx + 9, top + 4, 7, rgba('#5a7fc0', 0.75));
   p.text('♫', cx - 10, top + 12, 6, rgba('#e0559a', 0.65));
 }
 
-function pinwheel(p: Pen): void {
+function pinwheel(p: Pen, frame = 0): void {
   const { x, y } = p.center;
   p.shadow(x, y + 1, 9, 4, 0.26);
   tuft(p, x - 4, y + 2, 5);
@@ -4026,10 +4068,10 @@ function pinwheel(p: Pen): void {
   };
   // small one behind
   thick(p, [{ x: x + 9, y: y + 1 }, { x: x + 9, y: y - 20 }], '#f7f0e0', 1);
-  wheel(x + 9, y - 21, 7, ['#9ad08a', '#f7c86a', '#7fb2dc', '#f28a8a'], 0.6);
+  wheel(x + 9, y - 21, 7, ['#9ad08a', '#f7c86a', '#7fb2dc', '#f28a8a'], 0.6 + (frame * Math.PI) / 6);
   thick(p, [{ x: x - 4, y: y + 2 }, { x: x - 4, y: y - 30 }], '#f7f0e0', 1.2);
   for (let k = 0; k < 5; k++) p.line([{ x: x - 5, y: y - 3 - k * 6 }, { x: x - 3, y: y - 5 - k * 6 }], '#e8574e', 1);
-  wheel(x - 4, y - 32, 11, ['#f28a8a', '#7fb2dc', '#f7c86a', '#9ad08a'], 0.2);
+  wheel(x - 4, y - 32, 11, ['#f28a8a', '#7fb2dc', '#f7c86a', '#9ad08a'], 0.2 + (frame * Math.PI) / 6);
 }
 
 function hotAirBalloon(p: Pen): void {
@@ -4423,5 +4465,20 @@ export const sprites: SpriteSpec[] = DECORATION_LIST.filter((d) => !d.event && T
   const [height, paint] = TABLE[d.id];
   return { key: `deco:${d.id}`, fw: d.w, fh: d.h, height, paint };
 });
+
+/** Animation frames `key#1..key#n`: the base sprite's footprint and height, repainted with `paint(p, frame)`. */
+function animFrames(key: string, n: number, paint: (p: Pen, frame: number) => void): SpriteSpec[] {
+  const base = sprites.find((s) => s.key === key);
+  if (!base) return [];
+  return Array.from({ length: n }, (_, i) => ({ ...base, key: `${key}#${i + 1}`, paint: (p: Pen) => paint(p, i + 1) }));
+}
+
+sprites.push(
+  ...animFrames('deco:string_lights', 1, stringLights),
+  ...animFrames('deco:campfire', 2, campfire),
+  ...animFrames('deco:fountain', 2, fountain),
+  ...animFrames('deco:pinwheel', 2, pinwheel),
+  ...animFrames('deco:windchime', 2, windchime),
+);
 
 export const icons: IconSpec[] = [];
