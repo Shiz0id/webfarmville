@@ -19,7 +19,7 @@ import {
   type FarmState,
   type GameEvent,
 } from '@farm/shared';
-import { RES, artMeta, registerTextures, texture } from '../art';
+import { RES, artMeta, hasArt, registerTextures, texture } from '../art';
 import { rng } from '../art/kit';
 import { Ambience } from './ambience';
 import { Pet } from './pets';
@@ -73,6 +73,13 @@ interface RenderSpec {
   smoke?: boolean;
   glow?: boolean;
 }
+
+/** Decorations that bob gently in the air. */
+const FLOATERS = /ghost|balloon|sky_lantern|kite|lantern_tree|bubble|pinata|paper_cranes|float/;
+/** Decorations that sway in the breeze. */
+const SWAYERS =
+  /(^|_)(tree|willow|blossom|bamboo|sunflower|wildflowers|swing|bunting|streamers|windchime|scarecrow|laundry|hanging|wisteria|lilac|magnolia|palm|osmanthus|maple|pine|oak)($|_)/;
+const NO_SWAY = /stump|house|tower|planter|statue|topiary|lantern|arch/;
 
 /** Decorations that light up at night. */
 const GLOWING = /lamp|lantern|torch|candle|diya|campfire|fire_pit|menorah|jack_o|firefly|string_lights|sparkler|decorated_pine|marigold/;
@@ -301,7 +308,8 @@ export class FarmScene extends Phaser.Scene {
     }
   }
 
-  update(_time: number, delta: number): void {
+  update(time: number, delta: number): void {
+    this.stepAnimations(time);
     if (this.dirty) {
       this.dirty = false;
       this.sync();
@@ -559,6 +567,8 @@ export class FarmScene extends Phaser.Scene {
         .setScale(1 / RES)
         .setDepth(main.depth + 0.05);
     }
+    if (!moving) this.animate(entry, spec.tex, obj);
+
     if (obj.kind === 'animal' && !moving) {
       // Gentle breathing.
       this.tweens.add({
@@ -641,9 +651,50 @@ export class FarmScene extends Phaser.Scene {
     return { key: b.icon ?? b.emoji ?? '', container: c };
   }
 
+  /**
+   * Bring a sprite to life: cycle painted animation frames (key#1, key#2, ...)
+   * and give suitable decorations a gentle float or sway.
+   */
+  private animate(entry: ObjSprite, tex: string, obj: FarmObject): void {
+    const frames = [tex];
+    for (let i = 1; hasArt(`${tex}#${i}`); i++) frames.push(`${tex}#${i}`);
+    const seed = (obj.x * 7 + obj.y * 13) % 17;
+    if (frames.length > 1) {
+      // Animals idle with blinks/tail swishes (base, #1, base, #2...); machines loop.
+      const sequence = obj.kind === 'animal' ? frames.slice(1).flatMap((f) => [frames[0], frames[0], f]) : frames;
+      const fps = tex === 'building:mill' ? 8 : /fire|torch|campfire|cauldron|sprinkler|fountain/.test(tex) ? 6 : obj.kind === 'animal' ? 2.5 : 4;
+      this.animated.set(entry.main, { frames: sequence, fps, phase: seed });
+    }
+    if (obj.kind !== 'deco') return;
+    const def = obj.def;
+    if (FLOATERS.test(def)) {
+      this.tweens.add({ targets: entry.main, y: entry.main.y - 5, duration: 1600 + seed * 40, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    } else if (SWAYERS.test(def) && !NO_SWAY.test(def)) {
+      // Pivot at the bottom centre so it sways like it's rooted.
+      const m = entry.main;
+      m.setOrigin(0.5, 1);
+      m.x += m.displayWidth / 2;
+      this.tweens.add({ targets: m, angle: { from: -1.4, to: 1.4 }, duration: 2200 + seed * 60, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+  }
+
+  private animated = new Map<Phaser.GameObjects.Image, { frames: string[]; fps: number; phase: number }>();
+
+  private stepAnimations(time: number): void {
+    for (const [img, a] of this.animated) {
+      if (!img.active) {
+        this.animated.delete(img);
+        continue;
+      }
+      const key = a.frames[Math.floor(time / (1000 / a.fps) + a.phase) % a.frames.length];
+      if (img.texture.key !== key) img.setTexture(texture(this, key));
+    }
+  }
+
   private removeSprite(id: string): void {
     const s = this.sprites.get(id);
     if (!s) return;
+    this.animated.delete(s.main);
     this.tweens.killTweensOf(s.main);
     s.main.destroy();
     s.overlay?.destroy();
