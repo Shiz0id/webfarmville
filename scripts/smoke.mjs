@@ -119,8 +119,9 @@ step('visit Mayor Maple');
 await page.click('button[aria-label="Neighbors"]', { force: true });
 await page.waitForTimeout(800);
 await shot('08-neighbors');
-const accept = await page.$('.row button:has-text("Accept")');
-if (accept) await accept.click();
+// The panel re-renders live, so use a locator (which re-finds the button) rather than a handle.
+const accept = page.locator('.row button:has-text("Accept")').first();
+if (await accept.count()) await accept.click();
 await page.waitForTimeout(300);
 await page.click('.row:has-text("Mayor") button:has-text("Visit")');
 await page.waitForTimeout(1500);
