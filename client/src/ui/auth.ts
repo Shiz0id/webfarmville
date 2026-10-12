@@ -1,6 +1,6 @@
 import { api, setToken, type MePayload } from '../api';
 import { DECORATION_LIST } from '@farm/shared';
-import { artURL, hasArt } from '../art';
+import { artURL, hasArt, iconURL } from '../art';
 import { featuredEvent } from '../events';
 import { h } from '../util';
 
@@ -78,7 +78,7 @@ export function showAuth(): Promise<MePayload> {
     const form = h(
       'form',
       { class: 'auth-card' },
-      h('div', { style: { fontSize: '54px' } }, '🌻'),
+      h('img', { class: 'auth-logo', src: iconURL('sunflower'), alt: '' }),
       h('h1', null, 'Meadowbrook Farm'),
       h('p', null, 'Grow crops, raise animals, decorate, and visit your neighbors.'),
       h('div', { class: 'auth-tabs' }, tabReg, tabLogin),

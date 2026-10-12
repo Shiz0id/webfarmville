@@ -115,10 +115,11 @@ window.addEventListener('keydown', (e) => {
 // --- confetti -----------------------------------------------------------------------
 
 export function confetti(n = 60): void {
-  const colors = ['#ff8fb1', '#f5c542', '#7cc95a', '#8fd3f4', '#c49bff', '#ff9b5e'];
+  const colors = ['#f8a6b2', '#b77dee', '#889df0', '#f7cd67', '#e59266', '#82d5bb', '#8ac68a', '#fc736d', '#19c8b9'];
+  const shapes = ['', ' dot', ' star', ' dot'];
   for (let i = 0; i < n; i++) {
     const el = h('div', {
-      class: 'confetti',
+      class: `confetti${shapes[i % shapes.length]}`,
       style: {
         left: `${Math.random() * 100}vw`,
         background: colors[i % colors.length],

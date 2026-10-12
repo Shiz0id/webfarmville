@@ -1,5 +1,5 @@
 import { CAN_SIZE, CROPS, EVENTS, EVENT_FEATURE_LIST, charmStars, farmCharm, needsAttention, waterLevel, xpForLevel } from '@farm/shared';
-import { iconURL } from '../art';
+import { artURL, hasArt, iconURL } from '../art';
 import { bus } from '../bus';
 import type { Store } from '../store';
 import { setTool, tools, type Tool } from '../tools';
@@ -29,6 +29,11 @@ interface HudDeps {
   store: Store;
   goHome: () => void;
   zoom: (factor: number) => void;
+}
+
+/** A painted UI icon (ui:<key>) when there is one, else the emoji. */
+function uiIcon(key: string, em: string): Node {
+  return hasArt(`ui:${key}`) ? h('img', { class: 'ui-ico', src: artURL(`ui:${key}`), alt: '' }) : document.createTextNode(em);
 }
 
 const TOOLS: { id: Tool | 'shop' | 'cook'; label: string; em: string; hint?: string }[] = [
@@ -89,24 +94,26 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   );
 
   // --- top-right buttons ---
-  const roundBtn = (em: string, label: string, onclick: () => void) => {
+  const roundBtn = (key: string, em: string, label: string, onclick: () => void) => {
     const badge = h('span', { class: 'badge', style: { display: 'none' } });
-    const btn = h('button', { class: 'round-btn', onclick, 'aria-label': label }, em, badge, h('small', null, label));
+    const btn = h('button', { class: 'round-btn', onclick, 'aria-label': label }, uiIcon(key, em), badge, h('small', null, label));
     return { btn, badge };
   };
-  const quests = roundBtn('📜', 'Quests', openQuests);
-  const neighbors = roundBtn('🏘️', 'Neighbors', openNeighbors);
-  const barn = roundBtn('🧺', 'Barn', openBarn);
-  const orders = roundBtn('📋', 'Orders', openOrders);
-  const daily = roundBtn('🏡', 'Farm', openFarmhouse);
-  const catalog = roundBtn('📖', 'Collections', () => openCatalog());
-  const music = roundBtn(audioSettings.music ? '🎵' : '🔇', 'Music', () => {
+  const quests = roundBtn('quests', '📜', 'Quests', openQuests);
+  const neighbors = roundBtn('neighbors', '🏘️', 'Neighbors', openNeighbors);
+  const barn = roundBtn('barn', '🧺', 'Barn', openBarn);
+  const orders = roundBtn('orders', '📋', 'Orders', openOrders);
+  const daily = roundBtn('farm', '🏡', 'Farm', openFarmhouse);
+  const catalog = roundBtn('collections', '📖', 'Collections', () => openCatalog());
+  const musicIcon = () => (audioSettings.music ? uiIcon('music', '🎵') : uiIcon('music_off', '🔇'));
+  const music = roundBtn('music', '🎵', 'Music', () => {
     setMusic(!audioSettings.music);
-    music.btn.firstChild!.textContent = audioSettings.music ? '🎵' : '🔇';
+    music.btn.firstChild!.replaceWith(musicIcon());
   });
+  music.btn.firstChild!.replaceWith(musicIcon());
   music.btn.classList.add('small-round');
   // Feature buttons (fishing, critters, ...) slot in before Farm and Music.
-  const extraCorner = HUD_BUTTONS.filter((b) => b.where === 'corner').map((b) => ({ def: b, ...roundBtn(b.em, b.label, b.onClick) }));
+  const extraCorner = HUD_BUTTONS.filter((b) => b.where === 'corner').map((b) => ({ def: b, ...roundBtn(b.id, b.em, b.label, b.onClick) }));
   const corner = h(
     'div',
     { class: 'corner' },
@@ -150,7 +157,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const seedImg = h('img', { alt: '' });
   const toolbar = h('div', { class: 'toolbar' });
   for (const t of TOOLS) {
-    const em = t.id === 'seed' ? h('span', { class: 'em' }, seedImg) : h('span', { class: 'em' }, t.em);
+    const em = h('span', { class: 'em' }, t.id === 'seed' ? seedImg : uiIcon(t.id === 'shop' ? 'market' : t.id, t.em));
     const btn = h(
       'button',
       {
@@ -171,7 +178,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     // Feature tools sit right after Cook.
     if (t.id === 'cook')
       for (const b of HUD_BUTTONS.filter((x) => x.where === 'toolbar')) {
-        const fb = h('button', { class: 'tool', style: { position: 'relative' }, onclick: b.onClick }, h('span', { class: 'em' }, b.em), b.label);
+        const fb = h('button', { class: 'tool', style: { position: 'relative' }, onclick: b.onClick }, h('span', { class: 'em' }, uiIcon(b.id, b.em)), b.label);
         toolButtons.set(`feature:${b.id}`, fb);
         toolbar.append(fb);
       }
@@ -204,6 +211,9 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   });
 
   ui.append(hud, corner, toolbar, hint, zoomBox, banner);
+  // A tap shouldn't leave a keyboard focus ring behind once Esc is pressed.
+  for (const el of [corner, toolbar, zoomBox])
+    el.addEventListener('pointerup', (e) => (e.target as HTMLElement).closest('button')?.blur());
 
   const setBadge = (badge: HTMLElement, n: number) => {
     badge.style.display = n > 0 ? 'grid' : 'none';

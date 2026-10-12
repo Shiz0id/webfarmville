@@ -80,5 +80,26 @@ if (!touch) {
   await shot('11-tooltip');
 }
 
+// Level up by plowing one plot just short of the next level.
+{
+  const r = db.prepare('SELECT f.state FROM farms f WHERE f.user_id = ?').get(row.user_id);
+  const s2 = JSON.parse(r.state);
+  s2.xp = xpFor(13) - 1;
+  db.prepare('UPDATE farms SET state = ?, rev = rev + 1 WHERE user_id = ?').run(JSON.stringify(s2), row.user_id);
+  await page.reload();
+  await page.waitForSelector('.toolbar');
+  await page.waitForTimeout(900);
+  await page.keyboard.press('Escape');
+  await tool('Plow')();
+  for (const [x, y] of [[11, 11], [12, 12], [10, 12], [12, 10], [13, 13]]) {
+    const p = await page.evaluate(([x, y]) => window.__farm.scene().tileToScreen(x, y), [x, y]);
+    await page.mouse.click(p.x, p.y);
+    await page.waitForTimeout(300);
+    if (await page.locator('.levelup').isVisible()) break;
+  }
+  await page.waitForTimeout(700);
+  await shot('12-levelup');
+}
+
 console.log(errors.length ? 'Errors:\n' + errors.join('\n') : 'No errors');
 await browser.close();
