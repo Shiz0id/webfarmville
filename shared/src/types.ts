@@ -36,6 +36,8 @@ export interface BuildingObject extends Placed {
   kind: 'building';
   def: string;
   queue: CraftJob[];
+  /** Workshop upgrade level (absent means 1). See content/workshops.ts. */
+  level?: number;
 }
 
 export interface DecoObject extends Placed {

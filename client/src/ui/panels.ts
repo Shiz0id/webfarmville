@@ -4,6 +4,8 @@ import {
   BABY_NAMES,
   babyGrowMs,
   babyPrice,
+  craftMs,
+  workshopSlots,
   BUILDINGS,
   BUILDING_LIST,
   CHARM_TIERS,
@@ -674,7 +676,8 @@ export function openBuilding(id: string): void {
       const st = buildingStatus(b, now);
       for (const sec of BUILDING_SECTIONS) if (sec.where === 'top') sec.render(body, b);
       const queue = h('div', { class: 'queue' });
-      for (let i = 0; i < def.slots; i++) {
+      const slots = workshopSlots(b, def);
+      for (let i = 0; i < slots; i++) {
         const job = b.queue[i];
         if (!job) {
           queue.append(h('div', { class: 'slot' }, h('div', { style: { height: '34px', fontSize: '22px' } }, '·'), 'Empty slot'));
@@ -696,7 +699,7 @@ export function openBuilding(id: string): void {
         h(
           'div',
           { class: 'section-title' },
-          `Production (${b.queue.length}/${def.slots})`,
+          `Production (${b.queue.length}/${slots})`,
           st.done
             ? h('button', { class: 'btn small green', onclick: () => S.dispatch({ type: 'collectCrafts', id }) }, `Collect ${st.done}`)
             : null,
@@ -729,7 +732,7 @@ export function openBuilding(id: string): void {
               { class: 'grow', style: { flex: '1' } },
               h('div', { class: 'title', style: { fontWeight: '900' } }, `${nameOf(r.output)}${r.qty > 1 ? ` ×${r.qty}` : ''}`),
               inputs,
-              h('div', { class: 'sub', style: { fontSize: '12px', color: 'var(--muted)', fontWeight: '800', marginTop: '3px' } }, `⏱ ${fmtDuration(r.craftSec * 1000)} · +${r.xp} XP · sells ${ITEMS[r.output].sell}🪙`),
+              h('div', { class: 'sub', style: { fontSize: '12px', color: 'var(--muted)', fontWeight: '800', marginTop: '3px' } }, `⏱ ${fmtDuration(craftMs(b, r))} · +${r.xp} XP · sells ${ITEMS[r.output].sell}🪙`),
             ),
             h(
               'button',

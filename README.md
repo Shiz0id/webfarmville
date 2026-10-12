@@ -83,6 +83,10 @@ All of the art is drawn in code at startup, so there are no image assets to down
   quests (Many Hands, A Little Fairy Magic, Helping Out), now and then inside a mystery gift, with every completed
   collection, and from the County Fair's Prize Booth for tickets. Use them from the Garage, whose button shows a
   badge when one has work waiting.
+- **Workshop upgrades** (from FarmVille 2): every workshop's panel has an Upgrades section. Level 2 (coins plus
+  5 of the workshop's first good) adds a queue slot and crafts 15% faster; level 3 (more coins, 10 of its first
+  good and 5 of its second) adds another slot, crafts 30% faster and gives a 1-in-4 chance of a bonus item with
+  every job. Upgraded workshops show their stars in the tooltip.
 - **Well water** (from FarmVille 2): pick up the Water tool and tap or drag over growing crops to give them a 25%
   head start, once per crop. The can holds 10 splashes and slowly trickles back by itself, or tap a Wishing Well or
   Water Pump to fill it to the brim (each well refills every two hours). On rainy days the sky does the watering.
@@ -171,7 +175,7 @@ There are also two helper scripts:
   it live at http://localhost:5173/art-preview.html?mod=all.
 - `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Companion
   scripts check other features (`scripts/blooms-check.mjs` and `scripts/collections-check.mjs` run with `npx tsx`;
-  `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs`, `scripts/water-check.mjs`, `scripts/nursery-check.mjs`, `scripts/feedmill-check.mjs`, `scripts/vehicles-check.mjs` and `scripts/helpers-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
+  `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs`, `scripts/water-check.mjs`, `scripts/nursery-check.mjs`, `scripts/feedmill-check.mjs`, `scripts/vehicles-check.mjs`, `scripts/helpers-check.mjs` and `scripts/workshops-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
   `FARM_ALL_EVENTS=1` on weekdays): `scripts/halloween-check.mjs` covers seasonal visitors and the token shop
   (try `?debug&event=winter`), and `scripts/cooking-check.mjs` covers the kitchen mini-games. Point it at a
   running game with `?debug` in the URL, for example `http://localhost:3001/?debug` after `npm run build &&

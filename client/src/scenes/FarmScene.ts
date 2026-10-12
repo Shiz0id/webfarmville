@@ -932,7 +932,8 @@ export class FarmScene extends Phaser.Scene {
         if (st.done) lines.push(`✅ ${st.done} ready to collect`);
         if (st.active) lines.push(`Making ${nameOf(st.active.recipe)} · ${fmtDuration(st.active.end - now)}`);
         if (!st.done && !st.active) lines.push('Idle: click to craft');
-        return { title: def.name, lines };
+        const lv = obj.level ?? 1;
+        return { title: lv > 1 ? `${def.name} ${'★'.repeat(lv)}` : def.name, lines };
       }
       case 'deco': {
         const def = DECORATIONS[obj.def];

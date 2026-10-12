@@ -645,6 +645,17 @@ export const QUEST_LIST: QuestDef[] = [
     goals: [stat('helper', 1, 'Use a helper')],
     reward: { coins: 250, xp: 40, items: { farmhand: 1 } },
   },
+  // Workshop upgrades
+  {
+    id: 'workshop_wonders',
+    title: 'Workshop Wonders',
+    text: "A workshop that's loved works better! Upgrade one with coins and a few of its own goods: more room in the queue, quicker crafting, and at the top level the odd bonus treat.",
+    giver: 'Penny',
+    level: 5,
+    requires: ['welcome'],
+    goals: [stat('craft', 10, 'Make goods in workshops'), stat('upgrade', 1, 'Upgrade a workshop')],
+    reward: { coins: 300, xp: 50, items: { mystery_gift: 1 } },
+  },
   ...EVENT_FEATURE_LIST.filter((f) => f.event !== 'halloween').flatMap((f) => eventQuests(f)),
 ];
 

@@ -1,6 +1,7 @@
 import { BUILDINGS } from '../content/buildings';
 import { CROPS, witherAfterSec } from '../content/crops';
 import { ANIMALS, TREES } from '../content/producers';
+import { craftMs, workshopSlots } from '../content/workshops';
 import type { BuildingObject, FarmState, PlotObject, ProducerObject } from '../types';
 
 export type CropStage = 'empty' | 'sprout' | 'growing' | 'ready' | 'withered';
@@ -56,10 +57,10 @@ export function buildingStatus(b: BuildingObject, now: number): BuildingStatus {
   let active: BuildingStatus['active'];
   if (next) {
     const recipe = def?.recipes.find((r) => r.id === next.recipe);
-    const dur = (recipe?.craftSec ?? 1) * 1000;
+    const dur = recipe ? craftMs(b, recipe) : 1000;
     active = { recipe: next.recipe, progress: Math.max(0, Math.min(1, 1 - (next.end - now) / dur)), end: next.end };
   }
-  return { done, active, freeSlots: Math.max(0, (def?.slots ?? 0) - b.queue.length) };
+  return { done, active, freeSlots: Math.max(0, workshopSlots(b, def) - b.queue.length) };
 }
 
 /** Anything on the farm that wants the player's attention right now. */

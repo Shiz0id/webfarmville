@@ -31,6 +31,7 @@ import { buildingStatus, cropStatus, producerStatus } from './status';
 import { afterFeatures, featureHandler, migrateFeatures, type FeatureKit } from './features';
 import '../features';
 import { seedCost } from '../features/mastery';
+import { craftMs, workshopLevel, workshopSlots } from '../content/workshops';
 
 export interface ActionResult {
   state: FarmState;
@@ -342,13 +343,13 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       const def = BUILDINGS[b.def];
       const recipe = findRecipe(b.def, action.recipe);
       if (!def || !recipe) throw new GameError("This building can't make that");
-      if (b.queue.length >= def.slots) throw new GameError('The queue is full');
+      if (b.queue.length >= workshopSlots(b, def)) throw new GameError('The queue is full');
       for (const [item, qty] of Object.entries(recipe.inputs)) {
         if ((state.inventory[item] ?? 0) < qty) throw new GameError(`Need ${qty} ${ITEMS[item]?.name ?? item}`);
       }
       for (const [item, qty] of Object.entries(recipe.inputs)) takeItem(state, item, qty);
       const start = Math.max(now, b.queue.length ? b.queue[b.queue.length - 1].end : 0);
-      b.queue.push({ recipe: recipe.id, end: start + recipe.craftSec * 1000 });
+      b.queue.push({ recipe: recipe.id, end: start + craftMs(b, recipe) });
       break;
     }
 
@@ -365,6 +366,12 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
         const recipe = findRecipe(b.def, job.recipe);
         if (!recipe) continue;
         addItem(state, recipe.output, recipe.qty, events, at);
+        // A top-level workshop sometimes makes one extra.
+        const bonus = workshopLevel(b).bonus;
+        if (bonus && nextRandom(state) < bonus) {
+          addItem(state, recipe.output, 1, events, at);
+          events.push({ type: 'workshopBonus', id: b.id, item: recipe.output });
+        }
         addXp(state, recipe.xp, events, at);
         bumpStat(state, 'craft', recipe.qty);
         bumpStat(state, `craft:${recipe.output}`, recipe.qty);
