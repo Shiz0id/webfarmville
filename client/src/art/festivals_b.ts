@@ -110,49 +110,69 @@ function boxAt(p: Pen, x: number, y: number, du: number, dv: number, ht: number,
   p.box(u - du / 2, v - dv / 2, du, dv, ht, color, z);
 }
 
-/** Small bare tree hung with paper autumn leaves and tiny hearts. */
+/** Full autumn gratitude tree: many branches hung with warm paper leaves, tiny hearts and a wooden sign at its foot. */
 function gratitudeTree(p: Pen): void {
   const { x, y } = p.center;
   const at = (dx: number, dy: number): Pt => ({ x: x + dx, y: y + dy });
-  p.shadow(x, y + 1, 16, 6);
-  p.ellipse(x, y + 0.5, 6, 2.6, '#8a5f3e', O);
+  const rand = rng('gratitude');
+  const autumn = ['#e8553a', '#ff9d2e', '#f4c24a', '#c8423a', '#d9622b', '#ffb13a', '#b5542a'];
+  p.shadow(x, y + 1, 20, 7);
+  p.ellipse(x, y + 0.5, 8, 3, '#8a5f3e', O);
   // tapered trunk with a little face
-  p.poly([at(-4, 1), at(-2.2, -26), at(2.2, -26), at(4, 1)], hgrad(p, x - 4, x + 4, shade(WOOD, 0.15), shade(WOOD, -0.25)));
-  face(p, x, y - 14, 0.7);
-  // bare branches
-  const branches: Pt[][] = [
-    [at(0, -24), at(-8, -36), at(-15, -42)],
-    [at(0, -24), at(9, -34), at(16, -41)],
-    [at(0, -30), at(-1, -44), at(2, -52)],
-    [at(-8, -36), at(-12, -48)],
-    [at(9, -34), at(12, -46)],
+  p.poly([at(-5, 1), at(-3, -30), at(3, -30), at(5, 1)], hgrad(p, x - 5, x + 5, shade(WOOD, 0.15), shade(WOOD, -0.25)));
+  face(p, x, y - 16, 0.8);
+  // branches: main limbs, then forked twigs
+  const segs: [Pt, Pt, number][] = [
+    [at(-2, -30), at(-9, -38), 3],
+    [at(2, -30), at(10, -37), 3],
+    [at(0, -34), at(-1, -50), 2.8],
+    [at(-9, -38), at(-17, -44), 2.2],
+    [at(10, -37), at(18, -45), 2.2],
+    [at(-9, -38), at(-12, -52), 2],
+    [at(10, -37), at(13, -52), 2],
+    [at(-1, -50), at(3, -62), 2],
+    [at(-1, -50), at(-8, -60), 1.8],
+    [at(-17, -44), at(-24, -52), 1.6],
+    [at(18, -45), at(24, -56), 1.6],
+    [at(3, -62), at(10, -69), 1.5],
+    [at(3, -62), at(-2, -72), 1.5],
+    [at(-12, -52), at(-6, -64), 1.4],
+    [at(13, -52), at(18, -62), 1.4],
   ];
-  for (const br of branches) thick(p, br, 2.4, '#8a5f3e');
-  // paper leaves hung from the twigs, back to front
-  const leaves: [number, number, number, string][] = [
-    [-8, -33, -2.0, '#f4c24a'],
-    [-4, -40, -2.9, '#ffb13a'],
-    [6, -39, -0.2, '#e8553a'],
-    [11, -31, 0.4, '#ff9d2e'],
-    [-15, -42, -2.6, '#e8553a'],
-    [-11, -48, -2.2, '#ff9d2e'],
-    [12, -46, -0.9, '#d9622b'],
-    [16, -41, -0.5, '#f4c24a'],
-    [2, -52, -1.6, '#c8423a'],
-  ];
-  leaves.sort((a, b) => a[1] - b[1]);
-  leaves.forEach(([dx, dy, ang, col], i) => {
-    const lx = x + dx;
-    const ly = y + dy;
-    paperLeaf(p, lx, ly, 8, ang, col);
-    if (i % 3 === 0) {
-      p.heart(lx + Math.cos(ang) * 4.5, ly + Math.sin(ang) * 4.5, 1.5, '#ff5b7f');
+  for (const [a, b, w] of segs) thick(p, [a, b], w, '#8a5f3e');
+  // paper leaves, two per branch tip, drawn back to front
+  const leaves: { x: number; y: number; ang: number; len: number; col: string }[] = [];
+  for (const [a, b] of segs) {
+    for (const t of [0.5, 1]) {
+      const qx = a.x + (b.x - a.x) * t;
+      const qy = a.y + (b.y - a.y) * t;
+      for (let k = 0; k < 2; k++) {
+        leaves.push({
+          x: qx + (rand() - 0.5) * 5,
+          y: qy + (rand() - 0.5) * 4,
+          ang: rand() * TAU,
+          len: 6 + rand() * 2.5,
+          col: autumn[Math.floor(rand() * autumn.length)],
+        });
+      }
     }
+  }
+  leaves.sort((m, k) => m.y - k.y);
+  leaves.forEach((l, i) => {
+    paperLeaf(p, l.x, l.y, l.len, l.ang, l.col);
+    if (i % 11 === 0) p.heart(l.x + Math.cos(l.ang) * l.len * 0.5, l.y + Math.sin(l.ang) * l.len * 0.5, 1.4, '#ff5b7f');
   });
-  // a few tiny hearts drifting from the tips
-  p.heart(x - 19, y - 34, 1.6, '#ff5b7f');
-  p.heart(x + 20, y - 28, 1.3, '#ff8fa8');
-  p.heart(x + 4, y - 60, 1.3, '#e5344f');
+  // a few tiny hearts floating around the crown
+  p.heart(x - 25, y - 36, 1.7, '#ff5b7f');
+  p.heart(x + 27, y - 40, 1.5, '#ff8fa8');
+  p.heart(x + 6, y - 78, 1.5, '#e5344f');
+  // little wooden sign at the base with a carved heart
+  const sx = x + 14;
+  thick(p, [{ x: sx - 5, y }, { x: sx - 5, y: y - 6 }], 1.8, WOOD_DK);
+  thick(p, [{ x: sx + 9, y }, { x: sx + 9, y: y - 6 }], 1.8, WOOD_DK);
+  p.roundRect(sx - 8, y - 14, 20, 9, 2, hgrad(p, sx - 8, sx + 12, '#e8b47a', '#c98b53'));
+  p.line([{ x: sx - 5, y: y - 10 }, { x: sx + 9, y: y - 10 }], shade(WOOD, -0.3), 0.6);
+  p.heart(sx + 2, y - 9.5, 2.3, '#e5344f');
 }
 
 /** A gold, silver or bronze rosette with its ribbon tails, centred on (x, y). */
@@ -431,21 +451,39 @@ function snowman(p: Pen, x: number, y: number, s: number, knit: string | null): 
   }
 }
 
-/** A snowman family on a soft snow hill, with a steaming cocoa mug. */
+/** A snowman family on a soft, rounded snow mound with blue-ish shading and sparkles. */
 function cocoaSledHill(p: Pen): void {
   const c = p.center;
   p.shadow(c.x, c.y + 2, 34, 12);
-  p.diamond(0.06, 0.06, 1.88, 0.88, '#ffffff', O);
-  p.diamond(0.1, 0.1, 1.8, 0.8, rgba('#ddeaf6', 0.6), null);
+  // a soft drift: two side bumps and a big rounded mound on top
+  const snow = radial(p, c.x - 12, c.y - 6, 44, '#ffffff', '#d2e6f7');
+  p.ellipse(c.x - 28, c.y + 4, 16, 8, snow, O);
+  p.ellipse(c.x + 28, c.y + 3, 16, 8, snow, O);
+  p.ellipse(c.x, c.y + 2, 44, 15, snow, O);
+  // cool blue shade along the front edge, soft highlight on the crown
+  p.ellipse(c.x, c.y + 9, 40, 5, rgba('#9cc8ec', 0.35), null);
+  p.ellipse(c.x - 10, c.y - 6, 18, 4, rgba('#ffffff', 0.85), null, -0.1);
+  for (const [dx, dy] of [
+    [-18, -3],
+    [14, 1],
+    [30, -4],
+  ]) {
+    p.circle(c.x + dx, c.y + dy, 0.9, '#ffffff', null);
+  }
+  sparkle(p, c.x - 36, c.y - 4, 2.4);
+  sparkle(p, c.x + 38, c.y - 2, 2);
+  sparkle(p, c.x - 22, c.y + 9, 1.8);
+  // hot cocoa mug
+  const mug = p.iso(0.98, 0.92);
+  p.cylinder(mug.x, mug.y, 3.4, 5, '#fff8f0');
+  p.ellipse(mug.x, mug.y - 5, 3.4, 1.4, '#6b3a24', O);
+  p.heart(mug.x + 1.2, mug.y - 2.4, 1.2, '#ff5b7f', null);
+  // the snowman family, back to front
   const family: { u: number; v: number; s: number; knit: string | null }[] = [
     { u: 0.62, v: 0.5, s: 1.05, knit: null },
     { u: 1.32, v: 0.42, s: 0.78, knit: '#5fae4a' },
     { u: 1.4, v: 0.88, s: 0.52, knit: '#ffb13a' },
   ];
-  const mug = p.iso(0.98, 0.92);
-  p.cylinder(mug.x, mug.y, 3.4, 5, '#fff8f0');
-  p.ellipse(mug.x, mug.y - 5, 3.4, 1.4, '#6b3a24', O);
-  p.heart(mug.x + 1.2, mug.y - 2.4, 1.2, '#ff5b7f', null);
   for (const f of family) {
     const q = p.iso(f.u, f.v, 0);
     snowman(p, q.x, q.y, f.s, f.knit);
@@ -453,6 +491,7 @@ function cocoaSledHill(p: Pen): void {
 }
 
 // ---------------------------------------------------------------------------
+
 // Party (year-round)
 
 const PASTELS = ['#ff9ec4', '#8fd0ff', '#c7a6ff', '#ffe07a', '#a8e6a0', '#ffb38a'];
@@ -857,42 +896,57 @@ function cupcakeTower(p: Pen): void {
   });
 }
 
-/** Rainbow llama pinata hanging by a rope from a wooden post with a crossbar. */
+/** Rainbow llama pinata, about twice life size, hanging by a rope from a sturdy wooden post with a little bow. */
 function pinata(p: Pen): void {
   const { x, y } = p.center;
   const c = p.ctx;
-  p.shadow(x + 2, y + 1, 12, 5);
-  const px = x - 17;
-  p.ellipse(px, y, 4, 1.6, shade(WOOD, -0.25));
-  thick(p, [{ x: px, y }, { x: px, y: y - 50 }], 3.2, WOOD);
-  thick(p, [{ x: px, y: y - 50 }, { x: x + 14, y: y - 50 }], 2.6, WOOD_DK);
-  const rx = x + 2;
-  p.line([{ x: rx, y: y - 50 }, { x: rx, y: y - 31 }], '#c7a26a', 1);
   const bands = ['#ff9ec4', '#ffe07a', '#a8e6a0', '#8fd0ff', '#c7a6ff'];
+  p.shadow(x + 4, y + 1, 22, 8);
+  // sturdy wooden post with a crossbar, and the rope it hangs from
+  const px = x - 24;
+  p.ellipse(px, y, 6, 2.4, shade(WOOD, -0.25));
+  thick(p, [{ x: px, y }, { x: px, y: y - 84 }], 5, WOOD);
+  thick(p, [{ x: px, y: y - 84 }, { x: x + 22, y: y - 84 }], 4.2, WOOD_DK);
+  p.ellipse(px, y - 84, 3, 1.4, shade(WOOD, 0.3));
+  const bx = x - 3;
+  const by = y - 40;
+  p.line([{ x: bx, y: y - 84 }, { x: bx, y: by - 16 }], '#c7a26a', 1.4);
+  // fluffy rainbow fringe hanging from the bottom, each strip with a pompom tip
+  for (let i = 0; i < 8; i++) {
+    const fx = bx - 15 + i * 4.3;
+    const col = bands[i % bands.length];
+    const sway = i % 2 ? 0.8 : -0.8;
+    p.poly([{ x: fx - 2.2, y: by + 14 }, { x: fx + 2.2, y: by + 14 }, { x: fx + sway, y: by + 26 }], col, O, 0.7);
+    p.circle(fx + sway, by + 27, 1.9, shade(col, 0.25));
+  }
   // neck, then the body with rainbow bands clipped to its shape
-  thick(p, [{ x: rx + 4, y: y - 27 }, { x: rx + 7, y: y - 33 }], 5, '#fff8f0');
+  thick(p, [{ x: bx + 8, y: by - 8 }, { x: bx + 14, y: by - 22 }], 9, '#fff8f0');
   c.save();
   c.beginPath();
-  c.ellipse(rx, y - 22, 10, 8, 0, 0, TAU);
+  c.ellipse(bx, by, 20, 16, 0, 0, TAU);
   c.clip();
   bands.forEach((col, i) => {
     c.fillStyle = col;
-    c.fillRect(rx - 11, y - 30 + i * 3.2, 22, 3.2);
+    c.fillRect(bx - 22, by - 16 + i * 6.4, 44, 6.4);
   });
   c.restore();
-  p.ellipse(rx, y - 22, 10, 8, null, O);
-  // tissue fringe along the bottom
-  for (let i = 0; i < 6; i++) {
-    const fx = rx - 8 + i * 3.2;
-    p.poly([{ x: fx - 1.6, y: y - 15 }, { x: fx + 1.6, y: y - 15 }, { x: fx, y: y - 10.5 }], bands[i % bands.length], O, 0.6);
+  p.ellipse(bx, by, 20, 16, null, O);
+  p.ellipse(bx - 10, by - 8, 3, 5, rgba('#ffffff', 0.45), null, 0.3);
+  // ears, head, a rainbow mane of pompoms and a snout
+  p.poly([{ x: bx + 9, y: by - 20 }, { x: bx + 11, y: by - 31 }, { x: bx + 18, y: by - 22 }], '#fff8f0');
+  p.poly([{ x: bx + 17, y: by - 22 }, { x: bx + 22, y: by - 32 }, { x: bx + 25, y: by - 21 }], '#fff8f0');
+  p.poly([{ x: bx + 11.5, y: by - 23 }, { x: bx + 12.5, y: by - 28 }, { x: bx + 16, y: by - 23 }], '#ffb3c8', null);
+  p.ball(bx + 16, by - 30, 12, '#fff8f0');
+  for (let i = 0; i < 5; i++) {
+    const a = -2.7 + i * 0.55;
+    p.circle(bx + 16 + Math.cos(a) * 12, by - 30 + Math.sin(a) * 12, 2.6, bands[i]);
   }
-  // ears, head, a rainbow mane and a snout
-  p.poly([{ x: rx + 5, y: y - 39 }, { x: rx + 6.2, y: y - 46 }, { x: rx + 9.2, y: y - 41 }], '#fff8f0');
-  p.poly([{ x: rx + 9, y: y - 40 }, { x: rx + 10.6, y: y - 45 }, { x: rx + 12, y: y - 40.5 }], '#fff8f0');
-  p.ball(rx + 8, y - 36, 6, '#fff8f0');
-  for (let i = 0; i < 5; i++) p.circle(rx + 4.6 + i * 2, y - 41 - (i % 2) * 1.6, 1.5, bands[i], O);
-  p.ellipse(rx + 12.6, y - 34, 2.6, 1.8, '#ffe0ec');
-  face(p, rx + 7.4, y - 37, 0.72);
+  p.ellipse(bx + 26, by - 23, 5, 3.6, '#ffe0ec');
+  face(p, bx + 13, by - 31, 1.3);
+  // a little bow tied on the neck
+  p.ellipse(bx + 3, by - 16, 4, 2.4, '#ff5b7f', O, -0.4);
+  p.ellipse(bx + 9.4, by - 16, 4, 2.4, '#ff5b7f', O, 0.4);
+  p.circle(bx + 6.2, by - 16, 1.8, '#e5344f');
 }
 
 /** Giant golden picture frame on an easel: a sunny pastel photo, a heart and little props. */
@@ -992,7 +1046,7 @@ function iceCreamBike(p: Pen): void {
 type Art = { height: number; paint: Painter };
 
 const ART: Record<string, Art> = {
-  gratitude_tree: { height: 62, paint: gratitudeTree },
+  gratitude_tree: { height: 76, paint: gratitudeTree },
   pie_contest: { height: 40, paint: pieContest },
   igloo: { height: 40, paint: igloo },
   skating_pond: { height: 26, paint: skatingPond },
@@ -1006,7 +1060,7 @@ const ART: Record<string, Art> = {
   garden_party_table: { height: 42, paint: gardenPartyTable },
   dance_floor: { height: 20, paint: danceFloor },
   cupcake_tower: { height: 58, paint: cupcakeTower },
-  pinata: { height: 64, paint: pinata },
+  pinata: { height: 86, paint: pinata },
   photo_frame: { height: 76, paint: photoFrame },
   ice_cream_bike: { height: 66, paint: iceCreamBike },
 };

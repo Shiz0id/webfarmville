@@ -773,39 +773,71 @@ function mooncakeTable(p: Pen): void {
   face(p, t.x, t.y - 6, 0.6);
 }
 
+/**
+ * Moon gate: a chunky whitewashed garden wall along the 2x1 footprint with a
+ * round opening through its front face, a terracotta tiled cap, a plum sprig
+ * peeking over the top, and the full moon rising behind.
+ */
 function moonGate(p: Pen): void {
   const c = p.center;
-  const o = p.iso(0, 0.5, 0);
-  p.shadow(c.x, c.y + 3, 38, 12, 0.18);
-  // pale stone path the gate stands on
-  p.diamond(0.1, 0.3, 1.8, 0.62, '#ece4d0', shade('#ece4d0', -0.25), 0);
-  p.diamond(0.2, 0.42, 1.6, 0.4, null, rgba('#ffffff', 0.7), 0);
-  // full moon glowing above the gate, with a face
-  const my = p.height - 47;
-  p.glow(c.x, my, 36, '#fff3b0', 0.6);
-  p.circle(c.x, my, 14, radial(p, c.x, my, 16, '#fffbe6', '#ffe27a'), '#d9a93a');
-  p.circle(c.x - 6, my - 6, 2.2, rgba('#e0b84a', 0.45), null);
-  p.circle(c.x + 6, my + 5, 1.6, rgba('#e0b84a', 0.4), null);
-  face(p, c.x, my + 1, 0.9);
-  // wall with a round opening, and a tiled roof
-  onWallU(p, o, () => {
+  p.shadow(c.x, c.y + 4, 40, 12, 0.2);
+  // the full moon glows above and behind the gate, with a face
+  const my = p.height - 40;
+  p.glow(c.x, my, 38, '#fff3b0', 0.6);
+  p.circle(c.x, my, 13, radial(p, c.x, my, 15, '#fffbe6', '#ffe27a'), '#d9a93a');
+  p.circle(c.x - 6, my - 6, 2, rgba('#e0b84a', 0.45), null);
+  p.circle(c.x + 6, my + 5, 1.5, rgba('#e0b84a', 0.4), null);
+  face(p, c.x, my + 1, 0.85);
+
+  // stone plinth, then the whitewashed wall
+  p.box(0.06, 0.38, 1.88, 0.24, 3, '#d8c9ae', 0);
+  p.box(0.1, 0.42, 1.8, 0.16, 30, { top: '#fffdf7', left: '#f7efe1', right: '#e4d5ba' }, 3);
+
+  // round opening through the front face, looking out onto a hedge and grass
+  onWallU(p, p.iso(0, 0.58, 0), () => {
     const ctx = p.ctx;
-    p.rect(0, -40, 64, 40, hgrad(p, 0, 64, '#fffdf8', '#eadfcc'), O);
-    p.rect(-1.5, -3.5, 67, 3.5, '#c9b8a0', O);
-    p.circle(32, -20, 17.5, '#e9dfcf', O);
-    p.circle(32, -20, 14.5, radial(p, 32, -20, 15, '#fffbe0', '#bfe3b0'), O);
-    // tiled roof with upturned eaves
-    const A: Pt = { x: -10, y: -44 };
-    const C: Pt = { x: 32, y: -68 };
-    const B: Pt = { x: 74, y: -44 };
-    const eave = -34;
+    p.circle(32, -18, 12.5, '#f7efdf', O);
+    p.circle(32, -18, 10.5, radial(p, 32, -18, 11, '#eaffd9', '#8fd07a'), O);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(32, -18, 10.5, 0, TAU);
+    ctx.clip();
+    p.ellipse(32, -25, 13, 5, '#4f9a4a', null);
+    p.ellipse(32, -24.5, 11, 3, '#3d8240', null);
+    p.curve({ x: 27, y: -8 }, { x: 31, y: -13 }, { x: 30, y: -19 }, '#f5e6bf', 2.2);
+    p.circle(24, -11, 1.1, '#ffb3c8', null);
+    p.circle(39, -9, 1.1, '#fff3a6', null);
+    ctx.restore();
+    p.circle(32, -18, 10.5, null, O);
+  });
+
+  // plum sprig peeking over the wall, drawn behind the roof cap
+  const bark = '#7a4b2e';
+  thick(p, [p.iso(1.55, 0.5, 30), p.iso(1.5, 0.5, 44), p.iso(1.7, 0.5, 56)], 2, bark);
+  const blossoms: [number, number, number, string][] = [
+    [1.5, 0.5, 47, '#ffb3c9'],
+    [1.66, 0.5, 52, '#ffffff'],
+    [1.72, 0.5, 57, '#ff8fb3'],
+  ];
+  for (const [u, v, z, col] of blossoms) {
+    const q = p.iso(u, v, z);
+    sakura(p, q.x, q.y, 2.8, col, u);
+  }
+
+  // terracotta tiled cap with upturned eaves
+  onWallU(p, p.iso(0, 0.6, 0), () => {
+    const ctx = p.ctx;
+    const A: Pt = { x: -5, y: -35 };
+    const C: Pt = { x: 32, y: -52 };
+    const B: Pt = { x: 69, y: -35 };
+    const low = -31;
     ctx.beginPath();
     ctx.moveTo(A.x, A.y);
     ctx.quadraticCurveTo(C.x, C.y, B.x, B.y);
-    ctx.lineTo(70, eave);
-    ctx.lineTo(-6, eave);
+    ctx.lineTo(B.x - 2, low);
+    ctx.lineTo(A.x + 2, low);
     ctx.closePath();
-    ctx.fillStyle = '#5d6073';
+    ctx.fillStyle = '#d97b52';
     ctx.fill();
     ctx.strokeStyle = O;
     ctx.lineWidth = 1;
@@ -815,25 +847,30 @@ function moonGate(p: Pen): void {
       const q = qpt(A, C, B, i / 12);
       ridge.push({ x: q.x, y: q.y + 2 });
     }
-    p.line(ridge, '#9a9db3', 1.2);
+    p.line(ridge, '#f3a27c', 1.4);
     for (const k of [0.36, 0.7]) {
       const row: Pt[] = [];
       for (let i = 0; i <= 12; i++) {
         const q = qpt(A, C, B, i / 12);
-        row.push({ x: q.x, y: q.y + (eave - q.y) * k });
+        row.push({ x: q.x, y: q.y + (low - q.y) * k });
       }
-      p.line(row, rgba('#2a2d3e', 0.7), 0.8);
+      p.line(row, rgba('#a95a38', 0.85), 0.8);
     }
-    p.line([{ x: -6, y: eave + 0.5 }, { x: 70, y: eave + 0.5 }], '#343748', 1.2);
+    p.line([{ x: A.x + 2, y: low - 0.5 }, { x: B.x - 2, y: low - 0.5 }], '#8a4428', 1.2);
   });
-  // stepping stones in front
+
+  // soft stepping stones and a few flowers at the foot of the wall
   for (const [u, v, r] of [
-    [1.1, 0.98, 4],
-    [1.5, 1.22, 3.4],
+    [0.9, 0.95, 3.6],
+    [1.35, 1.12, 3.2],
   ] as const) {
     const q = p.iso(u, v, 0);
-    p.ellipse(q.x, q.y, r, r * 0.5, '#d9d3c4');
+    p.ellipse(q.x, q.y, r, r * 0.5, '#e8e0cc');
   }
+  const f1 = p.iso(0.3, 0.8, 0);
+  p.flower(f1.x, f1.y, 2.2, '#ffb3c8', '#ffd84a');
+  const f2 = p.iso(1.8, 0.92, 0);
+  p.flower(f2.x, f2.y, 2.2, '#fff3a6', '#ff9a2e');
 }
 
 function osmanthusTree(p: Pen): void {
@@ -1014,7 +1051,7 @@ const SPECS: Record<string, { height: number; paint: Painter }> = {
   paper_cranes: { height: 60, paint: paperCranes },
   rabbit_lantern: { height: 56, paint: rabbitLantern },
   mooncake_table: { height: 44, paint: mooncakeTable },
-  moon_gate: { height: 64, paint: moonGate },
+  moon_gate: { height: 66, paint: moonGate },
   osmanthus_tree: { height: 56, paint: osmanthusTree },
   turkey_statue: { height: 52, paint: turkeyStatue },
   feast_table: { height: 40, paint: feastTable },

@@ -645,14 +645,30 @@ function lanternKidRabbit(p: Pen, walk: boolean): void {
 // ---------------------------------------------------------------------------
 // Costume accessories (overlays, drawn at the animal head position)
 
-/** Autumn-leaf headband: a warm brown band with three orange leaves fanning up. */
-function leafHeadband(p: Pen): void {
+/** A knitted pumpkin-orange beanie with a cream rib band, knit ribbing and a tiny stem-and-leaf on top. */
+function knitBeanie(p: Pen): void {
   const cx = p.center.x;
   const base = p.center.y - 11;
-  stalk(p, { x: cx - 7.4, y: base + 0.8 }, { x: cx, y: base - 2.4 }, { x: cx + 7.4, y: base + 0.8 }, '#a8703a', 2);
-  leaf(p, cx - 1.2, base - 1.4, 8.6, -Math.PI / 2 - 0.8, 3.2, '#ff8a1c');
-  leaf(p, cx + 0.2, base - 1.6, 9.8, -Math.PI / 2, 3.4, '#ff6a14');
-  leaf(p, cx + 1.4, base - 1.4, 8.6, -Math.PI / 2 + 0.8, 3.2, '#ffa33a');
+  const PUMPKIN = '#ff8a2e';
+  const CREAM = '#fff3dc';
+  p.ellipse(cx, base - 3.6, 8.2, 5.6, sphere(p, cx - 2.5, base - 5.5, 8, PUMPKIN));
+  for (const dx of [-4.2, -1.4, 1.4, 4.2]) {
+    p.curve(
+      { x: cx + dx * 0.5, y: base - 8.4 },
+      { x: cx + dx * 1.25, y: base - 4.4 },
+      { x: cx + dx, y: base - 1.4 },
+      shade(PUMPKIN, -0.25),
+      0.5,
+    );
+  }
+  p.ellipse(cx - 3.8, base - 6.6, 1.8, 1, 'rgba(255,255,255,0.45)', null, -0.5);
+  p.line([{ x: cx + 0.4, y: base - 8.6 }, { x: cx + 1, y: base - 11 }], '#7a5538', 1.1);
+  heartLeaf(p, cx + 1, base - 11, 4.6, -Math.PI / 2 + 0.5, LEAF);
+  p.roundRect(cx - 8.6, base - 1.4, 17.2, 4.6, 2, CREAM);
+  for (let i = 0; i < 8; i++) {
+    const x = cx - 7.4 + i * 2.1;
+    p.line([{ x, y: base - 0.8 }, { x: x + 0.5, y: base + 2.6 }], shade(CREAM, -0.25), 0.4);
+  }
 }
 
 /** Little ring of marigold flowers across the head. */
@@ -906,29 +922,67 @@ function iconMooncake(p: Pen): void {
   sparkle(p, 7, 13, 1.3);
 }
 
-/** Taro: a big heart leaf over a round purple-speckled corm. */
+/** Taro: a plump brown root with fuzzy ring lines and rootlets, a cut slice of speckled lilac flesh in front, a heart leaf and a face. */
 function iconTaro(p: Pen): void {
-  p.shadow(20, 37, 11, 2.6, 0.25);
+  const SKIN_BROWN = '#b5834f';
+  const FLESH = '#e2d2f4';
+  p.shadow(20, 37, 13, 2.6, 0.25);
+  // a short stalk and a small heart-shaped leaf on top
   p.line(
     [
-      { x: 20, y: 22 },
-      { x: 20, y: 12 },
+      { x: 19, y: 16 },
+      { x: 19, y: 13 },
     ],
-    shade(TARO_LEAF, -0.15),
-    1.6,
+    shade(TARO_LEAF, -0.2),
+    1.3,
   );
-  heartLeaf(p, 20, 12, 14, -Math.PI / 2 - 0.5, TARO_LEAF);
-  heartLeaf(p, 20, 12, 12, -Math.PI / 2 + 0.6, shade(TARO_LEAF, -0.08));
-  p.circle(20, 27.5, 10, sphere(p, 17, 24, 10, TARO_LILAC));
-  p.ellipse(20.5, 19.6, 4.2, 2, '#8a6a4a', null, -0.2);
-  const rand = rng(11);
-  for (let i = 0; i < 16; i++) {
-    const a = rand() * Math.PI * 2;
-    const d = Math.sqrt(rand()) * 8.4;
-    p.circle(20 + Math.cos(a) * d, 27.5 + Math.sin(a) * d * 0.85, 0.8, TARO_SPECK, null);
+  heartLeaf(p, 19, 13, 10, -Math.PI / 2 + 0.35, TARO_LEAF);
+
+  // the whole root: plump, brown, with fuzzy horizontal rings
+  p.ellipse(20, 25, 12, 9.5, sphere(p, 15, 21, 12, SKIN_BROWN), p.outline, -0.12);
+  for (const y0 of [18.8, 31.2]) {
+    p.curve(
+      { x: 12.5, y: y0 },
+      { x: 20, y: y0 + 1.3 },
+      { x: 27.5, y: y0 },
+      shade(SKIN_BROWN, -0.38),
+      0.6,
+    );
   }
-  p.ellipse(15.2, 22.6, 2.4, 1.2, 'rgba(255,255,255,0.5)', null, -0.5);
-  sparkle(p, 33, 12, 1.6);
+  p.ellipse(14.5, 19.6, 3, 1.2, 'rgba(255,255,255,0.45)', null, -0.4);
+  // rootlets
+  for (const [a, b] of [
+    [
+      [14, 33.6],
+      [12, 36.6],
+    ],
+    [
+      [20, 34.4],
+      [20, 37.2],
+    ],
+  ] as const) {
+    p.line(
+      [
+        { x: a[0], y: a[1] },
+        { x: b[0], y: b[1] },
+      ],
+      '#7a5538',
+      0.6,
+    );
+  }
+  miniFace(p, 19.5, 24.6, 1.5);
+
+  // a cut slice in front: brown skin ring, pale lilac flesh with purple speckles
+  p.ellipse(31, 32.6, 6.4, 5, '#6b4426');
+  p.ellipse(31, 31.2, 6.4, 5, '#8a5a3a');
+  p.ellipse(31, 31.2, 5.1, 3.9, FLESH);
+  const rand = rng(21);
+  for (let i = 0; i < 9; i++) {
+    const a = rand() * Math.PI * 2;
+    const d = Math.sqrt(rand()) * 0.8;
+    p.circle(31 + Math.cos(a) * 5.1 * d, 31.2 + Math.sin(a) * 3.9 * d, 0.55, TARO_SPECK, null);
+  }
+  sparkle(p, 35, 9, 1.5);
 }
 
 // ---------------------------------------------------------------------------
@@ -952,7 +1006,7 @@ export const sprites: SpriteSpec[] = [
   { key: 'npc:lantern_kid_rabbit', fw: 1, fh: 1, height: KID_H, paint: (p) => lanternKidRabbit(p, false) },
   { key: 'npc:lantern_kid_rabbit_walk', fw: 1, fh: 1, height: KID_H, paint: (p) => lanternKidRabbit(p, true) },
 
-  { key: 'costume:pilgrim_bonnet', fw: 1, fh: 1, height: 20, paint: leafHeadband },
+  { key: 'costume:pilgrim_bonnet', fw: 1, fh: 1, height: 20, paint: knitBeanie },
   { key: 'costume:marigold_crown', fw: 1, fh: 1, height: 20, paint: marigoldCrown },
   { key: 'costume:rabbit_ears', fw: 1, fh: 1, height: 20, paint: bunnyEars },
 ];

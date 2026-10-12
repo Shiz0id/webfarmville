@@ -4,7 +4,7 @@
 // currencies, and the confetti and red-lantern particles. Same house style as
 // the rest of the art: chunky rounded shapes, dark outlines, top-left light,
 // kawaii faces with blush. Warm, joyful and never loud.
-import { type IconSpec, type Pen, type Pt, type SpriteSpec, mix, rng, shade } from './kit';
+import { type IconSpec, type Pen, type Pt, type SpriteSpec, rng, shade } from './kit';
 
 const INK = '#2b1d14';
 const EYE = '#2b1b12';
@@ -50,10 +50,11 @@ const LANTERN_DK = '#a81d1d';
 const ROBE_RED = '#d8302c';
 const LION_RED = '#dc2f2b';
 const LION_MANE = '#ffb83a';
-const BOK_PALE = '#eaf9cf';
-const BOK_LT = '#f7ffe6';
-const BOK_LEAF = '#3a9a4a';
-const BOK_LEAF_LT = '#6cc556';
+const BOK_DARK = '#2f8a3f';
+const BOK_MID = '#4fb24e';
+const BOK_BRIGHT = '#8fd45a';
+const BOK_RIB = '#c6f08a';
+const BOK_CELERY = '#eaf8cc';
 const ENVELOPE = '#d92b25';
 const ENVELOPE_DK = '#a51b18';
 
@@ -563,24 +564,50 @@ function grapeBearing(p: Pen): void {
 // Lunar New Year: bok choy
 
 /**
- * A bok choy head: pale spoon-shaped stalks in the middle, dark leafy blades
- * fanning out around them. (x, y) is its base; s scales it. faced puts a
- * kawaii face on the pale heart.
+ * A bok choy head: a rosette of glossy green spoon-shaped leaves fanning out
+ * from a chunky pale celadon base. (x, y) is the base; s scales it. faced puts
+ * a kawaii face on the pale base.
  */
 function bokChoy(p: Pen, x: number, y: number, s: number, faced: boolean): void {
-  p.shadow(x, y + 0.4, 7 * s, 2.6 * s, 0.24);
-  const fan: [number, number, number, string][] = [
-    [-1.1, 9.4, 3.2, BOK_LEAF],
-    [1.1, 9.4, 3.2, BOK_LEAF],
-    [-0.52, 11, 3.6, BOK_LEAF_LT],
-    [0.52, 11, 3.6, BOK_LEAF_LT],
+  p.shadow(x, y + 0.6, 7.5 * s, 2.7 * s, 0.24);
+  const pivot = { x, y: y - 1.8 * s };
+  const len = 12.4 * s;
+  // outer blades first, so the bright centre blades sit on top
+  const blades: [number, string][] = [
+    [-1.2, BOK_DARK],
+    [1.2, BOK_DARK],
+    [-0.66, BOK_MID],
+    [0.66, BOK_MID],
+    [-0.24, BOK_BRIGHT],
+    [0.24, BOK_BRIGHT],
+    [0, BOK_MID],
   ];
-  for (const [a, len, w, c] of fan) leaf(p, x, y - 2.6 * s, len * s, -Math.PI / 2 + a, w * s, c);
-  p.ellipse(x - 2.5 * s, y - 5.4 * s, 2.5 * s, 5.8 * s, BOK_PALE, p.outline, -0.2);
-  p.ellipse(x + 2.5 * s, y - 5.4 * s, 2.5 * s, 5.8 * s, BOK_PALE, p.outline, 0.2);
-  p.ellipse(x, y - 6.6 * s, 2.9 * s, 7.2 * s, mix(BOK_LT, '#ffffff', 0.4));
-  p.line([{ x, y: y - 1.6 * s }, { x, y: y - 10.6 * s }], shade(BOK_PALE, -0.14), 0.6);
-  if (faced) face(p, x, y - 6.2 * s, 1.4 * s);
+  for (const [off, dark] of blades) {
+    const a = -Math.PI / 2 + off;
+    const dx = Math.cos(a);
+    const dy = Math.sin(a);
+    const cx = pivot.x + dx * len * 0.5;
+    const cy = pivot.y + dy * len * 0.5;
+    // rounded spoon blade: a chunky ellipse whose long axis follows the fan
+    p.ellipse(cx, cy, 3.6 * s, len * 0.5, sphere(p, cx - 1.2 * s, cy - 1.6 * s, len * 0.5, dark), p.outline, off);
+    // a light midrib running up the blade
+    p.line(
+      [
+        { x: pivot.x + dx * len * 0.2, y: pivot.y + dy * len * 0.2 },
+        { x: pivot.x + dx * len * 0.78, y: pivot.y + dy * len * 0.78 },
+      ],
+      BOK_RIB,
+      0.6 * s + 0.2,
+    );
+    // soft glossy highlight on the upper blade
+    const hx = pivot.x + dx * len * 0.66 - 0.9 * s;
+    const hy = pivot.y + dy * len * 0.66;
+    p.ellipse(hx, hy, 0.8 * s, len * 0.16, 'rgba(255,255,255,0.45)', null, off);
+  }
+  // chunky pale celadon base where the stalks gather
+  p.ellipse(x, y - 2.2 * s, 3.4 * s, 3 * s, sphere(p, x - 1 * s, y - 3.6 * s, 3.4 * s, BOK_CELERY));
+  p.ellipse(x - 1.4 * s, y - 3.8 * s, 1.2 * s, 0.7 * s, 'rgba(255,255,255,0.85)', null, -0.4);
+  if (faced) face(p, x, y - 2.8 * s, 1.3 * s);
 }
 
 /** Stage 0: tiny bok choy sprouts. */
@@ -1025,7 +1052,7 @@ function iconRedEnvelope(p: Pen): void {
 
 /** A bok choy head on a little shadow, with a smiling face on its heart. */
 function iconBokChoy(p: Pen): void {
-  bokChoy(p, 20, 34, 1.7, true);
+  bokChoy(p, 20, 35, 1.5, true);
   sparkle(p, 6, 9, 2, '#fffbe0');
   sparkle(p, 34, 14, 1.4, '#fffbe0');
 }

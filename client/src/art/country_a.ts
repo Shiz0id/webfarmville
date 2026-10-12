@@ -23,6 +23,7 @@ const TAU = Math.PI * 2;
 const BARN = '#c8473a';
 const TRIM = '#fbf6ea';
 const ROOF = '#6d6a72';
+const ROOF_B = '#4d6680';
 const WOOD = '#b98352';
 const WOOD_D = '#8d5c36';
 const WOOD_L = '#d9aa74';
@@ -49,8 +50,6 @@ const SANDY = '#f0d9a0';
 const ORANGE = '#f09a48';
 const CAT_STRIPE = '#c86f2c';
 const TILE = '#b8583d';
-const SILO = '#d3dde2';
-const DOME = '#7f95a6';
 const HUB = '#d9a43f';
 const BARK = '#7a5236';
 
@@ -169,6 +168,21 @@ function fallback(p: Pen): void {
 // ---------------------------------------------------------------------------
 // Classic red barn: gambrel roof, X-trim doors, a hay loft with hay poking out,
 // weathervane on the ridge and a cat sitting on the eave.
+/** Shingle texture: rows of little scallops across one roof slope, from edge a to edge b. */
+function shingleRows(p: Pen, ua: number, ub: number, a: { v: number; z: number }, b: { v: number; z: number }): void {
+  const line = shade(ROOF_B, -0.4);
+  [0.25, 0.5, 0.75].forEach((s, idx) => {
+    const v = a.v + (b.v - a.v) * s;
+    const z = a.z + (b.z - a.z) * s;
+    p.line([p.iso(ua, v, z), p.iso(ub, v, z)], line, 0.9);
+    const off = idx % 2 ? 0.12 : 0;
+    for (let u = ua + 0.12 + off; u < ub - 0.05; u += 0.24) {
+      const q = p.iso(u, v, z);
+      p.curve({ x: q.x - 2.4, y: q.y }, { x: q.x, y: q.y + 2.6 }, { x: q.x + 2.4, y: q.y }, line, 0.7);
+    }
+  });
+}
+
 function redBarn(p: Pen): void {
   const ua = 0.2;
   const ub = 2.8;
@@ -188,15 +202,20 @@ function redBarn(p: Pen): void {
   p.box(ua, v0, ub - ua, v1 - v0, ZW, { top: shade(BARN, 0.1), left: BARN, right: RS });
 
   // back roof slopes (behind the ridge, visible above it)
-  p.poly([P(ea, 0.58, ZE), P(eb, 0.58, ZE), P(eb, 1.0, ZB), P(ea, 1.0, ZB)], shade(ROOF, 0.1));
-  p.poly([P(ea, 1.0, ZB), P(eb, 1.0, ZB), P(eb, 1.5, ZR), P(ea, 1.5, ZR)], shade(ROOF, 0.26));
+  p.poly([P(ea, 0.58, ZE), P(eb, 0.58, ZE), P(eb, 1.0, ZB), P(ea, 1.0, ZB)], shade(ROOF_B, 0.1));
+  shingleRows(p, ea, eb, { v: 0.58, z: ZE }, { v: 1.0, z: ZB });
+  p.poly([P(ea, 1.0, ZB), P(eb, 1.0, ZB), P(eb, 1.5, ZR), P(ea, 1.5, ZR)], shade(ROOF_B, 0.26));
+  shingleRows(p, ea, eb, { v: 1.0, z: ZB }, { v: 1.5, z: ZR });
   // front roof slopes
-  p.poly([P(ea, 1.5, ZR), P(eb, 1.5, ZR), P(eb, 2.0, ZB), P(ea, 2.0, ZB)], shade(ROOF, 0.04));
-  p.poly([P(ea, 2.0, ZB), P(eb, 2.0, ZB), P(eb, 2.42, ZE), P(ea, 2.42, ZE)], ROOF);
-  p.line([P(ea, 1.5, ZR), P(eb, 1.5, ZR)], shade(ROOF, -0.35), 1.4);
+  p.poly([P(ea, 1.5, ZR), P(eb, 1.5, ZR), P(eb, 2.0, ZB), P(ea, 2.0, ZB)], shade(ROOF_B, 0.04));
+  shingleRows(p, ea, eb, { v: 1.5, z: ZR }, { v: 2.0, z: ZB });
+  p.poly([P(ea, 2.0, ZB), P(eb, 2.0, ZB), P(eb, 2.42, ZE), P(ea, 2.42, ZE)], ROOF_B);
+  shingleRows(p, ea, eb, { v: 2.0, z: ZB }, { v: 2.42, z: ZE });
+  p.line([P(ea, 1.5, ZR), P(eb, 1.5, ZR)], shade(ROOF_B, -0.35), 1.4);
   // trim along the eaves
-  p.line([P(ea, 2.42, ZE), P(eb, 2.42, ZE)], TRIM, 1.4);
-  p.line([P(eb, 0.58, ZE), P(eb, 2.42, ZE)], TRIM, 1.4);
+  p.line([P(ea, 0.58, ZE), P(eb, 0.58, ZE)], TRIM, 2.2);
+  p.line([P(ea, 2.42, ZE), P(eb, 2.42, ZE)], TRIM, 2.2);
+  p.line([P(eb, 0.58, ZE), P(eb, 2.42, ZE)], TRIM, 2.2);
 
   // gable end (faces bottom-right)
   p.poly([P(ub, v0, ZW), P(ub, 1.0, ZB), P(ub, 1.5, ZR), P(ub, 2.0, ZB), P(ub, v1, ZW)], RS);
@@ -254,45 +273,53 @@ function redBarn(p: Pen): void {
   p.ellipse(k.x + 1.6, k.y - 0.8, 1.6, 1, CREAM, p.outline);
 }
 
-// Tall galvanised grain silo with a dome cap and ladder, beside a small feed shed.
 function grainSilo(p: Pen): void {
-  // feed shed, tucked behind the silo
-  p.box(0.02, 0.04, 0.36, 0.38, 24, boxColors(WOOD));
-  p.gableRoof(0.02, 0.04, 0.36, 0.38, 24, 15, TILE, WOOD, 0.06);
-  const dv = (v0: number, v1: number, z0: number, z1: number) =>
-    p.poly([p.iso(0.38, v0, z0), p.iso(0.38, v1, z0), p.iso(0.38, v1, z1), p.iso(0.38, v0, z1)], shade(WOOD_D, -0.1), TRIM, 1);
-  dv(0.14, 0.28, 0, 15);
-  p.line([p.iso(0.38, 0.21, 0), p.iso(0.38, 0.21, 15)], TRIM, 0.8);
+  const CREAM_S = '#f4e3c3';
+  const TEAL_S = '#5fb7a8';
+  const TEAL_D = '#3f8f82';
+  const P = (u: number, v: number, z: number) => p.iso(u, v, z);
+  // feed shed, tucked behind and to the left
+  p.box(0.0, 0.16, 0.36, 0.36, 22, boxColors(WOOD_L));
+  p.gableRoof(0.0, 0.16, 0.36, 0.36, 22, 13, TILE, WOOD_L, 0.08);
+  p.poly([P(0.36, 0.26, 0), P(0.36, 0.42, 0), P(0.36, 0.42, 13), P(0.36, 0.26, 13)], shade(WOOD, -0.1), TRIM, 0.8);
+  p.line([P(0.36, 0.34, 0), P(0.36, 0.34, 13)], TRIM, 0.6);
 
-  // silo
-  const SH = 74;
-  const s = p.iso(0.78, 0.5);
+  // chunky cream silo with a round blue-green dome
+  const R = 14;
+  const SH = 56;
+  const s = P(0.7, 0.55, 0);
   const top = s.y - SH;
-  p.shadow(s.x, s.y + 1, 14, 6.5, 0.25);
-  p.cylinder(s.x, s.y, 10, SH, SILO);
-  // dome cap
+  p.shadow(s.x, s.y + 1, 18, 8, 0.25);
+  p.cylinder(s.x, s.y, R, SH, CREAM_S);
   shape(
     p,
     (c) => {
-      c.moveTo(s.x - 10, top);
-      c.bezierCurveTo(s.x - 10, top - 13, s.x + 10, top - 13, s.x + 10, top);
-      c.ellipse(s.x, top, 10, 5, 0, 0, Math.PI);
+      c.moveTo(s.x - R, top);
+      c.bezierCurveTo(s.x - R, top - R * 1.5, s.x + R, top - R * 1.5, s.x + R, top);
+      c.ellipse(s.x, top, R, R / 2, 0, 0, Math.PI);
       c.closePath();
     },
-    radial(p, s.x, top - 4, 10, DOME),
+    radial(p, s.x - 2, top - 6, R, TEAL_S),
   );
-  p.circle(s.x, top - 9.5, 2, shade(DOME, 0.2), p.outline);
-  // hoop bands
-  for (const yb of [14, 34, 52]) {
-    p.curve({ x: s.x - 10, y: s.y - yb }, { x: s.x, y: s.y - yb + 5 }, { x: s.x + 10, y: s.y - yb }, shade(SILO, -0.35), 1.2);
+  // little vent cap on top
+  p.ellipse(s.x, top - R * 1.1, 3.6, 2.2, CREAM_S);
+  p.circle(s.x, top - R * 1.1 - 2.5, 1.5, TEAL_D, null);
+  // painted bands
+  for (const yb of [14, 42]) {
+    p.curve({ x: s.x - R, y: s.y - yb }, { x: s.x, y: s.y - yb + 5 }, { x: s.x + R, y: s.y - yb }, TEAL_S, 2.2);
   }
-  // glint
-  p.line([{ x: s.x - 6, y: top + 12 }, { x: s.x - 6, y: s.y - 14 }], 'rgba(255,255,255,0.75)', 1.6);
-  // ladder up the front
-  const xl = s.x + 5;
-  thick(p, [{ x: xl - 1.6, y: s.y - 1 }, { x: xl - 1.6, y: top + 6 }], IRON, 1.1);
-  thick(p, [{ x: xl + 1.6, y: s.y - 1 }, { x: xl + 1.6, y: top + 6 }], IRON, 1.1);
-  for (let y = s.y - 5; y > top + 8; y -= 5) p.line([{ x: xl - 1.6, y }, { x: xl + 1.6, y }], IRON, 0.8);
+  p.line([{ x: s.x - 8, y: top + 16 }, { x: s.x - 8, y: s.y - 14 }], 'rgba(255,255,255,0.7)', 2);
+  // ladder on the front-right
+  const xl = s.x + 6;
+  thick(p, [{ x: xl - 2.4, y: s.y - 2 }, { x: xl - 2.4, y: top + 10 }], WOOD_D, 1.4);
+  thick(p, [{ x: xl + 2.4, y: s.y - 2 }, { x: xl + 2.4, y: top + 10 }], WOOD_D, 1.4);
+  for (let y = s.y - 6; y > top + 12; y -= 6) p.line([{ x: xl - 2.4, y }, { x: xl + 2.4, y }], WOOD_L, 1.2);
+  // a sunflower at the base
+  const sf = P(0.98, 0.8, 0);
+  stem(p, sf.x, sf.y, sf.x, sf.y - 14, STEM, 1.4);
+  leafAt(p, sf.x, sf.y - 5, 6, -Math.PI + 0.5, LEAF, 0.22);
+  leafAt(p, sf.x, sf.y - 8, 5, -0.5, LEAF_D, 0.22);
+  p.flower(sf.x, sf.y - 16, 4.4, SUN, '#6b4a2f');
 }
 
 // Little A-frame chicken coop with a plank ramp, a nesting window and a hen peeking out.
@@ -353,51 +380,56 @@ function wheel(p: Pen, x: number, y: number, r: number): void {
   p.circle(x - r * 0.35, y - r * 0.35, r * 0.18, 'rgba(255,255,255,0.45)', null);
 }
 
-// Rounded cherry-red vintage tractor with a big back wheel, exhaust puff and a sunflower.
+/** Chunky toy-style wheel: dark tyre, cream hubcap, no spokes. */
+function toyWheel(p: Pen, x: number, y: number, r: number): void {
+  p.circle(x, y, r, '#4a3426', p.outline);
+  p.circle(x, y, r * 0.7, '#5b4232', null);
+  p.circle(x, y, r * 0.48, '#fff1c4', p.outline);
+  p.circle(x, y, r * 0.17, SUN, null);
+  p.circle(x - r * 0.25, y - r * 0.3, r * 0.12, 'rgba(255,255,255,0.7)', null);
+}
+
+// Storybook cherry-red tractor: rounded hood, chunky tyres, a little seat and a cheerful puff.
 function vintageTractor(p: Pen): void {
-  const RED_T = CHERRY;
+  const RED_T = '#e0484c';
   const P = (u: number, v: number, z: number) => p.iso(u, v, z);
   const c = p.center;
-  p.shadow(c.x, c.y + 1, 36, 15, 0.24);
+  p.shadow(c.x, c.y + 1, 38, 16, 0.24);
 
-  // chassis and engine
-  p.box(0.22, 0.28, 1.28, 0.44, 6, IRON, 0);
-  p.box(0.82, 0.3, 0.7, 0.4, 14, boxColors(RED_T), 6);
-  // radiator grille on the front
-  p.poly([P(1.52, 0.36, 8), P(1.52, 0.64, 8), P(1.52, 0.64, 16), P(1.52, 0.36, 16)], '#2f3538', p.outline, 0.8);
-  for (let z = 10; z < 16; z += 2.5) p.line([P(1.52, 0.38, z), P(1.52, 0.62, z)], '#6b7478', 0.6);
-  // rear body and seat
-  p.box(0.3, 0.3, 0.52, 0.4, 10, boxColors(RED_T), 6);
-  p.box(0.4, 0.4, 0.22, 0.22, 4, '#4a2f1e', 16);
-  p.box(0.4, 0.4, 0.06, 0.22, 10, shade(RED_T, -0.15), 20);
+  // chocolate chassis and rounded rear body
+  p.box(0.22, 0.3, 1.3, 0.42, 6, '#7a5236', 2);
+  p.box(0.3, 0.3, 0.46, 0.42, 14, boxColors(RED_T), 6);
+  // seat cushion
+  const seat = P(0.42, 0.51, 20);
+  p.cylinder(seat.x, seat.y, 5, 4, '#5a3a24');
+  // a fat, rounded engine hood at the front
+  const hood = P(1.2, 0.51, 6);
+  p.cylinder(hood.x, hood.y, 10, 18, RED_T);
+  // cream grille with a round lamp
+  p.ellipse(hood.x + 6.5, hood.y - 9, 3.8, 4.8, CREAM);
+  p.circle(hood.x + 6.5, hood.y - 9, 1.6, '#ffe39a', null);
 
-  // exhaust pipe with a puff of smoke
-  const ex = P(1.22, 0.42, 20);
-  p.cylinder(ex.x, ex.y, 2.4, 22, '#7d8489');
-  p.circle(ex.x + 1, ex.y - 27, 3, 'rgba(255,255,255,0.82)', null);
-  p.circle(ex.x + 4, ex.y - 33, 4, 'rgba(255,255,255,0.66)', null);
-  p.circle(ex.x + 8, ex.y - 40, 5, 'rgba(255,255,255,0.45)', null);
+  // exhaust with a cheerful puff
+  const ex = P(1.1, 0.36, 24);
+  p.cylinder(ex.x, ex.y, 2.6, 16, '#b9b2a6');
+  p.circle(ex.x + 3, ex.y - 22, 4, '#ffffff', p.outline);
+  p.circle(ex.x + 8, ex.y - 31, 5, '#ffffff', p.outline);
+  p.circle(ex.x + 14, ex.y - 39, 5.5, '#ffffff', p.outline);
 
-  // a sunflower tucked into the grille
-  const sf = P(1.5, 0.5, 18);
-  const sfTop = { x: sf.x, y: sf.y - 17 };
-  stem(p, sf.x, sf.y, sfTop.x, sfTop.y, STEM, 1.3);
+  // rounded fenders and chunky tyres, no spikes
+  const bw = P(0.56, 0.78, 14);
+  const fw = P(1.5, 0.78, 9);
+  p.ellipse(bw.x, bw.y - 2, 17, 14, RED_T);
+  p.ellipse(fw.x, fw.y - 1, 11, 9, RED_T);
+  toyWheel(p, bw.x, bw.y, 13);
+  toyWheel(p, fw.x, fw.y, 9);
+
+  // a sunflower tucked on the hood
+  const sf = P(1.25, 0.7, 24);
+  const sfTop = { x: sf.x, y: sf.y - 15 };
+  stem(p, sf.x, sf.y, sfTop.x, sfTop.y, STEM, 1.4);
   leafAt(p, sf.x, sf.y - 6, 6, -Math.PI + 0.5, LEAF, 0.22);
-  leafAt(p, sf.x, sf.y - 9, 6, -0.5, LEAF_D, 0.22);
-  p.flower(sfTop.x, sfTop.y, 4.6, SUN, '#6b4a2f');
-
-  // fenders and wheels on the near side
-  const bw = P(0.56, 0.76, 13);
-  const fw = P(1.46, 0.76, 8);
-  p.ellipse(bw.x, bw.y - 1, 15, 12, RED_T);
-  p.ellipse(fw.x, fw.y - 1, 10, 8, RED_T);
-  wheel(p, bw.x, bw.y, 12);
-  wheel(p, fw.x, fw.y, 7.5);
-
-  // headlamp
-  const hl = P(1.5, 0.3, 22);
-  p.glow(hl.x, hl.y, 7, '#ffe39a', 0.5);
-  p.circle(hl.x, hl.y, 1.7, '#fff6c8', p.outline);
+  p.flower(sfTop.x, sfTop.y, 5, SUN, '#6b4a2f');
 }
 
 // Old pastel-blue pickup with a bed bursting with flowers.
@@ -498,63 +530,81 @@ function waterTower(p: Pen): void {
   }
 }
 
-// Metal farm windpump: lattice tower, spinning fan wheel, tail vane and a water trough.
+// Warm weathered-wood windpump: chunky tapered legs, a six-blade teal fan, a heart vane and a trough with a bird.
 function windPump(p: Pen): void {
+  const TEAL_M = '#5fb7a8';
   const P = (u: number, v: number, z: number) => p.iso(u, v, z);
   const TOP = 76;
   const c = p.center;
-  p.shadow(c.x, c.y + 1, 26, 11, 0.24);
+  p.shadow(c.x, c.y + 1, 28, 12, 0.24);
 
   const ground = [
-    [0.2, 0.2],
-    [0.8, 0.2],
-    [0.2, 0.8],
-    [0.8, 0.8],
+    [0.18, 0.18],
+    [0.82, 0.18],
+    [0.18, 0.82],
+    [0.82, 0.82],
   ];
-  const top = (g: number[]) => [0.5 + (g[0] - 0.5) * 0.25, 0.5 + (g[1] - 0.5) * 0.25];
+  const topOf = (g: number[]) => [0.5 + (g[0] - 0.5) * 0.3, 0.5 + (g[1] - 0.5) * 0.3];
   const at = (i: number, f: number) => {
     const g = ground[i];
-    const t = top(g);
+    const t = topOf(g);
     return P(g[0] + (t[0] - g[0]) * f, g[1] + (t[1] - g[1]) * f, TOP * f);
   };
-  // back legs and lattice
-  for (const i of [0, 1, 2]) thick(p, [P(ground[i][0], ground[i][1], 0), at(i, 1)], IRON, 2);
-  for (const f of [0.3, 0.6, 0.85]) {
+  // back legs, then chunky plank bands around the tower
+  for (const i of [0, 1, 2]) thick(p, [P(ground[i][0], ground[i][1], 0), at(i, 1)], WOOD_D, 4.5);
+  for (const f of [0.3, 0.6]) {
     for (const [a, b] of [
       [0, 1],
       [1, 3],
       [3, 2],
       [2, 0],
     ]) {
-      p.line([at(a, f), at(b, f)], IRON, 0.8);
+      thick(p, [at(a, f), at(b, f)], WOOD_L, 2);
     }
   }
-  // platform
-  p.box(0.38, 0.38, 0.24, 0.24, 3, WOOD_L, TOP);
-  // trough (front, with water in it)
-  p.box(0.2, 0.66, 0.6, 0.22, 8, { top: WATER, left: WOOD_D, right: shade(WOOD_D, -0.2) });
-  // tail vane behind the wheel
+  p.box(0.36, 0.36, 0.28, 0.28, 4, boxColors(WOOD_L), TOP);
+  thick(p, [P(0.82, 0.82, 0), at(3, 1)], WOOD_D, 4.5);
+
+  // tail vane painted teal with a pink heart
   const h = P(0.5, 0.5, 88);
   p.poly(
     [
       { x: h.x + 3, y: h.y - 2 },
       { x: h.x + 24, y: h.y + 3 },
-      { x: h.x + 22, y: h.y + 13 },
-      { x: h.x + 3, y: h.y + 6 },
+      { x: h.x + 22, y: h.y + 14 },
+      { x: h.x + 3, y: h.y + 7 },
     ],
-    '#c94a3a',
+    TEAL_M,
+    p.outline,
+    1,
   );
-  // fan wheel
-  p.circle(h.x, h.y, 17, rgba('#ffffff', 0.18), IRON);
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * TAU;
-    p.line([{ x: h.x, y: h.y }, { x: h.x + Math.cos(a) * 16, y: h.y + Math.sin(a) * 16 }], IRON, 1);
+  p.heart(h.x + 13, h.y + 6, 3.4, PINK);
+
+  // trough with water, and a little bird on the rim
+  p.box(0.12, 0.6, 0.7, 0.28, 9, { top: WATER, left: WOOD, right: shade(WOOD, -0.22) });
+  const b = P(0.4, 0.74, 9);
+  p.ellipse(b.x, b.y - 4, 4, 3, '#7fb9e6');
+  p.circle(b.x + 3, b.y - 8, 2.6, '#7fb9e6');
+  p.poly(
+    [
+      { x: b.x + 5.2, y: b.y - 8.6 },
+      { x: b.x + 7.6, y: b.y - 7.6 },
+      { x: b.x + 5.2, y: b.y - 6.8 },
+    ],
+    '#ffb347',
+    p.outline,
+    0.6,
+  );
+  p.circle(b.x + 3.6, b.y - 8.8, 0.7, '#2b1d14', null);
+  p.ellipse(b.x - 0.8, b.y - 4, 1.8, 1.2, '#5a9ad0', null);
+
+  // six thick, rounded fan blades and a cream hub
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * TAU + 0.3;
+    const tip = { x: h.x + Math.cos(a) * 17, y: h.y + Math.sin(a) * 17 };
+    thick(p, [{ x: h.x, y: h.y }, tip], TEAL_M, 4.5);
   }
-  p.circle(h.x, h.y, 3, '#c9d4da', IRON);
-  // legs of the front, then the rest of the tower
-  for (const i of [3]) thick(p, [P(ground[i][0], ground[i][1], 0), at(i, 1)], IRON, 2);
-  // a drip from the trough tap
-  p.ellipse(P(0.5, 0.9, 6).x, P(0.5, 0.9, 6).y, 1.6, 1.1, WATER_D, null);
+  p.circle(h.x, h.y, 4.6, '#fff1c4', p.outline);
 }
 
 // Little covered bridge over a stream: red walls with lattice windows, an arched
@@ -604,63 +654,102 @@ function coveredBridge(p: Pen): void {
   p.poly([{ x: lan2.x - 1.8, y: lan2.y - 2.6 }, { x: lan2.x + 1.8, y: lan2.y - 2.6 }, { x: lan2.x + 1.8, y: lan2.y + 1.8 }, { x: lan2.x - 1.8, y: lan2.y + 1.8 }], GLOW, IRON, 0.7);
 }
 
-// Colourful playground slide with a ladder up the back tower.
+// Pastel playground tower: chunky box posts, a deck with rails, a roof with a flag, a wide slide.
 function playgroundSlide(p: Pen): void {
+  const BLUE_P = '#9fd3f5';
+  const PINK_P = '#ffb3c6';
+  const YEL_P = '#ffe27a';
+  const RED_P = '#ff8a8a';
+  const MINT_P = '#b8f0d9';
   const P = (u: number, v: number, z: number) => p.iso(u, v, z);
-  const PLAT = '#ff8a5c';
   const c = p.center;
-  p.shadow(c.x, c.y + 1, 26, 11, 0.24);
-  // tower posts
+  p.shadow(c.x, c.y + 1, 30, 12, 0.24);
+
+  // chunky tower posts
   for (const [u, v] of [
-    [0.12, 0.12],
-    [0.46, 0.12],
-    [0.12, 0.46],
-    [0.46, 0.46],
+    [0.06, 0.06],
+    [0.42, 0.06],
+    [0.06, 0.42],
+    [0.42, 0.42],
   ]) {
-    thick(p, [P(u, v, 0), P(u, v, 38)], '#4aa6ff', 2.2);
+    p.box(u, v, 0.08, 0.08, 40, boxColors(BLUE_P));
   }
-  // platform and railings
-  p.box(0.08, 0.08, 0.44, 0.44, 5, boxColors(PLAT), 38);
-  for (const pts of [
-    [P(0.08, 0.52, 46), P(0.52, 0.52, 46)],
-    [P(0.52, 0.08, 46), P(0.52, 0.52, 46)],
-  ]) {
-    thick(p, pts, '#4aa6ff', 1.6);
-  }
-  // ladder on the front-left face
-  for (const u of [0.18, 0.3]) thick(p, [P(u, 0.6, 0), P(u, 0.6, 38)], '#e0433a', 1.6);
-  for (let z = 4; z < 38; z += 6) p.line([P(0.18, 0.6, z), P(0.3, 0.6, z)], '#e0433a', 1);
-  // chute
-  const top0 = P(0.5, 0.26, 40);
-  const top1 = P(0.5, 0.42, 40);
-  const end0 = P(0.98, 0.26, 0);
-  const end1 = P(0.98, 0.42, 0);
-  p.poly([top0, top1, end1, end0], '#ffd84a');
-  p.line([top0, end0], '#e0433a', 1.6);
-  p.line([top1, end1], '#e0433a', 1.6);
-  p.circle(end0.x, end0.y - 1, 1.2, '#e0433a', null);
+  // deck and rails
+  p.box(0.02, 0.02, 0.5, 0.5, 6, boxColors(PINK_P), 40);
+  p.box(0.02, 0.46, 0.5, 0.06, 7, boxColors(YEL_P), 46);
+  p.box(0.46, 0.02, 0.06, 0.5, 7, boxColors(YEL_P), 46);
+  // little roof, with a flag on top
+  p.hipRoof(0.0, 0.0, 0.56, 0.56, 53, 14, RED_P);
+  const apex = P(0.28, 0.28, 67);
+  p.line([apex, { x: apex.x, y: apex.y - 16 }], IRON, 1.2);
+  p.poly(
+    [
+      { x: apex.x, y: apex.y - 16 },
+      { x: apex.x + 11, y: apex.y - 13 },
+      { x: apex.x, y: apex.y - 9 },
+    ],
+    '#ff7a9c',
+    p.outline,
+    0.7,
+  );
+  p.circle(apex.x, apex.y - 16, 1.6, YEL_P, p.outline);
+  // ladder on the front, with chunky rungs
+  for (const u of [0.14, 0.32]) p.box(u, 0.66, 0.05, 0.05, 40, boxColors(RED_P));
+  for (let z = 6; z < 38; z += 7) p.box(0.14, 0.66, 0.23, 0.05, 2.2, boxColors(YEL_P), z);
+  // wide rounded chute with side rails
+  const t0 = P(0.52, 0.14, 40);
+  const t1 = P(0.52, 0.42, 40);
+  const e0 = P(1.0, 0.14, 0);
+  const e1 = P(1.0, 0.42, 0);
+  p.poly([t0, t1, e1, e0], MINT_P);
+  thick(p, [t0, e0], PINK_P, 3);
+  thick(p, [t1, e1], PINK_P, 3);
+  p.circle(e0.x, e0.y - 1, 2.6, RED_P);
+  p.circle(e1.x, e1.y - 1, 2.6, RED_P);
 }
 
-// Red and yellow seesaw balanced on a fulcrum.
+// Chunky pastel seesaw: a thick painted plank, round seats and handles, a sturdy pivot and a tiny bunny.
 function seesaw(p: Pen): void {
+  const YEL = '#ffe27a';
+  const CORAL = '#ff9c8a';
+  const PINK_S = '#ffb3c6';
+  const MINT_S = '#b8f0d9';
   const P = (u: number, v: number, z: number) => p.iso(u, v, z);
   const c = p.center;
-  p.shadow(c.x, c.y + 1, 40, 14, 0.24);
-  // fulcrum
-  p.poly([P(0.92, 0.5, 0), P(1.08, 0.5, 0), P(1.0, 0.5, 18)], '#e04b3a');
-  p.poly([P(0.92, 0.5, 0), P(1.0, 0.5, 0), P(1.0, 0.5, 18)], shade('#e04b3a', -0.2), null);
-  // board: low end on the left, high end on the right
-  const tl = P(0.2, 0.3, 11);
-  const tr = P(1.8, 0.3, 37);
-  const br = P(1.8, 0.7, 37);
-  const bl = P(0.2, 0.7, 11);
-  p.poly([bl, br, P(1.8, 0.7, 32), P(0.2, 0.7, 6)], shade('#ffd84a', -0.22));
-  p.poly([tl, tr, br, bl], '#ffd84a');
-  // handles and seats at each end
-  p.circle(tl.x + 2, tl.y - 4, 2.2, '#e0433a', p.outline);
-  p.circle(tr.x - 2, tr.y - 4, 2.2, '#e0433a', p.outline);
-  p.poly([P(0.12, 0.3, 11), P(0.28, 0.3, 11), P(0.28, 0.7, 11), P(0.12, 0.7, 11)], '#e0433a', p.outline, 0.8);
-  p.poly([P(1.72, 0.3, 37), P(1.88, 0.3, 37), P(1.88, 0.7, 37), P(1.72, 0.7, 37)], '#e0433a', p.outline, 0.8);
+  p.shadow(c.x, c.y + 1, 42, 15, 0.24);
+
+  // sturdy base and pivot
+  const base = P(1, 0.5, 0);
+  p.cylinder(base.x, base.y, 14, 4, shade(MINT_S, -0.1));
+  const pv = P(1, 0.5, 4);
+  p.cylinder(pv.x, pv.y, 8, 14, CORAL);
+
+  // thick tilted plank: low on the left, high on the right
+  const zt = (u: number) => 24 + (u - 1) * (24 / 1.56);
+  const T = (u: number, v: number) => P(u, v, zt(u));
+  const Bt = (u: number, v: number) => P(u, v, zt(u) - 6);
+  p.poly([T(0.22, 0.3), T(1.78, 0.3), T(1.78, 0.7), T(0.22, 0.7)], YEL);
+  p.poly([T(0.22, 0.7), T(1.78, 0.7), Bt(1.78, 0.7), Bt(0.22, 0.7)], shade(YEL, -0.22));
+  p.poly([T(1.78, 0.3), T(1.78, 0.7), Bt(1.78, 0.7), Bt(1.78, 0.3)], shade(YEL, -0.35));
+
+  // round seats with handles at both ends
+  for (const u of [0.42, 1.58]) {
+    const s = T(u, 0.5);
+    p.cylinder(s.x, s.y, 6, 3, PINK_S);
+    thick(p, [{ x: s.x, y: s.y - 3 }, { x: s.x, y: s.y - 16 }], CORAL, 2.2);
+    p.circle(s.x, s.y - 17, 2.6, MINT_S);
+  }
+
+  // a tiny bunny sitting on the high end
+  const b = T(1.56, 0.36);
+  p.ellipse(b.x, b.y - 6, 5, 6, '#fff6e6');
+  p.circle(b.x + 0.5, b.y - 13, 4, '#fff6e6');
+  p.ellipse(b.x - 1.8, b.y - 21, 1.4, 4.5, '#fff6e6');
+  p.ellipse(b.x + 2.6, b.y - 21, 1.4, 4.5, '#fff6e6');
+  p.ellipse(b.x + 2.6, b.y - 21, 0.7, 3, '#ffb3c6', null);
+  kawaiiFace(p, b.x + 0.5, b.y - 13, 4);
+  p.ellipse(b.x - 2, b.y - 1, 2, 1.2, '#fff6e6');
+  p.circle(b.x - 5, b.y - 4, 1.6, '#ffffff');
 }
 
 // Wooden sandbox with a sandcastle, a bucket and a spade stuck in the sand.
@@ -1090,7 +1179,7 @@ function fishingDock(p: Pen): void {
 
 const TABLE: Record<string, [number, Painter]> = {
   red_barn: [118, redBarn],
-  grain_silo: [84, grainSilo],
+  grain_silo: [76, grainSilo],
   chicken_coop: [52, chickenCoop],
   vintage_tractor: [66, vintageTractor],
   flower_truck: [52, flowerTruck],
@@ -1099,7 +1188,7 @@ const TABLE: Record<string, [number, Painter]> = {
   covered_bridge: [62, coveredBridge],
   tire_swing: [84, tireSwing],
   treehouse: [132, treehouse],
-  playground_slide: [58, playgroundSlide],
+  playground_slide: [80, playgroundSlide],
   seesaw: [56, seesaw],
   sandbox: [42, sandbox],
   little_carousel: [124, littleCarousel],
