@@ -10,6 +10,7 @@ import {
   dailyBonus,
   levelForXp,
   levelUpReward,
+  GIFT_LEVEL_FROM,
   nextExpansion,
 } from '../content/progression';
 import { MYSTERY_CHANCE, MYSTERY_GIFT, ensureOrders, generateOrder, nextRandom, rollMysteryGift } from '../content/orders';
@@ -91,6 +92,7 @@ export function addXp(state: FarmState, xp: number, events: GameEvent[], at?: { 
   while (state.level < level) {
     state.level++;
     state.coins += levelUpReward(state.level);
+    if (state.level >= GIFT_LEVEL_FROM) addItem(state, MYSTERY_GIFT, 1);
     events.push({ type: 'levelUp', level: state.level });
   }
 }

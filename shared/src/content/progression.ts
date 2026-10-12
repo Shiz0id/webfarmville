@@ -6,7 +6,7 @@ export const MAX_LEVEL = 50;
 export function xpForLevel(level: number): number {
   if (level <= 1) return 0;
   const n = level - 1;
-  return Math.round(25 * n + 12 * n ** 1.85);
+  return Math.round(25 * n + 12 * n ** 1.85 + 3 * Math.max(0, n - 2) ** 3.6);
 }
 
 export function levelForXp(xp: number): number {
@@ -15,9 +15,18 @@ export function levelForXp(xp: number): number {
   return level;
 }
 
+/** Farms saved under an older, gentler level curve keep their level: XP is lifted to the level's floor. */
+export function keepLevel(state: { level: number; xp: number }): void {
+  const floor = xpForLevel(state.level);
+  if (state.xp < floor) state.xp = floor;
+}
+
 export function levelUpReward(level: number): number {
   return 50 * level;
 }
+
+/** Past the last market unlock, every level up also brings a mystery gift. */
+export const GIFT_LEVEL_FROM = 17;
 
 export interface Expansion {
   size: number;
@@ -30,9 +39,9 @@ export const MAX_SIZE = 30;
 
 export const EXPANSIONS: Expansion[] = [
   { size: 18, cost: 2000, level: 4 },
-  { size: 22, cost: 6000, level: 8 },
-  { size: 26, cost: 15000, level: 12 },
-  { size: 30, cost: 35000, level: 16 },
+  { size: 22, cost: 8000, level: 8 },
+  { size: 26, cost: 25000, level: 12 },
+  { size: 30, cost: 60000, level: 16 },
 ];
 
 export function nextExpansion(size: number): Expansion | undefined {

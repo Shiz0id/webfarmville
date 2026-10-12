@@ -106,7 +106,8 @@ describe('farming loop', () => {
     expect(cropStatus(p, T0 + 1000).stage).toBe('sprout');
     expect(cropStatus(p, T0 + 120_000).stage).toBe('growing');
     expect(cropStatus(p, T0 + 180_000).stage).toBe('ready');
-    const withered = T0 + 180_000 + 2 * 3600_000 + 1;
+    expect(cropStatus(p, T0 + 180_000 + 7 * 3600_000).stage).toBe('ready');
+    const withered = T0 + 180_000 + 8 * 3600_000 + 1;
     expect(cropStatus(p, withered).stage).toBe('withered');
     expect(() => applyAction(s, { type: 'harvest', id: p.id }, { now: withered })).toThrow('withered');
     s = applyAction(s, { type: 'clearPlot', id: p.id }, { now: withered }).state;

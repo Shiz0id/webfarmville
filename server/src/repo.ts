@@ -1,6 +1,6 @@
 // Data access helpers shared by the route modules.
 
-import { utcDay, type FarmState } from '@farm/shared';
+import { keepLevel, utcDay, type FarmState } from '@farm/shared';
 import type { DB } from './db';
 import { HttpError } from './errors';
 
@@ -38,7 +38,9 @@ export function loadFarm(db: DB, userId: number): FarmRow {
     | { state: string; rev: number }
     | undefined;
   if (!row) throw new HttpError(404, 'Farm not found');
-  return { state: JSON.parse(row.state) as FarmState, rev: row.rev };
+  const state = JSON.parse(row.state) as FarmState;
+  keepLevel(state);
+  return { state, rev: row.rev };
 }
 
 export function saveFarm(db: DB, userId: number, state: FarmState, now: number): number {

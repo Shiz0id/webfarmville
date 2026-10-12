@@ -10,6 +10,7 @@ import { CORE_DECORATIONS } from './decorations';
 import { HORTICULTURE_DECORATIONS } from './decorations2';
 import { DISH_LIST } from './cooking';
 import { ITEMS } from './items';
+import { keepLevel } from './progression';
 import type { FarmState, Order } from '../types';
 
 export const ORDER_SLOTS = 3;
@@ -100,6 +101,7 @@ export function ensureOrders(state: FarmState): void {
   if (!state.ribbons || typeof state.ribbons !== 'object') state.ribbons = {};
   if (!state.treats || typeof state.treats !== 'object') state.treats = { day: '', count: 0 };
   if (!state.mama || typeof state.mama !== 'object') state.mama = { day: '' };
+  keepLevel(state);
 }
 
 /** A random decoration from a mystery gift, weighted toward nicer things. */

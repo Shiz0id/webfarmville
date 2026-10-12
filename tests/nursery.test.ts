@@ -57,7 +57,7 @@ describe('baby animals', () => {
     const s0 = farmer();
     const { s, obj } = buyBaby(s0);
     expect(s.coins).toBe(s0.coins - babyPrice(ANIMALS.cow));
-    expect(babyPrice(ANIMALS.cow)).toBe(150);
+    expect(babyPrice(ANIMALS.cow)).toBe(ANIMALS.cow.cost / 2);
     expect(isBaby(obj, T0)).toBe(true);
     expect(obj.grownAt).toBe(T0 + babyGrowMs(ANIMALS.cow));
     expect(producerStatus(obj, T0).ready).toBe(false);

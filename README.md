@@ -136,6 +136,10 @@ titles, leafy tabs, the mint and sunshine palette) takes its look from
 [Animal Island UI](https://github.com/guokaigdg/animal-island-ui) (MIT), restyled in plain CSS.
 Run `node scripts/ui-tour.mjs <dir> [WxH]` to screenshot the whole kit at any screen size.
 
+To check pacing, `npx tsx scripts/balance-sim.ts [days] [casual|keen]` plays a simulated farmer through the real
+rules (four or twelve visits a day) and reports when each level arrives, where the coins come from and which quests
+stall.
+
 Requires **Node 22.13+**. Node's built-in SQLite prints an "experimental" warning, which is harmless.
 
 ## Getting started

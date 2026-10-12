@@ -39,6 +39,9 @@ import {
   type DecoCategory,
   type EventDef,
   type ItemCategory,
+  GIFT_LEVEL_FROM,
+  MYSTERY_GIFT,
+  levelUpReward,
 } from '@farm/shared';
 import { artURL, iconURL } from '../art';
 import type { Store } from '../store';
@@ -1160,8 +1163,18 @@ export function showLevelUp(level: number): void {
       'div',
       { class: 'levelup' },
       h('div', { class: 'big' }, `Level ${level}`),
-      h('div', { style: { fontWeight: '900', marginTop: '6px' } }, 'Bonus: ', coin(), fmtNum(50 * level)),
+      h(
+        'div',
+        { style: { fontWeight: '900', marginTop: '6px' } },
+        'Bonus: ',
+        coin(),
+        fmtNum(levelUpReward(level)),
+        level >= GIFT_LEVEL_FROM ? h('span', null, ' + ', h('img', { class: 'ico', src: iconURL(MYSTERY_GIFT), alt: '' }), ' Mystery Gift') : null,
+      ),
       unlocks.length ? h('div', { class: 'section-title', style: { justifyContent: 'center' } }, 'New in the market') : null,
+      !unlocks.length && level >= GIFT_LEVEL_FROM
+        ? h('div', { class: 'muted small center' }, 'You’ve unlocked the whole market! Every new level brings a mystery gift to unwrap in your barn.')
+        : null,
       h('div', { class: 'unlocks' }, ...unlocks.slice(0, 12).map((u) => h('div', null, h('img', { src: u.img }), h('div', null, u.name)))),
       exp && exp.level === level ? h('div', { style: { fontWeight: '900', margin: '6px 0' } }, `🗺️ You can now expand to ${exp.size}×${exp.size}!`) : null,
       h('button', { class: 'btn green big', onclick: () => m.close() }, 'Hooray!'),

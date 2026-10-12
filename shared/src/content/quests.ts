@@ -478,8 +478,8 @@ export const QUEST_LIST: QuestDef[] = [
   },
   // Farmers' market
   {
-    id: 'market_day',
-    title: 'Market Day!',
+    id: 'stall_day',
+    title: "Farmers' Market",
     text: "Oink! Folks in town would pay extra for your goodies! Set up a Farmers' Market Stall and put something tasty on it.",
     giver: 'Penny',
     level: 4,
