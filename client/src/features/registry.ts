@@ -35,3 +35,10 @@ export const HUD_BUTTONS: HudButton[] = [];
 export function addHudButton(button: HudButton): void {
   if (!HUD_BUTTONS.some((b) => b.id === button.id)) HUD_BUTTONS.push(button);
 }
+
+/** Extra pills for the top-left stats bar (e.g. the weather). */
+export const HUD_PILLS: HTMLElement[] = [];
+
+export function addHudPill(el: HTMLElement): void {
+  if (!HUD_PILLS.includes(el)) HUD_PILLS.push(el);
+}

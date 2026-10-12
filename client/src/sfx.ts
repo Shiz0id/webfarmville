@@ -193,6 +193,82 @@ export const sfx = {
   },
 };
 
+/** A distant rumble with a soft crack up front. */
+export function thunder(): void {
+  noise(0.25, { vol: 0.08, freq: 900, q: 0.6, slide: 0.4 });
+  const a = ctx();
+  if (!a || !audioSettings.sfx) return;
+  const t = a.currentTime;
+  const src = a.createBufferSource();
+  src.buffer = noiseBuffer(a, 3.2);
+  const lp = a.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(220, t);
+  lp.frequency.exponentialRampToValueAtTime(60, t + 3);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.7, t + 0.15);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 3);
+  src.connect(lp).connect(g).connect(sfxBus);
+  src.start(t + 0.08);
+  src.stop(t + 3.2);
+}
+
+export type AmbientSound = 'none' | 'rain' | 'storm' | 'wind';
+let ambient: { kind: AmbientSound; stop: () => void } | null = null;
+
+/** A looping weather bed (rain patter or wind). Safe to call often. */
+export function setAmbient(kind: AmbientSound): void {
+  const want = audioSettings.sfx ? kind : 'none';
+  if ((ambient?.kind ?? 'none') === want) return;
+  ambient?.stop();
+  ambient = null;
+  const a = ac; // Never create the context here: wait for a user gesture.
+  if (!a || want === 'none' || a.state !== 'running') return;
+  const t = a.currentTime;
+  const src = a.createBufferSource();
+  src.buffer = noiseBuffer(a, 2);
+  src.loop = true;
+  const f1 = a.createBiquadFilter();
+  const f2 = a.createBiquadFilter();
+  const g = a.createGain();
+  const vol = want === 'storm' ? 0.16 : want === 'rain' ? 0.1 : 0.07;
+  if (want === 'wind') {
+    f1.type = 'bandpass';
+    f1.frequency.value = 500;
+    f1.Q.value = 0.8;
+    f2.type = 'lowpass';
+    f2.frequency.value = 1400;
+    // Gusts: a slow wobble in volume and pitch.
+    const lfo = a.createOscillator();
+    lfo.frequency.value = 0.13;
+    const depth = a.createGain();
+    depth.gain.value = 260;
+    lfo.connect(depth).connect(f1.frequency);
+    lfo.start();
+    src.addEventListener('ended', () => lfo.stop());
+  } else {
+    f1.type = 'highpass';
+    f1.frequency.value = want === 'storm' ? 500 : 900;
+    f2.type = 'lowpass';
+    f2.frequency.value = 5200;
+  }
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 2);
+  src.connect(f1).connect(f2).connect(g).connect(sfxBus);
+  src.start(t);
+  ambient = {
+    kind: want,
+    stop: () => {
+      const n = a.currentTime;
+      g.gain.cancelScheduledValues(n);
+      g.gain.setValueAtTime(g.gain.value, n);
+      g.gain.exponentialRampToValueAtTime(0.0001, n + 1.2);
+      src.stop(n + 1.3);
+    },
+  };
+}
+
 let noiseCache: AudioBuffer | null = null;
 function noiseBuffer(a: AudioContext, seconds: number): AudioBuffer {
   if (noiseCache && noiseCache.duration >= seconds) return noiseCache;

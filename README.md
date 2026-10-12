@@ -20,6 +20,19 @@ All of the art is drawn in code at startup, so there are no image assets to down
   home-cooked meal. You can visit her kitchen garden too.
 - **Villager order board**: deliver produce, goods and dishes to the villagers for bonus coins and thank-you
   decorations.
+- **Meadow Pond fishing**: cast, wait through the nibbles, hook on the bite and play a reel mini-game. There are
+  27 fish (6 only during festivals) that change with the season and the time of day.
+- **Critter catching**: butterflies, beetles and fireflies wander onto the farm; swing a net to catch one. There
+  are 23 critters. The Nature Journal tracks every species and gives keepsake decorations at milestones.
+- **Kitty Corner** (in the spirit of Neko Atsume): fill a food bowl and neighborhood cats drop by to nap and play
+  on your goodies. Collect their gifts and pet them to make them purr and earn hearts. At 10 hearts you can adopt
+  a cat, and it roams your farm. Rare cats only come for fancy food and their favorite goodie.
+- **Weather**: every farm shares a daily sky with a forecast.
+  - Rain and thunderstorms water crops so they grow 25% faster, and rare fish rise.
+  - Wind shakes extra fruit from the trees.
+  - Snow days make cooking worth more XP.
+  - Rainbows add +1 to every harvest.
+  - Cats shelter on your goodies when it's wet or snowy.
 - **Mystery gifts**: surprise presents that drop while you farm and unwrap into decorations.
 - **About 320 decorations** in six collections:
   - *core*: flowers, plants, fences, paths, furniture, lights, water and whimsy
@@ -119,6 +132,11 @@ There are also two helper scripts:
   to preview an event's look, music and visitors any time of year.
 
 ## Adding content
+
+Game mechanics can live in their own feature module. Add a file under `shared/src/features/` that calls
+`registerFeature` with its actions, and use module augmentation on `ExtraActions` and `ExtraEvents` for its
+types. Then add a matching `client/src/features/*.ts` with `init(ctx)` for HUD buttons, panels and scene
+effects. The reducer passes each feature the same coin, XP and item helpers that it uses itself.
 
 Content lives in `shared/src/content/`. Add a crop, animal, building, recipe, decoration or quest there, then
 paint its art in the matching `client/src/art/*.ts` module. `client/src/art/manifest.ts` lists the texture keys

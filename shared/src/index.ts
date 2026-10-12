@@ -16,6 +16,7 @@ export * from './content/villagers';
 export * from './content/eventFeatures';
 export * from './content/cooking';
 export * from './content/nature';
+export * from './content/weather';
 export * from './content/kitties';
 export * from './logic/catalog';
 export * from './logic/status';

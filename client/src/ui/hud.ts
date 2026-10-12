@@ -7,7 +7,7 @@ import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
 import { openKitchen, readyDishes } from './cooking';
 import { fmtNum, h } from '../util';
-import { HUD_BUTTONS } from '../features/registry';
+import { HUD_BUTTONS, HUD_PILLS } from '../features/registry';
 import {
   claimableQuests,
   dailyAvailable,
@@ -84,6 +84,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     coinPill,
     h('div', { class: 'pill', title: 'Farm charm' }, h('img', { class: 'ico', src: iconURL('charm') }), charm, stars),
     ...[...currencyPills.values()].map((c) => c.pill),
+    ...HUD_PILLS,
   );
 
   // --- top-right buttons ---

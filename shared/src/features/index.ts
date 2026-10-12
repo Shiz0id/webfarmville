@@ -2,3 +2,4 @@
 // Add one line per feature.
 export * from './nature';
 export * from './kitties';
+export * from './weather';

@@ -6,6 +6,7 @@ import {
   DECORATIONS,
   MAX_SIZE,
   TREES,
+  WEATHER,
   buildingStatus,
   canPlace,
   cropStatus,
@@ -15,6 +16,7 @@ import {
   objectAt,
   placeable,
   producerStatus,
+  weatherAt,
   type FarmObject,
   type FarmState,
   type GameEvent,
@@ -72,6 +74,8 @@ interface RenderSpec {
   ready?: boolean;
   smoke?: boolean;
   glow?: boolean;
+  /** Tint the base image (e.g. rain-darkened soil). */
+  tint?: number;
 }
 
 /** Decorations that bob gently in the air. */
@@ -453,6 +457,7 @@ export class FarmScene extends Phaser.Scene {
       case 'plot': {
         const st = cropStatus(obj, now);
         const spec: RenderSpec = { tex: obj.fertilized ? 'ground:plot_fert' : 'ground:plot', flat: true };
+        if (obj.watered && obj.crop && WEATHER[weatherAt(now)].wet) spec.tint = 0xa9b4c8;
         if (st.stage === 'sprout') spec.overlay = `crop:${obj.crop}:0`;
         else if (st.stage === 'growing') spec.overlay = `crop:${obj.crop}:1`;
         else if (st.stage === 'ready') {
@@ -537,6 +542,7 @@ export class FarmScene extends Phaser.Scene {
         flip,
         moving,
         night,
+        spec.tint,
       ].join('|');
       const existing = this.sprites.get(obj.id);
       if (existing?.sig === sig) continue;
@@ -565,6 +571,7 @@ export class FarmScene extends Phaser.Scene {
     main.setFlipX(flip);
     main.setDepth(spec.flat ? DEPTH_FLAT + obj.x + obj.y : this.depthFor(obj.x, obj.y, w, h));
     if (moving) main.setAlpha(0.35);
+    if (spec.tint !== undefined) main.setTint(spec.tint);
     const entry: ObjSprite = { sig, main, kind: obj.kind, ready: !!spec.ready };
 
     if (spec.overlay) {

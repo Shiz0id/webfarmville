@@ -15,6 +15,7 @@ import {
   type NatureKind,
 } from '../content/nature';
 import { EVENTS, isEventActive } from '../content/events';
+import { weatherRarityBoost } from '../content/weather';
 import { registerFeature, type FeatureKit } from '../logic/features';
 import { GameError, type ActionContext, type FarmState, type GameEvent } from '../types';
 
@@ -103,7 +104,8 @@ function cleanScore(score: unknown): number {
 /** Pick a species, weighted by rarity (`score` is the assumed skill, which tilts toward rarer finds). */
 function roll(state: FarmState, kind: NatureKind, score: number, hour: number, ctx: ActionContext, rand: () => number): CritterDef {
   const pool = availableCritters(kind, hour, ctx);
-  const weights = pool.map((c) => RARITY_WEIGHT[c.rarity] * (1 + (score / 100) * (c.rarity - 1) * 0.5));
+  const wet = kind === 'fish' ? (r: number) => weatherRarityBoost(ctx.now, r) : () => 1;
+  const weights = pool.map((c) => RARITY_WEIGHT[c.rarity] * (1 + (score / 100) * (c.rarity - 1) * 0.5) * wet(c.rarity));
   let r = rand() * weights.reduce((a, b) => a + b, 0);
   for (let i = 0; i < pool.length; i++) {
     r -= weights[i];

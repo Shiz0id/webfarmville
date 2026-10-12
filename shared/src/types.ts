@@ -13,6 +13,8 @@ export interface PlotObject extends Placed {
   plantedAt?: number;
   /** A neighbor fertilized this crop: it grew faster and yields +1. */
   fertilized?: boolean;
+  /** Rain has already watered this crop. */
+  watered?: boolean;
 }
 
 export interface ProducerObject extends Placed {
