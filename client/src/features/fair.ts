@@ -30,6 +30,7 @@ import { portrait } from '../ui/villager';
 import { fmtNum, h, nameOf } from '../util';
 import type { Store } from '../store';
 import { addHudButton, type FeatureContext } from './registry';
+import { helperBoothRows } from './helpers';
 
 let S: Store;
 
@@ -179,6 +180,8 @@ function openFair(tab: 'contests' | 'booth' = 'contests'): void {
           h('button', { class: `btn small${can ? ' green' : ''}`, disabled: !can, onclick: () => S.dispatch({ type: 'buyFairPrize', deco: p.deco }) }, ticketImg(), ` ${p.tickets}`),
         );
       }),
+      // Helpers (helpers.ts) are on offer too.
+      ...helperBoothRows(ticketImg),
       h('div', { class: 'muted small center fa-note' }, '🏆 Win all four contests at one fair to earn the Grand Champion Trophy and 50 bonus tickets!'),
     );
   render();

@@ -20,6 +20,25 @@ const urls = new Map<string, string>();
 const painted = new Set<string>();
 /** Art to borrow for a key nobody has painted yet (same footprint), optionally recoloured. */
 const fallbacks = new Map<string, { from: string; hue?: string }>();
+/** Emoji to draw for an icon nobody has painted yet. */
+const emojiIcons = new Map<string, string>();
+
+/** Until icon `key` is painted, draw it as this emoji (in <img> tags and on the farm alike). */
+export function emojiArt(key: string, emoji: string): void {
+  emojiIcons.set(key, emoji);
+}
+
+function renderEmoji(emoji: string): HTMLCanvasElement {
+  const size = 40;
+  const c = document.createElement('canvas');
+  c.width = c.height = size * RES;
+  const g = c.getContext('2d')!;
+  g.font = `${Math.round(size * RES * 0.78)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText(emoji, (size * RES) / 2, (size * RES) / 2 + RES * 2);
+  return c;
+}
 
 /**
  * Until `key` is painted, draw it with `from`'s art (which must have the same
@@ -105,6 +124,11 @@ function ensureSprite(key: string, fw = 1, fh = 1): HTMLCanvasElement {
     const m = meta.get(borrowed.from);
     if (m) meta.set(key, m);
   }
+  const emoji = emojiIcons.get(key);
+  if (!c && emoji) {
+    c = renderEmoji(emoji);
+    canvases.set(key, c);
+  }
   if (!c) {
     const spec = key.startsWith('icon:') ? null : placeholderSprite(key, fw, fh);
     c = spec ? renderSprite(spec) : renderIcon(placeholderIcon(key));
@@ -147,7 +171,7 @@ export function artURL(key: string): string {
 
 /** Item icon URL (crops, products, goods) with a sprite fallback for decorations. */
 export function iconURL(id: string): string {
-  if (painted.has(`icon:${id}`) || fallbacks.has(`icon:${id}`)) return artURL(`icon:${id}`);
+  if (painted.has(`icon:${id}`) || fallbacks.has(`icon:${id}`) || emojiIcons.has(`icon:${id}`)) return artURL(`icon:${id}`);
   if (painted.has(`deco:${id}`) || fallbacks.has(`deco:${id}`)) return artURL(`deco:${id}`);
   return artURL(`icon:${id}`);
 }

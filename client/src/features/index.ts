@@ -14,6 +14,7 @@ import * as water from './water';
 import * as nursery from './nursery';
 import * as feedmill from './feedmill';
 import * as vehicles from './vehicles';
+import * as helpers from './helpers';
 import * as weather from './weather';
 
 export function initFeatures(ctx: FeatureContext): void {
@@ -32,4 +33,5 @@ export function initFeatures(ctx: FeatureContext): void {
   nursery.init(ctx);
   feedmill.init(ctx);
   vehicles.init(ctx);
+  helpers.init(ctx);
 }

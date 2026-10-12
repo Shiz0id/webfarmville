@@ -614,6 +614,37 @@ export const QUEST_LIST: QuestDef[] = [
     goals: [stat('craft:animal_feed', 3, 'Make Barnyard Feed'), stat('feed', 3, 'Feed your animals')],
     reward: { coins: 200, xp: 35 },
   },
+  // Helpers
+  {
+    id: 'many_hands',
+    title: 'Many Hands',
+    text: "Hoo-hoo! A busy farmer needs a little help now and then. Look after your animals and trees, and I'll send a Farmhand and an Arborist your way. Find them in the Garage whenever everything is ready at once!",
+    giver: 'Mayor Maple',
+    level: 4,
+    requires: ['welcome'],
+    goals: [stat('collect', 15, 'Collect from animals or trees')],
+    reward: { coins: 150, xp: 30, items: { farmhand: 2, arborist: 1 } },
+  },
+  {
+    id: 'fairy_charm',
+    title: 'A Little Fairy Magic',
+    text: "Oh dear, crops do wilt when we're away! Bring in a good harvest and I'll share my Unwither Charms. One sprinkle brings every withered crop back, ripe and ready.",
+    giver: 'Rosie',
+    level: 5,
+    requires: ['welcome'],
+    goals: [stat('harvest', 40, 'Harvest crops')],
+    reward: { coins: 200, xp: 40, items: { unwither_charm: 2 } },
+  },
+  {
+    id: 'helping_out',
+    title: 'Helping Out',
+    text: 'Now put those helpers to work! Use a Farmhand, an Arborist or an Unwither Charm from the Garage.',
+    giver: 'Mayor Maple',
+    level: 4,
+    requires: ['many_hands'],
+    goals: [stat('helper', 1, 'Use a helper')],
+    reward: { coins: 250, xp: 40, items: { farmhand: 1 } },
+  },
   ...EVENT_FEATURE_LIST.filter((f) => f.event !== 'halloween').flatMap((f) => eventQuests(f)),
 ];
 

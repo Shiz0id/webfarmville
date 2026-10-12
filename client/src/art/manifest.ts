@@ -32,6 +32,7 @@ import {
   FEED_ITEMS,
   FEED_MILL,
   VEHICLE_LIST,
+  HELPER_LIST,
 } from '@farm/shared';
 
 /** Every cat sprite frame (key `cat:<id>:<frame>`); `#1` frames animate. */
@@ -145,6 +146,8 @@ export function expectedKeys(mod: string): string[] {
     // Vehicles: a Garage card icon each (emoji until painted) and a 2x1 farm sprite for the drive-by
     // (the Vintage Tractor decoration, tinted, until painted).
     vehicles: () => [...VEHICLE_LIST.map((v) => `icon:vehicle_${v.id}`), ...VEHICLE_LIST.map((v) => `vehicle:${v.id}`)],
+    // Helpers: Farmhand, Arborist and Unwither Charm icons (drawn as their emoji until painted).
+    helpers: () => HELPER_LIST.map((h) => `icon:${h.id}`),
     portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());

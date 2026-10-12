@@ -4,6 +4,7 @@
 
 import { DISH_LIST } from './cooking';
 import { FEED_ITEMS } from './feedmill';
+import { HELPER_ITEMS } from './helpers';
 import { CRITTER_LIST } from './nature';
 import { table } from './table';
 
@@ -126,6 +127,8 @@ export const ITEM_LIST: ItemDef[] = [
 
 // Animal feed from the Feed Mill.
 ITEM_LIST.push(...FEED_ITEMS);
+// Helpers (Farmhand, Arborist, Unwither Charm): handed out like items, kept in the tool shed.
+ITEM_LIST.push(...HELPER_ITEMS);
 // Home-cooked dishes from the kitchen mini-games.
 for (const d of DISH_LIST) ITEM_LIST.push(item(d.id, d.name, 'dish', d.sell));
 // Fish and critters from the Nature Journal.
