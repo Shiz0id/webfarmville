@@ -28,6 +28,7 @@ import {
   MASTERY_DECORATIONS,
   KEEPSAKE_DECORATIONS,
   COLLECTION_LIST,
+  NURSERY_DECORATIONS,
 } from '@farm/shared';
 
 /** Every cat sprite frame (key `cat:<id>:<frame>`); `#1` frames animate. */
@@ -134,6 +135,8 @@ export function expectedKeys(mod: string): string[] {
     mastery: () => [...MASTERY_DECORATIONS.map((d) => `deco:${d.id}`), 'icon:mastery'],
     // Collections: a 40px icon per collectible (the UI shows its emoji until then) and the keepsake decorations.
     collections: () => [...COLLECTION_LIST.flatMap((c) => c.items.map((i) => `icon:${i.id}`)), ...KEEPSAKE_DECORATIONS.map((d) => `deco:${d.id}`)],
+    // Baby animals: the Nursery Barn (babies themselves reuse the grown-up sprite, drawn smaller).
+    nursery: () => NURSERY_DECORATIONS.map((d) => `deco:${d.id}`),
     portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());

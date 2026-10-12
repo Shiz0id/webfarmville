@@ -98,8 +98,8 @@ describe('baby animals', () => {
   });
 
   it('a Nursery Barn doubles every cuddle nearby', () => {
-    expect(DECORATIONS[NURSERY_DECO]).toMatchObject({ w: 2, h: 2, set: 'nursery' });
-    let s = applyAction(farmer(), { type: 'buy', def: NURSERY_DECO, x: 12, y: 10 }, { now: T0 }).state;
+    expect(DECORATIONS[NURSERY_DECO]).toMatchObject({ w: 3, h: 3, set: 'nursery' });
+    let s = applyAction(farmer(), { type: 'buy', def: NURSERY_DECO, x: 11, y: 10 }, { now: T0 }).state;
     expect(nearNursery(s, 11, 8)).toBe(true);
     expect(nearNursery(s, 2, 12)).toBe(false);
     const near = buyBaby(s, 'cow', 11, 8);

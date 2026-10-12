@@ -16,6 +16,34 @@ const modules = import.meta.glob<ArtModule>(['./*.ts', '!./kit.ts', '!./index.ts
 const canvases = new Map<string, HTMLCanvasElement>();
 const meta = new Map<string, { fw: number; fh: number; height: number }>();
 const urls = new Map<string, string>();
+/** Keys that were really painted (not placeholders or borrowed art). */
+const painted = new Set<string>();
+/** Art to borrow for a key nobody has painted yet (same footprint), optionally recoloured. */
+const fallbacks = new Map<string, { from: string; hue?: string }>();
+
+/**
+ * Until `key` is painted, draw it with `from`'s art (which must have the same
+ * footprint), shifted to `hue` (a CSS colour) so the two can be told apart.
+ * Call before the key is first used, e.g. at the top of a feature module.
+ */
+export function borrowArt(key: string, from: string, hue?: string): void {
+  fallbacks.set(key, { from, hue });
+}
+
+function recolour(src: HTMLCanvasElement, hue: string): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  c.width = src.width;
+  c.height = src.height;
+  const g = c.getContext('2d')!;
+  g.drawImage(src, 0, 0);
+  g.globalCompositeOperation = 'hue';
+  g.fillStyle = hue;
+  g.fillRect(0, 0, c.width, c.height);
+  // Keep the original silhouette.
+  g.globalCompositeOperation = 'destination-in';
+  g.drawImage(src, 0, 0);
+  return c;
+}
 
 function placeholderSprite(key: string, fw: number, fh: number): SpriteSpec {
   return {
@@ -50,6 +78,7 @@ export function buildArt(): void {
       try {
         canvases.set(s.key, renderSprite(s));
         meta.set(s.key, { fw: s.fw, fh: s.fh, height: s.height });
+        painted.add(s.key);
       } catch (err) {
         console.warn('Failed to paint', s.key, err);
       }
@@ -57,6 +86,7 @@ export function buildArt(): void {
     for (const i of mod.icons ?? []) {
       try {
         canvases.set(i.key, renderIcon(i));
+        painted.add(i.key);
       } catch (err) {
         console.warn('Failed to paint', i.key, err);
       }
@@ -67,6 +97,14 @@ export function buildArt(): void {
 /** Make sure a sprite texture exists (painting a placeholder if the art is missing). */
 function ensureSprite(key: string, fw = 1, fh = 1): HTMLCanvasElement {
   let c = canvases.get(key);
+  const borrowed = fallbacks.get(key);
+  if (!c && borrowed && painted.has(borrowed.from)) {
+    const src = canvases.get(borrowed.from)!;
+    c = borrowed.hue ? recolour(src, borrowed.hue) : src;
+    canvases.set(key, c);
+    const m = meta.get(borrowed.from);
+    if (m) meta.set(key, m);
+  }
   if (!c) {
     const spec = key.startsWith('icon:') ? null : placeholderSprite(key, fw, fh);
     c = spec ? renderSprite(spec) : renderIcon(placeholderIcon(key));
@@ -88,8 +126,9 @@ export function texture(scene: Phaser.Scene, key: string, fw = 1, fh = 1): strin
   return key;
 }
 
+/** Has this key been painted (rather than drawn with a placeholder or borrowed art)? */
 export function hasArt(key: string): boolean {
-  return canvases.has(key);
+  return painted.has(key);
 }
 
 export function artMeta(key: string): { fw: number; fh: number; height: number } {
@@ -108,8 +147,8 @@ export function artURL(key: string): string {
 
 /** Item icon URL (crops, products, goods) with a sprite fallback for decorations. */
 export function iconURL(id: string): string {
-  if (canvases.has(`icon:${id}`)) return artURL(`icon:${id}`);
-  if (canvases.has(`deco:${id}`)) return artURL(`deco:${id}`);
+  if (painted.has(`icon:${id}`) || fallbacks.has(`icon:${id}`)) return artURL(`icon:${id}`);
+  if (painted.has(`deco:${id}`) || fallbacks.has(`deco:${id}`)) return artURL(`deco:${id}`);
   return artURL(`icon:${id}`);
 }
 

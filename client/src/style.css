@@ -2558,3 +2558,17 @@ span.cl-keepsake { font-size: 26px; text-align: center; }
 .tool .tool-count { position: absolute; top: 1px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 99px; background: #8fd0ff; border: 2px solid var(--dark); color: var(--dark); font-size: 10px; font-weight: 900; line-height: 14px; text-align: center; }
 .tool .tool-count.empty { background: #e9dccb; color: var(--muted); }
 .toolbar .tool { position: relative; }
+
+/* Baby animals and the Nursery Barn */
+.nu-hint, .nu-intro { background: #fff4f8; border: 2px dashed #f2b8cc; border-radius: 14px; padding: 8px 10px; margin-bottom: 10px; font-size: 13px; font-weight: 700; color: var(--dark); }
+.nu-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
+.nu-row { display: flex; align-items: center; gap: 10px; background: #fffdf6; border: 2px solid var(--line); border-radius: 14px; padding: 6px 10px; }
+.nu-img { width: 40px; height: 40px; object-fit: contain; flex: none; }
+.nu-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.nu-name { font-weight: 900; font-size: 14px; }
+.nu-snug { font-size: 11px; color: #c0577a; }
+.nu-sub { font-size: 11px; font-weight: 700; color: var(--muted); }
+.nu-bar { height: 8px; border-radius: 99px; background: #f3e6d6; overflow: hidden; border: 1.5px solid var(--line); }
+.nu-bar > div { height: 100%; background: linear-gradient(90deg, #ffb3cb, #ff8fb1); border-radius: 99px; }
+.nu-empty { text-align: center; font-weight: 700; color: var(--muted); padding: 18px 8px; }
+.nu-all { display: block; margin: 12px auto 0; }
