@@ -237,15 +237,28 @@ function nurseryBarn(p: Pen): void {
     const s = dv0 + 0.16 + i * 0.2;
     p.line([R.pt(s, 9), R.pt(s + 0.08, 16 + (i % 2) * 5)], STRAW_D, 1);
   }
-  // the two door leaves, swung open towards the viewer
-  const leaf = (hinge: number, free: number) => {
-    const o = (v: number, z: number) => p.iso(ub + 0.3, v, z);
-    p.poly([R.pt(hinge, 0), R.pt(hinge, DOOR), o(free, DOOR), o(free, 0)], shade(PINK, -0.02));
-    const mid = p.iso(ub + 0.15, (hinge + free) / 2, 26);
+  // the two door leaves: panels parallel to the gable, pushed out from the
+  // doorway on their hinge side, bottom on the ground and the doorway's height
+  const OFF = 0.08;
+  const LEAF_W = 0.5;
+  const leaf = (hinge: number, dir: number) => {
+    const free = hinge + dir * LEAF_W;
+    const o = (v: number, z: number) => p.iso(ub + OFF, v, z);
+    // a thin strap from the jamb to the leaf's hinge edge
+    p.line([R.pt(hinge, 0), o(hinge, 0)], TRIM, 1.4);
+    p.line([R.pt(hinge, DOOR), o(hinge, DOOR)], TRIM, 1.4);
+    p.poly([o(hinge, 0), o(hinge, DOOR), o(free, DOOR), o(free, 0)], shade(PINK, -0.02));
+    p.poly(
+      [o(hinge + dir * 0.06, 4), o(hinge + dir * 0.06, DOOR - 4), o(free - dir * 0.06, DOOR - 4), o(free - dir * 0.06, 4)],
+      null,
+      TRIM,
+      1,
+    );
+    const mid = o((hinge + free) / 2, 26);
     p.heart(mid.x, mid.y, 2.6, TRIM, null);
   };
-  leaf(dv0, 0.72);
-  leaf(dv1, 2.56);
+  leaf(dv0, -1);
+  leaf(dv1, 1);
 
   // a star mobile hanging over the door
   const MZ = 64;
