@@ -133,6 +133,14 @@ export const sfx = {
     [72, 76, 79, 84, 79, 84, 88].forEach((n, i) => tone(NOTE(n), 0.35, { type: 'square', vol: 0.06, delay: i * 0.1 }));
     [60, 64, 67].forEach((n) => tone(NOTE(n), 1.2, { type: 'triangle', vol: 0.08, delay: 0.6 }));
   },
+  bark() {
+    tone(420, 0.09, { type: 'triangle', vol: 0.22, slide: 0.7 });
+    tone(470, 0.1, { type: 'triangle', vol: 0.22, slide: 0.65, delay: 0.14 });
+  },
+  meow() {
+    tone(700, 0.35, { type: 'sine', vol: 0.16, slide: 1.35, attack: 0.05 });
+    tone(1400, 0.3, { type: 'sine', vol: 0.03, slide: 1.3, attack: 0.05 });
+  },
   help() {
     [79, 83, 86].forEach((n, i) => tone(NOTE(n), 0.2, { type: 'sine', vol: 0.15, delay: i * 0.06 }));
   },

@@ -22,6 +22,7 @@ import {
 import { RES, artMeta, registerTextures, texture } from '../art';
 import { rng } from '../art/kit';
 import { Ambience } from './ambience';
+import { Pet } from './pets';
 import { sfx } from '../sfx';
 import { bus } from '../bus';
 import type { Store } from '../store';
@@ -94,6 +95,7 @@ export class FarmScene extends Phaser.Scene {
   private known = new Set<string>();
   private settled = false;
   private emitters = new Map<string, Phaser.GameObjects.Particles.ParticleEmitter>();
+  private pets: Pet[] = [];
 
   private drag: {
     mode: 'none' | 'pending' | 'pan' | 'paint' | 'harvest' | 'pinch';
@@ -154,6 +156,14 @@ export class FarmScene extends Phaser.Scene {
     this.time.addEvent({ delay: 450, loop: true, callback: () => this.twinkle() });
     this.time.addEvent({ delay: 700, loop: true, callback: () => this.puffSmoke() });
     this.time.addEvent({ delay: 1800, loop: true, callback: () => this.animalLife() });
+    const petOpts = {
+      isoX,
+      isoY,
+      depthFor: (x: number, y: number) => this.depthFor(x, y, 1, 1),
+      state: () => this.store.state,
+      hidden: () => this.store.isVisiting,
+    };
+    this.pets = [new Pet(this, 'dog', petOpts), new Pet(this, 'cat', petOpts)];
   }
 
   // -------------------------------------------------------------------------
@@ -236,6 +246,7 @@ export class FarmScene extends Phaser.Scene {
       this.refreshHover();
     }
     this.keyboardPan(delta);
+    for (const p of this.pets) p.update();
   }
 
   // -------------------------------------------------------------------------
@@ -927,6 +938,15 @@ export class FarmScene extends Phaser.Scene {
         sfx.help();
         void store.help(obj.id);
       } else if (helpKind(obj, store.now())) bus.emit('toast', 'No helps left for this neighbor today. Come back tomorrow!', 'info');
+      return;
+    }
+
+    const pet = tools.tool === 'hand' ? this.pets.find((p) => p.at(tile.x, tile.y)) : undefined;
+    if (pet) {
+      pet.pet();
+      if (pet.kind === 'dog') sfx.bark();
+      else sfx.meow();
+      this.emitter('fx:heart', 'burst').explode(4, pet.img.x, pet.img.y - 24);
       return;
     }
 
