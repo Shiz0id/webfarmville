@@ -5,6 +5,7 @@ export * from './content/producers';
 export * from './content/buildings';
 export * from './content/decorations';
 export * from './content/decorations2';
+export * from './content/decorations3';
 export * from './content/events';
 export * from './content/progression';
 export * from './content/quests';

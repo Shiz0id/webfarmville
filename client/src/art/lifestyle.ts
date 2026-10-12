@@ -477,6 +477,56 @@ function ghostMini(p: Pen, x: number, y: number, s: number): void {
   face(p, x, y + 0.6 * s, 0.5 * s);
 }
 
+/** A checked cloth laid flat over a box top (or the ground), with quarter-check lines. */
+function checkCloth(p: Pen, u0: number, v0: number, du: number, dv: number, z: number, base: string, line: string): void {
+  p.diamond(u0, v0, du, dv, base, shade(line, -0.2), z);
+  for (let k = 1; k < 4; k++) {
+    const u = u0 + (du * k) / 4;
+    p.line([p.iso(u, v0, z), p.iso(u, v0 + dv, z)], rgba(line, 0.7), 1);
+    const v = v0 + (dv * k) / 4;
+    p.line([p.iso(u0, v, z), p.iso(u0 + du, v, z)], rgba(line, 0.7), 1);
+  }
+}
+
+/** A rice triangle with a nori band. (x, y) is its base centre. */
+function onigiri(p: Pen, x: number, y: number, s: number): void {
+  p.poly([{ x: x - 4.5 * s, y }, { x: x + 4.5 * s, y }, { x, y: y - 8.5 * s }], '#fffdf7');
+  p.poly([{ x: x - 4.5 * s, y }, { x: x + 4.5 * s, y }, { x: x + 3.4 * s, y: y - 2 * s }, { x: x - 3.4 * s, y: y - 2 * s }], '#2b2b2b', null);
+  p.poly([{ x: x - 4.5 * s, y }, { x: x, y: y - 8.5 * s }, { x: x + 4.5 * s, y }], null, O, 1);
+}
+
+/** A tiny orange cat asleep on the ground, curled up with closed eyes. (x, y) is its resting base. */
+function sleepingCat(p: Pen, x: number, y: number, s: number): void {
+  const fur = '#f5a25a';
+  thickCurve(p, { x: x - 6 * s, y: y - 1.5 * s }, { x: x - 12 * s, y: y - 0.5 * s }, { x: x - 9 * s, y: y - 5 * s }, 2.2 * s, fur);
+  p.poly([{ x: x + 3.8 * s, y: y - 9.2 * s }, { x: x + 4.6 * s, y: y - 13 * s }, { x: x + 7.6 * s, y: y - 10.2 * s }], fur);
+  p.poly([{ x: x + 6.8 * s, y: y - 10.4 * s }, { x: x + 8.6 * s, y: y - 13.4 * s }, { x: x + 9.6 * s, y: y - 9.2 * s }], fur);
+  p.ellipse(x, y - 3.6 * s, 7.4 * s, 4.2 * s, radial(p, x, y - 3.6 * s, 8 * s, shade(fur, 0.2), fur));
+  for (const dx of [-3.5, -0.5, 2.5]) {
+    p.curve({ x: x + dx * s, y: y - 6.4 * s }, { x: x + (dx + 0.6) * s, y: y - 5.6 * s }, { x: x + (dx + 0.3) * s, y: y - 3.2 * s }, shade(fur, -0.35), 0.8);
+  }
+  p.ball(x + 6 * s, y - 6.4 * s, 4.2 * s, fur);
+  for (const dx of [4.2, 7.4]) {
+    p.curve({ x: x + dx * s, y: y - 6.2 * s }, { x: x + (dx + 0.6) * s, y: y - 4.8 * s }, { x: x + (dx + 1.2) * s, y: y - 6.2 * s }, DARK, Math.max(0.6, 0.7 * s));
+  }
+  p.ellipse(x + 5.2 * s, y - 4 * s, 1 * s, 0.6 * s, rgba('#ff7a9a', 0.7), null);
+  p.ellipse(x + 8.8 * s, y - 4 * s, 1 * s, 0.6 * s, rgba('#ff7a9a', 0.7), null);
+  p.circle(x + 9.8 * s, y - 5 * s, 0.7 * s, '#ff8fa3', null);
+  p.ellipse(x + 2 * s, y - 1 * s, 2.2 * s, 1.1 * s, '#fff4e2');
+}
+
+/** The clover-leaf backrest silhouette in face coordinates (x along the seat, y up). */
+function cloverShape(p: Pen, dy: number, grow: number, col: string): void {
+  for (const [lx, ly, r] of [
+    [7, -16, 5.5],
+    [20, -16, 5.5],
+    [13.5, -23, 6.2],
+  ] as const) {
+    p.circle(lx, ly + dy, r + grow, col, null);
+  }
+  p.rect(10.5 - grow, -11 + dy - grow, 6 + grow * 2, 11 + grow * 2, col, null);
+}
+
 // ---------------------------------------------------------------------------
 // Lunar New Year
 
@@ -535,7 +585,7 @@ function lionDrum(p: Pen): void {
   p.circle(x + 4.5, hy - 6, 1.9, '#f7a53a');
   p.circle(x, hy - 3, 6, '#f7a53a');
   p.circle(x, hy - 2.4, 4.2, '#ffe2a8', null);
-  face(p, x, hy - 2.4, 0.75);
+  face(p, x, hy - 2.4, 0.9);
   // drumsticks resting on the head
   thick(p, [{ x: x - 16, y: hy - 18 }, { x: x - 8, y: hy - 4 }], 2, WOOD_LT);
   thick(p, [{ x: x + 16, y: hy - 18 }, { x: x + 8, y: hy - 4 }], 2, WOOD_LT);
@@ -621,82 +671,101 @@ function fondueTable(p: Pen): void {
 }
 
 /** Love letter mailbox: pink box on a wood post, stuffed with envelopes. */
+/** Love letter mailbox: a pink box on a thick wood post, with an envelope peeking out of its slot. */
 function loveMailbox(p: Pen): void {
   const { x, y } = p.center;
-  p.shadow(x, y + 1, 14, 6);
-  post(p, x, y, 26, '#9a6a44', 4);
-  const top = y - 26;
-  p.roundRect(x - 12, top - 20, 24, 20, 9, p.vgrad(top - 20, top, '#ffbdd0', '#ec5a86'));
-  // a glossy highlight and the letter slot
-  p.ellipse(x - 7, top - 13, 1.6, 4, rgba('#ffffff', 0.55), null, 0.1);
-  p.roundRect(x - 8, top - 10, 16, 3, 1.4, '#5b2a3a', null);
-  // envelopes stuffed out of the slot
-  for (const [dx, rot] of [
-    [-4, -0.12],
-    [0, 0.06],
-    [4, 0.16],
-  ] as const) {
-    withXform(p, x + dx, top - 8.5, rot, () => {
-      p.rect(-3.6, -2.8, 7.2, 5, '#fff7fa');
-      p.line([{ x: -3.6, y: -2.8 }, { x: 0, y: 0.4 }, { x: 3.6, y: -2.8 }], '#ff8fb3', 0.6);
-    });
-  }
+  p.shadow(x, y + 1, 15, 6);
+  post(p, x, y, 28, '#9a6a44', 6.5);
+  const top = y - 28;
+  p.roundRect(x - 13.5, top - 23, 27, 23, 10, p.vgrad(top - 23, top, '#ffbdd0', '#ec5a86'));
+  p.ellipse(x - 8, top - 16, 1.8, 4.6, rgba('#ffffff', 0.55), null, 0.1);
+  // letter slot with an envelope peeking out of it
+  p.roundRect(x - 9, top - 12, 18, 3.4, 1.6, '#5b2a3a', null);
+  withXform(p, x - 1, top - 10, -0.08, () => {
+    p.rect(-6, -5, 12, 8, '#fff7fa');
+    p.line([{ x: -6, y: -5 }, { x: 0, y: -0.5 }, { x: 6, y: -5 }], '#ff8fb3', 0.7);
+    p.heart(0, 1.2, 1.8, '#ff5b7f', null);
+  });
   // little red flag with a heart
-  p.line([{ x: x + 13, y: top - 4 }, { x: x + 13, y: top - 24 }], O, 1);
+  p.line([{ x: x + 15, y: top - 4 }, { x: x + 15, y: top - 25 }], O, 1.1);
   p.poly(
     [
-      { x: x + 13, y: top - 24 },
-      { x: x + 20, y: top - 21 },
-      { x: x + 13, y: top - 18 },
+      { x: x + 15, y: top - 25 },
+      { x: x + 22, y: top - 22 },
+      { x: x + 15, y: top - 19 },
     ],
     RED,
   );
-  p.heart(x + 16, top - 21, 1.6, '#ffffff', null);
+  p.heart(x + 18, top - 22, 1.6, '#ffffff', null);
   // stray letters on the ground
-  withXform(p, x + 12, y + 1, 0.3, () => p.rect(0, 0, 6, 3.5, '#ff9fbf'));
-  withXform(p, x - 14, y, -0.2, () => p.rect(0, 0, 6, 3.5, '#ffc2d6'));
+  withXform(p, x + 13, y + 1, 0.3, () => p.rect(0, 0, 6, 3.5, '#ff9fbf'));
+  withXform(p, x - 15, y, -0.2, () => p.rect(0, 0, 6, 3.5, '#ffc2d6'));
   p.heart(x - 16, top - 26, 3.2, '#ff5b7f');
-  p.heart(x + 18, top - 30, 2.4, '#ff8fb3');
+  p.heart(x + 19, top - 31, 2.4, '#ff8fb3');
 }
 
 /** Picnic blanket for two: basket, heart cake, two cups. Flat on the ground. */
+/** Picnic blanket for two: a checked basket with onigiri, heart cake, cups and a posy. Flat on the ground. */
 function picnicForTwo(p: Pen): void {
-  blanket(p, 0.2, 0.2, 1.6, 1.6, '#fff1f5', PINK, 4);
-  // wicker basket with a strawberry peeking out
-  p.box(0.3, 0.32, 0.5, 0.4, 7, WOOD_LT);
-  p.diamond(0.3, 0.32, 0.5, 0.4, '#fff5f8', O, 7);
-  for (const [u, v] of [
-    [0.42, 0.5],
-    [0.62, 0.52],
-  ] as const) {
-    const q = p.iso(u, v, 7);
-    strawberry(p, q.x, q.y - 2.2, 2.6);
+  blanket(p, 0.14, 0.14, 1.72, 1.72, '#fff1f5', PINK, 4);
+  // wicker basket with a checked cloth over the top
+  p.box(0.22, 0.2, 0.62, 0.5, 9, WOOD_LT, 0);
+  for (const zz of [3, 6]) {
+    p.line([p.iso(0.22, 0.7, zz), p.iso(0.84, 0.7, zz)], shade(WOOD_LT, -0.3), 0.8);
+    p.line([p.iso(0.84, 0.2, zz), p.iso(0.84, 0.7, zz)], shade(WOOD_LT, -0.3), 0.8);
   }
-  // heart cake on a plate
-  const cake = p.iso(1.22, 0.62, 0);
-  p.ellipse(cake.x, cake.y, 10, 5, '#ffffff');
-  withXform(p, cake.x, cake.y - 0.5, 0, () => {
-    p.heart(0, 1.4, 4.6, shade(PINK, -0.25), null);
-    p.heart(0, 0, 4.6, '#ffb3c8');
-  }, 1, 0.6);
-  p.cylinder(cake.x, cake.y - 1.2, 1.4, 4, '#fff6b0');
-  flame(p, cake.x, cake.y - 5.2, 2.2, false);
+  checkCloth(p, 0.2, 0.18, 0.66, 0.54, 9, '#fff8f8', '#ff6b8a');
+  const o1 = p.iso(0.42, 0.42, 9);
+  onigiri(p, o1.x, o1.y, 1.2);
+  // onigiri on the blanket
+  const o2 = p.iso(0.6, 1.36, 0);
+  onigiri(p, o2.x, o2.y, 1.2);
+  const o3 = p.iso(0.92, 1.5, 0);
+  onigiri(p, o3.x, o3.y, 1.1);
+  // heart cake on a plate, with a candle
+  const cake = p.iso(1.22, 0.6, 0);
+  p.ellipse(cake.x, cake.y, 13, 6.5, '#ffffff', O);
+  withXform(
+    p,
+    cake.x,
+    cake.y - 0.6,
+    0,
+    () => {
+      p.heart(0, 1.8, 6.4, shade(PINK, -0.25), null);
+      p.heart(0, 0, 6.4, '#ffb3c8');
+    },
+    1,
+    0.6,
+  );
+  p.cylinder(cake.x, cake.y - 1.2, 1.6, 5, '#fff6b0');
+  flame(p, cake.x, cake.y - 6.6, 2.6, false);
   // two cups with hearts
   for (const [u, v] of [
-    [1.36, 1.3],
-    [1.62, 1.1],
+    [1.18, 1.36],
+    [1.5, 1.18],
   ] as const) {
     const b = p.iso(u, v, 0);
     p.cylinder(b.x, b.y, 4.4, 7, PINK);
     p.heart(b.x, b.y - 4, 1.7, '#ffffff', null);
   }
+  // a little vase of posy flowers
+  const vase = p.iso(1.62, 1.66, 0);
+  p.cylinder(vase.x, vase.y, 3.6, 6, '#8fc8f0');
+  for (const [dx, dy, col] of [
+    [-4, -13, '#ffb3c8'],
+    [0, -17, '#ffe066'],
+    [4.5, -12, '#c7a6ff'],
+  ] as const) {
+    p.line([{ x: vase.x, y: vase.y - 6 }, { x: vase.x + dx, y: vase.y + dy }], '#4f9e45', 1);
+    p.flower(vase.x + dx, vase.y + dy, 3, col, '#ffd84a');
+  }
   for (const [u, v] of [
-    [0.9, 1.6],
-    [1.7, 1.7],
-    [0.4, 1.7],
+    [0.36, 1.1],
+    [1.0, 0.18],
+    [1.72, 1.0],
   ] as const) {
     const q = p.iso(u, v, 0);
-    p.heart(q.x, q.y, 1.6, '#ff9fbc', null);
+    p.heart(q.x, q.y, 1.8, '#ff9fbc', null);
   }
 }
 
@@ -746,6 +815,7 @@ function hatPlanter(p: Pen): void {
 }
 
 /** Clover-backed garden bench with a tuft of lucky clovers on the grass. */
+/** Clover garden bench: a clover-leaf cut-out backrest with a little depth, and clovers in the grass. */
 function cloverBench(p: Pen): void {
   const c = p.center;
   p.shadow(c.x, c.y + 2, 22, 9);
@@ -766,14 +836,18 @@ function cloverBench(p: Pen): void {
     p.box(u, v, 0.05, 0.05, 7, WOOD_DK);
   }
   p.box(0.08, 0.32, 0.84, 0.36, 3, WOOD_LT, 7);
-  p.box(0.08, 0.3, 0.84, 0.05, 14, '#63c46e', 10);
+  // clover-leaf backrest standing on the back of the seat
+  const green = '#63c46e';
   onFace(p, p.iso(0.08, 0.35, 10), () => {
-    for (const cx of [7, 14, 21]) {
-      const s = 2;
-      p.circle(cx - s, -6 - s * 0.2, s, '#e4ffd6', O);
-      p.circle(cx + s, -6 - s * 0.2, s, '#e4ffd6', O);
-      p.circle(cx, -6 - s * 1.1, s, '#e4ffd6', O);
-      p.line([{ x: cx, y: -6 }, { x: cx, y: -3 }], '#3e8a35', 0.9);
+    cloverShape(p, 1.8, 0.6, shade(green, -0.35));
+    cloverShape(p, 0, 1, O);
+    cloverShape(p, 0, 0, green);
+    for (const [lx, ly] of [
+      [5, -18],
+      [18.5, -18],
+      [12.6, -25],
+    ] as const) {
+      p.circle(lx, ly, 1.6, '#a6ec9a', null);
     }
   });
 }
@@ -894,41 +968,50 @@ function kitePost(p: Pen): void {
 }
 
 /** Tiny blossom picnic with sakura petals and bento: flat, with petals drifting. */
+/** Blossom picnic: a bento with rice balls, a tea cup and a blossom vase, petals drifting down. Flat. */
 function blossomPicnic(p: Pen): void {
-  blanket(p, 0.2, 0.2, 1.6, 1.6, '#fff1f5', '#ffb3c9', 6);
-  // bento boxes
-  p.box(0.6, 0.62, 0.42, 0.34, 4, '#fff6ea', 0);
-  p.box(0.6, 0.62, 0.42, 0.34, 2, RED, 4);
-  for (const [u, v] of [
-    [0.7, 0.75],
-    [0.86, 0.85],
-  ] as const) {
-    const q = p.iso(u, v, 6);
-    p.ball(q.x, q.y - 2, 2.6, '#fffdf7');
-    p.rect(q.x - 1.4, q.y - 4.5, 2.8, 2.2, '#2b2b2b', null);
-  }
-  // blossom branch in a little blue vase
-  const vase = p.iso(1.45, 1.1, 0);
-  p.cylinder(vase.x, vase.y, 4, 8, '#8fc8f0');
-  thick(p, [{ x: vase.x, y: vase.y - 8 }, { x: vase.x - 3, y: vase.y - 16 }, { x: vase.x + 4, y: vase.y - 22 }], 1.4, WOOD_DK);
-  for (const [dx, dy] of [
-    [-3, -17],
-    [3, -14],
-    [4, -23],
-    [-1, -22],
-  ] as const) {
-    p.flower(vase.x + dx, vase.y + dy, 2.6, '#ffc2d6', '#ffd84a');
-  }
-  // petals scattered across the blanket
+  blanket(p, 0.14, 0.14, 1.72, 1.72, '#fff1f5', '#ffb3c9', 6);
+  // petals scattered on the blanket (drawn first so food sits on top)
   const rand = rng('blossom-picnic');
-  for (let i = 0; i < 14; i++) {
-    const q = p.iso(0.3 + rand() * 1.4, 0.3 + rand() * 1.4, 0);
-    p.ellipse(q.x, q.y, 2.2, 1.2, '#ffc2d6', null, rand() * 3);
+  for (let i = 0; i < 26; i++) {
+    const q = p.iso(0.25 + rand() * 1.5, 0.25 + rand() * 1.5, 0);
+    p.ellipse(q.x, q.y, 2.6, 1.4, '#ffc2d6', null, rand() * 3);
   }
-  // falling petals in the air
-  for (let i = 0; i < 4; i++) {
-    p.ellipse(p.center.x - 14 + i * 9, 6 + (i % 2) * 8, 1.8, 1, rgba('#ffc2d6', 0.9), null, i);
+  // bento box with rice balls
+  p.box(0.22, 0.26, 0.56, 0.4, 5, '#fff6ea', 0);
+  p.box(0.22, 0.26, 0.56, 0.4, 2.4, RED, 5);
+  for (const [u, v] of [
+    [0.34, 0.4],
+    [0.52, 0.5],
+  ] as const) {
+    const q = p.iso(u, v, 7.4);
+    p.ball(q.x, q.y - 3, 3.6, '#fffdf7');
+    p.rect(q.x - 1.8, q.y - 5.4, 3.6, 2.8, '#2b2b2b', null);
   }
+  // a second, smaller green bento on the front edge
+  p.box(0.48, 1.0, 0.42, 0.3, 3.6, '#fff6ea', 0);
+  p.box(0.48, 1.0, 0.42, 0.3, 1.6, '#7fd8a0', 3.6);
+  // tea cup with steam
+  const cup = p.iso(1.2, 0.5, 0);
+  p.cylinder(cup.x, cup.y, 4, 5, '#ffffff');
+  p.ellipse(cup.x, cup.y - 5, 3.2, 1.4, '#9ed98a', null);
+  steam(p, cup.x, cup.y - 7, 10, 2);
+  // blossom vase
+  const vase = p.iso(1.55, 1.4, 0);
+  p.cylinder(vase.x, vase.y, 4, 8, '#8fc8f0');
+  thick(p, [{ x: vase.x, y: vase.y - 8 }, { x: vase.x - 3, y: vase.y - 18 }, { x: vase.x + 5, y: vase.y - 26 }], 1.6, WOOD_DK);
+  for (const [dx, dy] of [
+    [-4, -19],
+    [2, -16],
+    [6, -26],
+    [-1, -27],
+    [9, -20],
+  ] as const) {
+    p.flower(vase.x + dx, vase.y + dy, 3.2, '#ffc2d6', '#ffd84a');
+  }
+  // petals drifting in the air
+  const c = p.center;
+  for (let i = 0; i < 5; i++) p.ellipse(c.x - 16 + i * 8, 5 + (i % 2) * 7, 1.8, 1, rgba('#ffc2d6', 0.9), null, i);
 }
 
 // ---------------------------------------------------------------------------
@@ -1011,16 +1094,20 @@ function beachChairs(p: Pen): void {
 }
 
 /** Watermelon picnic: a green-striped blanket, a slice and a whole melon. */
+/** Watermelon picnic: a whole melon, a standing slice with a bee, a cooler and a sleeping cat. Flat. */
 function watermelonPicnic(p: Pen): void {
-  blanket(p, 0.2, 0.2, 1.6, 1.6, '#e9fbe0', '#7ed16a', 4);
+  blanket(p, 0.14, 0.14, 1.72, 1.72, '#e9fbe0', '#7ed16a', 4);
+  // cooler box at the back corner
+  p.box(0.2, 0.2, 0.44, 0.34, 6, '#7fd8c0', 0);
+  p.box(0.2, 0.2, 0.44, 0.34, 1.6, '#5fbfa8', 6);
   // whole melon
-  const m = p.iso(1.2, 0.6, 0);
-  p.ball(m.x, m.y - 11, 11, '#4fae4a');
-  p.curve({ x: m.x - 5, y: m.y - 21 }, { x: m.x - 8, y: m.y - 11 }, { x: m.x - 5, y: m.y - 1 }, '#2f7a34', 1.3);
-  p.curve({ x: m.x + 5, y: m.y - 21 }, { x: m.x + 8, y: m.y - 11 }, { x: m.x + 5, y: m.y - 1 }, '#2f7a34', 1.3);
-  p.ellipse(m.x - 4.5, m.y - 17, 2.4, 1.2, rgba('#ffffff', 0.6), null, -0.5);
-  // slice standing on its flat edge
-  const s = p.iso(0.55, 1.25, 0);
+  const m = p.iso(1.3, 0.55, 0);
+  p.ball(m.x, m.y - 13, 13, '#4fae4a');
+  p.curve({ x: m.x - 6, y: m.y - 25 }, { x: m.x - 9.5, y: m.y - 13 }, { x: m.x - 6, y: m.y - 1 }, '#2f7a34', 1.4);
+  p.curve({ x: m.x + 6, y: m.y - 25 }, { x: m.x + 9.5, y: m.y - 13 }, { x: m.x + 6, y: m.y - 1 }, '#2f7a34', 1.4);
+  p.ellipse(m.x - 5.5, m.y - 19, 2.6, 1.3, rgba('#ffffff', 0.6), null, -0.5);
+  // slice standing on its flat edge, with a bee
+  const s = p.iso(0.5, 1.3, 0);
   p.arc(s.x, s.y, 13, Math.PI, TAU, '#3f9d46');
   p.arc(s.x, s.y, 11.2, Math.PI, TAU, '#f5fff0', null);
   p.arc(s.x, s.y, 10, Math.PI, TAU, '#ff5a6e', null);
@@ -1033,35 +1120,47 @@ function watermelonPicnic(p: Pen): void {
   ]) {
     p.ellipse(s.x + dx, s.y + dy, 0.7, 1.4, DARK, null, 0.3);
   }
-  bee(p, s.x + 8, s.y - 24, 1.2);
+  bee(p, s.x + 9, s.y - 26, 1.2);
+  // a sleeping cat in front of the slice
+  const cat = p.iso(1.05, 1.4, 0);
+  sleepingCat(p, cat.x, cat.y, 1.1);
 }
 
 /** Lawn sprinkler throwing arcs of water with droplets. */
+/** Lawn sprinkler with a chunky smiling head, sparkling water arcs and droplets landing on the grass. */
 function sprinkler(p: Pen): void {
   const c = p.center;
-  p.shadow(c.x, c.y + 1, 16, 6);
-  p.ellipse(c.x, c.y + 1, 12, 5, rgba('#7cc8f0', 0.35), null);
-  p.cylinder(c.x, c.y, 5.5, 3, '#6fc3e8');
-  p.rect(c.x - 1.6, c.y - 12, 3.2, 9, '#6fc3e8');
-  p.circle(c.x, c.y - 14, 4.6, radial(p, c.x, c.y - 14, 5, '#ffe38a', '#f4b43a'));
-  face(p, c.x, c.y - 14, 0.55);
+  p.shadow(c.x, c.y + 1, 18, 7);
+  p.ellipse(c.x, c.y + 1, 15, 6, rgba('#7cc8f0', 0.35), null);
+  // base and stem
+  p.cylinder(c.x, c.y, 7.5, 4, '#5fbde6');
+  p.rect(c.x - 2.4, c.y - 14, 4.8, 11, '#5fbde6');
+  // water arcs out to both sides, each with a sparkle at its top
   for (const s of [-1, 1]) {
-    p.curve({ x: c.x + s * 2, y: c.y - 16 }, { x: c.x + s * 11, y: c.y - 31 }, { x: c.x + s * 18, y: c.y - 6 }, '#8fd8ff', 2.2);
-    p.curve({ x: c.x + s * 2, y: c.y - 16 }, { x: c.x + s * 13, y: c.y - 22 }, { x: c.x + s * 26, y: c.y - 4 }, '#8fd8ff', 1.8);
-    p.curve({ x: c.x + s * 2, y: c.y - 16 }, { x: c.x + s * 11, y: c.y - 31 }, { x: c.x + s * 18, y: c.y - 6 }, '#ffffff', 0.7);
+    p.curve({ x: c.x + s * 3, y: c.y - 22 }, { x: c.x + s * 14, y: c.y - 42 }, { x: c.x + s * 27, y: c.y - 2 }, '#8fd8ff', 3);
+    p.curve({ x: c.x + s * 3, y: c.y - 22 }, { x: c.x + s * 14, y: c.y - 42 }, { x: c.x + s * 27, y: c.y - 2 }, '#ffffff', 0.9);
+    p.curve({ x: c.x + s * 3, y: c.y - 20 }, { x: c.x + s * 11, y: c.y - 30 }, { x: c.x + s * 21, y: c.y - 3 }, '#8fd8ff', 2.2);
+    sparkle(p, c.x + s * 13, c.y - 33, 2.2);
+  }
+  // chunky head with a cute face, drawn over the arc roots
+  p.circle(c.x, c.y - 17, 7, radial(p, c.x, c.y - 17, 8, '#fff09a', '#f4b43a'));
+  face(p, c.x, c.y - 16.5, 1);
+  // grass tufts with droplets landing on them
+  const tufts: Pt[] = [
+    { x: c.x - 22, y: c.y + 1 },
+    { x: c.x + 22, y: c.y + 2 },
+  ];
+  grassTufts(p, tufts);
+  for (const t of tufts) {
     for (const [dx, dy, r] of [
-      [18, -4, 1.5],
-      [24, -7, 1.2],
-      [26, -2, 1.3],
+      [-1, -7, 1.6],
+      [1.5, -11, 1.3],
+      [0.5, -4, 1.1],
     ] as const) {
-      p.circle(c.x + s * dx, c.y + dy, r, '#bfeaff', O);
-      p.circle(c.x + s * dx - 0.4, c.y + dy - 0.5, 0.4, '#ffffff', null);
+      p.circle(t.x + dx, t.y + dy, r, '#bfeaff', O);
+      p.circle(t.x + dx - 0.4, t.y + dy - 0.4, 0.4, '#ffffff', null);
     }
   }
-  grassTufts(p, [
-    { x: c.x - 10, y: c.y + 3 },
-    { x: c.x + 10, y: c.y + 4 },
-  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -1098,7 +1197,7 @@ function appleBobbing(p: Pen): void {
     ],
     '#ff9a2e',
   );
-  face(p, x + 9.6, y - 18, 0.45);
+  face(p, x + 9.6, y - 18, 0.8);
   // ripples
   p.ellipse(x - 3, y - 10, 7, 2.4, null, rgba('#ffffff', 0.7), 0);
 }
@@ -1495,36 +1594,37 @@ function cookieTable(p: Pen): void {
 }
 
 /** Red snow sled with gold runners, a striped scarf draped over its nose. */
+/** Red snow sled with curved runners, wooden slats, a knitted scarf draped over its front and a snowball beside it. */
 function snowSled(p: Pen): void {
   const c = p.center;
   p.shadow(c.x, c.y + 2, 22, 8);
-  p.ellipse(c.x, c.y + 1, 20, 7.5, '#ffffff', shade('#cfe6f5', -0.15));
-  const steel = '#9aa6b5';
-  for (const v of [0.3, 0.72]) {
-    thick(p, [p.iso(0.1, v, 1), p.iso(0.92, v, 1)], 1.8, steel);
-    thick(p, [p.iso(0.92, v, 1), p.iso(1.0, v, 4)], 1.8, steel);
-    thick(p, [p.iso(0.3, v, 1), p.iso(0.3, v, 6)], 1.4, steel);
-    thick(p, [p.iso(0.72, v, 1), p.iso(0.72, v, 6)], 1.4, steel);
+  p.ellipse(c.x + 2, c.y + 2, 20, 7, '#ffffff', shade('#cfe6f5', -0.15));
+  // curved red runners with wooden struts
+  for (const v of [0.3, 0.7]) {
+    thickCurve(p, p.iso(0.06, v, 1), p.iso(0.5, v, -2), p.iso(0.98, v, 6), 2.6, '#e5344f');
+    thick(p, [p.iso(0.28, v, 1), p.iso(0.28, v, 6)], 1.4, WOOD_DK);
+    thick(p, [p.iso(0.74, v, 1), p.iso(0.74, v, 6)], 1.4, WOOD_DK);
   }
-  // red sled body with a cushion on top
-  p.box(0.16, 0.26, 0.7, 0.52, 7, '#ff6b7a', 5);
-  p.diamond(0.22, 0.32, 0.58, 0.4, '#ff9aa6', O, 12);
-  p.line([p.iso(0.5, 0.32, 12), p.iso(0.5, 0.72, 12)], '#ffffff', 1.2);
-  // scarf draped over the front-left face, with a little fringe
-  const sa = p.iso(0.22, 0.8, 12);
-  const sc = p.iso(0.48, 0.8, -1);
-  const sb = p.iso(0.74, 0.8, 12);
-  thickCurve(p, sa, sc, sb, 5, '#ff5b7f');
-  // knit stripes: a dashed white line down the middle of the scarf
-  p.ctx.setLineDash([2.2, 2.2]);
-  p.curve(sa, sc, sb, '#ffffff', 1.3);
+  // red body with wooden slats across the top
+  p.box(0.18, 0.26, 0.66, 0.5, 6, '#ff5b6e', 6);
+  for (const u of [0.34, 0.5, 0.66]) thick(p, [p.iso(u, 0.26, 12), p.iso(u, 0.76, 12)], 2.2, WOOD_LT);
+  // knitted scarf draped over the front edge, with a dangling tail and fringe
+  const sa = p.iso(0.2, 0.8, 12);
+  const sc = p.iso(0.46, 0.84, -1);
+  const sb = p.iso(0.72, 0.8, 12);
+  thickCurve(p, sa, sc, sb, 5.4, '#ff5b7f');
+  p.ctx.setLineDash([2, 2]);
+  p.curve(sa, sc, sb, '#ffffff', 1.4);
   p.ctx.setLineDash([]);
-  for (const t of [0.38, 0.52, 0.64]) {
-    const a = p.iso(0.22 + t * 0.52, 0.8, 12 - 13 * (1 - Math.abs(0.5 - t) * 2));
-    p.line([a, { x: a.x, y: a.y + 3.5 }], '#ff5b7f', 1.4);
+  thick(p, [{ x: sb.x - 1, y: sb.y + 1 }, { x: sb.x - 0.5, y: sb.y + 9 }], 4, '#ff5b7f');
+  for (const dx of [-2.2, 0, 2]) {
+    p.line([{ x: sb.x - 0.5 + dx, y: sb.y + 9 }, { x: sb.x - 0.5 + dx * 1.1, y: sb.y + 12 }], '#ff5b7f', 1.4);
   }
-  sparkle(p, c.x - 15, c.y - 16, 2.6, '#ffffff');
-  sparkle(p, c.x + 17, c.y - 18, 2.2, '#ffffff');
+  // a little snowball beside it
+  const sbl = p.iso(0.12, 0.92, 0);
+  p.ball(sbl.x, sbl.y - 4.5, 4.5, '#ffffff');
+  sparkle(p, c.x - 14, c.y - 18, 2.4, '#ffffff');
+  sparkle(p, c.x + 18, c.y - 20, 2, '#ffffff');
 }
 
 /** Fire pit ringed with stones, plaid blankets folded beside it, and a toasting marshmallow. */
@@ -1727,15 +1827,15 @@ const ART: Record<string, { height: number; paint: Painter }> = {
   picnic_for_two: { height: 26, paint: picnicForTwo },
   shamrock_tea: { height: 40, paint: shamrockTea },
   hat_planter: { height: 30, paint: hatPlanter },
-  clover_bench: { height: 28, paint: cloverBench },
+  clover_bench: { height: 34, paint: cloverBench },
   egg_painting: { height: 36, paint: eggPainting },
   bunny_burrow: { height: 36, paint: bunnyBurrow },
   kite_post: { height: 84, paint: kitePost },
   blossom_picnic: { height: 26, paint: blossomPicnic },
   ice_cream_cart: { height: 66, paint: iceCreamCart },
   beach_chairs: { height: 36, paint: beachChairs },
-  watermelon_picnic: { height: 28, paint: watermelonPicnic },
-  sprinkler: { height: 36, paint: sprinkler },
+  watermelon_picnic: { height: 30, paint: watermelonPicnic },
+  sprinkler: { height: 40, paint: sprinkler },
   apple_bobbing: { height: 32, paint: appleBobbing },
   pie_rack: { height: 36, paint: pieRack },
   hayride_wagon: { height: 36, paint: hayrideWagon },

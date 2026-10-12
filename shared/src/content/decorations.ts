@@ -2,6 +2,7 @@
 // "charm" to the farm, which raises the farm's star rating and daily bonus.
 
 import { HORTICULTURE_DECORATIONS, LIFESTYLE_DECORATIONS } from './decorations2';
+import { COUNTRY_DECORATIONS, FESTIVAL_DECORATIONS, SPOOKY_DECORATIONS } from './decorations3';
 import { table } from './table';
 
 export type DecoCategory =
@@ -15,6 +16,8 @@ export type DecoCategory =
   | 'garden'
   | 'whimsy'
   | 'horticulture'
+  | 'country'
+  | 'party'
   | 'seasonal';
 
 export interface DecoDef {
@@ -31,7 +34,9 @@ export interface DecoDef {
   /** Only purchasable while this seasonal event is running. */
   event?: string;
   /** Later decoration collections (painted in their own art module). */
-  set?: 'lifestyle' | 'horticulture';
+  set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals';
+  /** Bought with Halloween candy instead of coins. */
+  candy?: number;
 }
 
 type Opts = Partial<Pick<DecoDef, 'w' | 'h' | 'flat' | 'event'>>;
@@ -230,13 +235,22 @@ export const CORE_DECORATIONS: DecoDef[] = [
   ev('new_year', 'confetti_cannon', 'Confetti Cannon', 90, 3),
 ];
 
-export const DECORATION_LIST: DecoDef[] = [...CORE_DECORATIONS, ...LIFESTYLE_DECORATIONS, ...HORTICULTURE_DECORATIONS];
+export const DECORATION_LIST: DecoDef[] = [
+  ...CORE_DECORATIONS,
+  ...LIFESTYLE_DECORATIONS,
+  ...HORTICULTURE_DECORATIONS,
+  ...SPOOKY_DECORATIONS,
+  ...COUNTRY_DECORATIONS,
+  ...FESTIVAL_DECORATIONS,
+];
 
 export const DECORATIONS: Record<string, DecoDef> = table(DECORATION_LIST);
 
 export const DECO_CATEGORIES: { id: DecoCategory; name: string }[] = [
   { id: 'seasonal', name: 'Seasonal' },
   { id: 'horticulture', name: 'Gardening' },
+  { id: 'country', name: 'Countryside' },
+  { id: 'party', name: 'Party' },
   { id: 'flowers', name: 'Flowers' },
   { id: 'plants', name: 'Plants' },
   { id: 'fences', name: 'Fences' },
