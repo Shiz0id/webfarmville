@@ -687,10 +687,10 @@ function wool(p: Pen): void {
   fluff(p, 20, 22, 14, 10, '#fbf5e8', 'woolicon', 11);
   // crimp curls
   for (const [x, y] of [
-    [14, 21],
-    [21, 18],
-    [26, 24],
-    [18, 26],
+    [11.5, 21],
+    [28.5, 20],
+    [24, 28.5],
+    [13, 27],
   ]) {
     p.ctx.beginPath();
     p.ctx.arc(x, y, 2, 0.2, Math.PI * 1.6);
@@ -707,8 +707,8 @@ function honey(p: Pen): void {
   p.line([{ x: 25, y: 18 }, { x: 33, y: 3 }], '#c98a4b', 2);
   // jar
   p.roundRect(9, 13, 22, 22, 6, p.vgrad(13, 35, '#ffc24a', '#e08a12'));
-  p.rect(12, 20, 16, 9, '#fff3d6');
-  p.text('HONEY', 20, 24.6, 4.2, '#b5651d');
+  p.rect(12, 25, 16, 8, '#fff3d6');
+  p.text('HONEY', 20, 29.2, 4.2, '#b5651d');
   p.ellipse(20, 13, 11, 2.5, '#d18a2a');
   // cloth lid with string
   p.poly(
@@ -905,9 +905,9 @@ const PRODUCT_FACE: Record<string, [number, number, number]> = {
   egg: [20, 19, 2.4],
   milk: [20, 18, 2.2],
   wool: [20, 21.5, 2.4],
-  honey: [20, 16.5, 2],
+  honey: [20, 19.6, 2.4],
   truffle: [19, 21, 2.4],
-  feather: [23.5, 15.5, 1.5],
+  feather: [19, 15.8, 1.9],
   goat_milk: [20, 25, 2.8],
   angora: [17, 24, 2.4],
 };
@@ -933,6 +933,10 @@ export const icons: IconSpec[] = ANIMAL_LIST.map((a) => ({
   paint: (p: Pen) => {
     (PRODUCT_ART[a.product] ?? fallbackProduct)(p);
     const f = PRODUCT_FACE[a.product];
-    if (f) face(p, f[0], f[1], f[2]);
+    if (f) {
+      const [x, y, k] = f;
+      p.glow(x - k, y - k * 1.2, k * 2.4, '#ffffff', 0.3); // soft highlight on the body, as on the crops
+      face(p, x, y, k);
+    }
   },
 }));

@@ -375,14 +375,10 @@ const lemonTree: TreeArt = {
     trunkH: 26,
     trunkW: 6,
     canopyZ: 48,
-    clumps: [
-      [-9, 3, 13, '#9fcb3f'],
-      [9, 3, 13, '#a9d248'],
-      [0, -7, 15, '#b8dc5a'],
-    ],
+    clumps: [[0, 0, 21, '#a9d248']],
     fruit: (p, x, y, i) => lemonShape(p, x, y, 3.1, i % 2 ? 0.5 : -0.4),
     fruitN: 8,
-    fruitArea: [16, 22],
+    fruitArea: [15, 17],
     minD: 7,
   }),
 };
@@ -424,14 +420,14 @@ const bananaTree: TreeArt = {
     ctx.quadraticCurveTo(c.x, c.y + 3, c.x - 7.5, c.y + 1);
     ctx.closePath();
     const g = ctx.createLinearGradient(c.x - 7.5, 0, c.x + 7.5, 0);
-    g.addColorStop(0, '#a4bc4c');
-    g.addColorStop(0.5, '#6e9e34');
-    g.addColorStop(1, '#4b7324');
+    g.addColorStop(0, '#b6e05a');
+    g.addColorStop(0.5, '#5fb83a');
+    g.addColorStop(1, '#3a8a2c');
     finish(p, g);
     for (const t of [0.25, 0.55, 0.8])
       p.curve({ x: c.x - 4.5, y: c.y - h * t + 3 }, { x: c.x, y: c.y - h * t - 2 }, { x: c.x + 4.5, y: c.y - h * t - 5 }, '#2f4f1c', 1);
     p.curve({ x: c.x - 2.5, y: c.y - 2 }, { x: c.x - 3.5, y: c.y - 12 }, { x: c.x - 2.5, y: c.y - 20 }, '#c8c97a', 0.8);
-    const leafCol = '#34a040';
+    const leafCol = '#2fb34a';
     const back: [number, number, number][] = [
       [-2.2, 27, 2],
       [-0.95, 27, 2],
@@ -620,13 +616,13 @@ function face(p: Pen, x: number, y: number, k: number): void {
 /** Where each fruit icon's face sits, as [x, y, k] (k = half the eye gap in px). */
 const ICON_FACE: Record<string, [number, number, number]> = {
   apple: [20, 22, 2.6],
-  cherry: [23.5, 29.5, 1.8],
+  cherry: [23.5, 29.4, 2.2],
   orange: [20, 23, 2.8],
   lemon: [20, 22, 2.4],
   peach: [22.5, 23, 2.4],
-  banana: [20, 22, 1.7],
+  banana: [20, 22, 2.2],
   coconut: [25, 17, 2.6],
-  maple_syrup: [20, 24.5, 1.9],
+  maple_syrup: [20, 23.6, 2.2],
 };
 
 function iconShadow(p: Pen, y = 35, rx = 12): void {
@@ -675,6 +671,7 @@ const ICONS: Record<string, (p: Pen) => void> = {
   peach: (p) => {
     iconShadow(p, 35, 13);
     peach(p, 20, 22, 12);
+    p.ellipse(14.5, 17, 2.8, 1.6, 'rgba(255,255,255,0.6)', null, -0.6); // soft gloss
   },
   banana: (p) => {
     iconShadow(p, 34, 14);
@@ -685,6 +682,7 @@ const ICONS: Record<string, (p: Pen) => void> = {
     ] as const)
       banana(p, { x: 8, y: 26 }, ang, len, -curl, col, 5);
     p.roundRect(5, 23, 5, 5, 1.5, '#7a8a3a');
+    p.line([{ x: 13, y: 20.5 }, { x: 17, y: 17.5 }], 'rgba(255,255,255,0.55)', 1.2); // gloss on the top banana
   },
   coconut: (p) => {
     iconShadow(p, 35, 15);
@@ -701,6 +699,7 @@ const ICONS: Record<string, (p: Pen) => void> = {
       [0, -3.5],
     ])
       p.circle(24 + dx, 18 + dy, 1.1, '#3e2614', null);
+    p.ellipse(19.5, 12.5, 2.6, 1.3, 'rgba(255,255,255,0.45)', null, -0.6); // soft gloss
     // a cracked half in front
     const ctx = p.ctx;
     ctx.beginPath();
@@ -758,9 +757,9 @@ const ICONS: Record<string, (p: Pen) => void> = {
     finish(p, null);
     // cap
     p.roundRect(15, 4.5, 10, 4.5, 1.2, '#c0533a');
-    // label with a maple leaf
+    // label with a small maple leaf kept clear of the face
     p.roundRect(11.5, 21, 17, 11, 2, '#fbf3df');
-    mapleLeaf(p, 20, 26.5, 4.2, '#d9472b');
+    mapleLeaf(p, 20, 29.8, 2.4, '#d9472b');
     // glass shine
     p.line([{ x: 11.5, y: 18 }, { x: 11.5, y: 30 }], 'rgba(255,255,255,0.7)', 1.2);
   },

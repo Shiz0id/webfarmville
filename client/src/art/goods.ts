@@ -1039,7 +1039,11 @@ function face(p: Pen, x: number, y: number, k: number): void {
 function withFace(art: (p: Pen) => void, f: [number, number, number] | undefined): (p: Pen) => void {
   return (p) => {
     art(p);
-    if (f) face(p, f[0], f[1], f[2]);
+    if (f) {
+      const [x, y, k] = f;
+      p.glow(x - k, y - k * 1.2, k * 2.4, '#ffffff', 0.3); // soft highlight on the body, as on the crops
+      face(p, x, y, k);
+    }
   };
 }
 
@@ -1053,7 +1057,7 @@ const GOOD_FACE: Record<string, [number, number, number]> = {
   cornbread: [19, 25.5, 2],
   pumpkin_pie: [20, 26.5, 2.4],
   butter: [13.5, 24.5, 1.8],
-  cheese: [18, 21, 1.8],
+  cheese: [18, 21.5, 2.2],
   ice_cream: [20, 15.5, 2.4],
   goat_cheese: [17, 24.5, 2.2],
   strawberry_jam: [20, 17.6, 2],

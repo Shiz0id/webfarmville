@@ -145,7 +145,82 @@ export const sfx = {
   help() {
     [79, 83, 86].forEach((n, i) => tone(NOTE(n), 0.2, { type: 'sine', vol: 0.15, delay: i * 0.06 }));
   },
+  splash() {
+    noise(0.35, { vol: 0.22, freq: 1400, q: 0.7, slide: 0.4 });
+    tone(320, 0.12, { type: 'sine', vol: 0.12, slide: 0.5, delay: 0.02 });
+  },
+  plop() {
+    tone(520, 0.12, { type: 'sine', vol: 0.18, slide: 0.45 });
+  },
+  reel() {
+    if (throttled('reel', 70)) return;
+    tone(1800 + Math.random() * 300, 0.02, { type: 'square', vol: 0.025 });
+  },
+  catch() {
+    [67, 72, 76, 79, 84].forEach((n, i) => tone(NOTE(n), 0.28, { type: 'triangle', vol: 0.13, delay: i * 0.07 }));
+    tone(NOTE(91), 0.5, { type: 'sine', vol: 0.06, delay: 0.38 });
+  },
+  swoosh() {
+    noise(0.18, { vol: 0.12, freq: 2500, q: 0.5, slide: 0.5 });
+  },
+  /** A soft rumbly purr: filtered noise pulsing about 25 times a second. */
+  purr(seconds = 1.4) {
+    const a = ctx();
+    if (!a || !audioSettings.sfx || throttled('purr', 600)) return;
+    const t = a.currentTime;
+    const src = a.createBufferSource();
+    src.buffer = noiseBuffer(a, seconds + 0.1);
+    const lp = a.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 260;
+    const g = a.createGain();
+    g.gain.value = 0;
+    const lfo = a.createOscillator();
+    lfo.frequency.value = 24;
+    const depth = a.createGain();
+    depth.gain.value = 0.5;
+    lfo.connect(depth).connect(g.gain);
+    const env = a.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.exponentialRampToValueAtTime(0.9, t + 0.25);
+    env.gain.setValueAtTime(0.9, t + seconds - 0.35);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + seconds);
+    src.connect(lp).connect(g).connect(env).connect(sfxBus);
+    lfo.start(t);
+    src.start(t);
+    lfo.stop(t + seconds + 0.05);
+    src.stop(t + seconds + 0.05);
+  },
 };
+
+let noiseCache: AudioBuffer | null = null;
+function noiseBuffer(a: AudioContext, seconds: number): AudioBuffer {
+  if (noiseCache && noiseCache.duration >= seconds) return noiseCache;
+  const buf = a.createBuffer(1, Math.ceil(a.sampleRate * Math.max(seconds, 2)), a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return (noiseCache = buf);
+}
+
+/** A burst of filtered noise (splashes, swooshes). */
+function noise(dur: number, o: { vol: number; freq: number; q: number; slide?: number }): void {
+  const a = ctx();
+  if (!a || !audioSettings.sfx) return;
+  const t = a.currentTime;
+  const src = a.createBufferSource();
+  src.buffer = noiseBuffer(a, dur);
+  const bp = a.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.setValueAtTime(o.freq, t);
+  if (o.slide) bp.frequency.exponentialRampToValueAtTime(o.freq * o.slide, t + dur);
+  bp.Q.value = o.q;
+  const g = a.createGain();
+  g.gain.setValueAtTime(o.vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp).connect(g).connect(sfxBus);
+  src.start(t);
+  src.stop(t + dur + 0.05);
+}
 
 // ---------------------------------------------------------------------------
 // Music box: an endless, gently varying arpeggio. Each seasonal event has its

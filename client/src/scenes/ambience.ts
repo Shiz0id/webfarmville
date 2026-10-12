@@ -5,6 +5,12 @@ import type { EventFeature } from '@farm/shared';
 
 export type DayPhase = 'dawn' | 'day' | 'dusk' | 'night';
 
+/** The player's local hour (0-23); `?hour=` overrides it for testing. */
+export function localHour(date = new Date()): number {
+  const forced = new URLSearchParams(location.search).get('hour');
+  return forced !== null ? Math.floor(Number(forced)) % 24 : date.getHours();
+}
+
 export function dayPhase(date = new Date()): DayPhase {
   const forced = new URLSearchParams(location.search).get('hour');
   const h = forced !== null ? Number(forced) : date.getHours() + date.getMinutes() / 60;
