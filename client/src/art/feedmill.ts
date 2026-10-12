@@ -26,7 +26,6 @@ const GRAIN = '#f2c24a';
 const MINT = '#a8e6cf';
 const MINT_D = '#7fcdb0';
 const PINK = '#ffb3cf';
-const PINK_D = '#e77fa6';
 const BURLAP = '#e6c48c';
 const TWINE = '#c7985a';
 const CARROT = '#ff9a3c';
@@ -52,8 +51,6 @@ interface Face {
 const faceL = (p: Pen, v: number): Face => ({ pt: (s, z) => p.iso(s, v, z), dim: 0 });
 /** The gable (right-hand) wall: u is fixed and s runs along v. */
 const faceR = (p: Pen, u: number): Face => ({ pt: (s, z) => p.iso(u, s, z), dim: -0.12 });
-
-const tint = (f: Face, col: string): string => shade(col, f.dim);
 
 function quad(p: Pen, f: Face, s0: number, s1: number, z0: number, z1: number, fill: Fill, stroke: string | null = p.outline): void {
   p.poly([f.pt(s0, z0), f.pt(s1, z0), f.pt(s1, z1), f.pt(s0, z1)], fill, stroke);
@@ -192,14 +189,14 @@ function feedMill(p: Pen): void {
     const s = HOUSE + ((HOUSE_E - HOUSE) * k) / 8;
     p.line([hl.pt(s, 14), hl.pt(s, WALL_TOP - 2)], shade(WOOD, -0.22), 0.7);
   }
-  p.gableRoof(HOUSE, HOUSE, HOUSE_E - HOUSE, HOUSE_E - HOUSE, WALL_TOP, ROOF_H, ROOF, WOOD, 0.12);
+  p.gableRoof(HOUSE, HOUSE, HOUSE_E - HOUSE, HOUSE_E - HOUSE, WALL_TOP, ROOF_H, ROOF, WOOD, 0.04);
   // roof tiles on the front slope and a ridge cap
   for (const t of [0.3, 0.6]) {
     const vt = 1.0 + (HOUSE_E + 0.12 - 1.0) * t;
     const zt = WALL_TOP + ROOF_H * (1 - t);
-    p.line([P(HOUSE - 0.12, vt, zt), P(HOUSE_E + 0.12, vt, zt)], shade(ROOF, -0.3), 0.8);
+    p.line([P(HOUSE - 0.04, vt, zt), P(HOUSE_E + 0.04, vt, zt)], shade(ROOF, -0.3), 0.8);
   }
-  thick(p, [P(HOUSE - 0.12, 1.0, WALL_TOP + ROOF_H), P(HOUSE_E + 0.12, 1.0, WALL_TOP + ROOF_H)], shade(ROOF, -0.12), 2.4);
+  thick(p, [P(HOUSE - 0.04, 1.0, WALL_TOP + ROOF_H), P(HOUSE_E + 0.04, 1.0, WALL_TOP + ROOF_H)], shade(ROOF, -0.12), 2.4);
 
   // porthole in the gable
   const port = P(HOUSE_E, 0.98, 58);
@@ -213,10 +210,12 @@ function feedMill(p: Pen): void {
   p.line([hl.pt(1.39, 26), hl.pt(1.39, 36)], TRIM, 0.9);
 
   // water wheel on a pier, turning over a little stream
-  const water = [P(0.12, 1.8, 0), P(1.5, 1.8, 0), P(1.6, 1.98, 0), P(0.22, 1.98, 0)];
-  p.poly(water, WATER, p.outline, 1.2);
-  p.line([P(0.3, 1.9, 0.5), P(0.7, 1.9, 0.5)], '#ffffff', 1);
-  p.line([P(0.95, 1.92, 0.5), P(1.2, 1.92, 0.5)], '#ffffff', 1);
+  // a little stream under the wheel, with ripples
+  const stream = [P(0.4, 1.9, 0), P(0.86, 1.86, 0), P(1.34, 1.92, 0)];
+  p.line(stream, p.outline, 6.4);
+  p.line(stream, WATER_D, 4.6);
+  p.line(stream, WATER, 2.6);
+  p.line([P(0.55, 1.9, 0), P(0.72, 1.88, 0)], '#ffffff', 0.8);
   const uC = 0.84;
   const zC = 31;
   const rU = 0.36;
@@ -241,10 +240,6 @@ function feedMill(p: Pen): void {
   p.circle(hub.x, hub.y, 2.4, WOOD_D);
   p.circle(hub.x - 0.6, hub.y - 0.6, 0.8, WOOD_L, null);
 
-  // a splash where the wheel dips towards the water
-  const splash = rim(1, 0.5);
-  p.circle(splash.x, splash.y + 2, 1, '#ffffff', WATER_D);
-
   // hopper and chute on the gable wall, pouring grain onto the sacks
   quad(p, hr, 1.04, 1.34, 36, 46, WOOD_D);
   quad(p, hr, 1.08, 1.3, 38, 44, INK, null);
@@ -262,23 +257,23 @@ function feedMill(p: Pen): void {
   p.circle(hr.pt(0.9, 25).x, hr.pt(0.9, 25).y, 1, '#ffd34a', null);
 
   // feed sacks stacked by the door: mint and pink, with paw and heart prints
-  const sA = P(1.95, 1.2, 0);
+  const sA = P(1.96, 1.08, 0);
   sack(p, sA.x, sA.y, 21, 22, MINT, 'paw', CREAM);
-  const sC = P(1.95, 1.2, 14);
+  const sC = P(1.96, 1.08, 14);
   sack(p, sC.x, sC.y, 18, 17, PINK, 'heart', MINT_D);
   // grain pile where the chute pours onto the top sack
   for (const [dx, dy] of [
-    [-2, 0],
-    [0.5, -0.8],
-    [2.4, 0.4],
+    [-2.4, 0.6],
+    [0.2, -0.6],
+    [2.6, 0.4],
   ]) {
-    p.ellipse(sC.x + dx, sC.y - 22 + dy, 1.8, 1.1, GRAIN, shade(GRAIN, -0.4), 0.3);
+    p.ellipse(sC.x + dx, sC.y - 19 + dy, 1.8, 1.1, GRAIN, shade(GRAIN, -0.4), 0.3);
   }
-  const sB = P(1.9, 1.52, 0);
+  const sB = P(1.84, 1.66, 0);
   sack(p, sB.x, sB.y, 19, 21, PINK, 'paw', CREAM);
 
   // a few tufts of grass and a flower or two by the plinth
-  const fl = P(0.02, 0.2, 0);
+  const fl = P(1.92, 0.42, 0);
   p.flower(fl.x, fl.y - 2, 2.2, '#ffffff', '#ffd84a');
 
   // a weathervane with a golden wheat ear on the ridge
@@ -329,8 +324,8 @@ function animalFeed(p: Pen): void {
     CARROT,
   );
   p.line([{ x: 29.5, y: 8 }, { x: 27.5, y: 10.5 }], shade(CARROT, -0.3), 0.6);
-  p.ellipse(31.3, 2.6, 1, 3.1, LEAF, p.outline, -0.4);
-  p.ellipse(33.6, 3.4, 0.9, 2.8, LEAF, p.outline, 0.45);
+  p.ellipse(31.2, 4.6, 1, 3.1, LEAF, p.outline, -0.4);
+  p.ellipse(33.5, 5.2, 0.9, 2.8, LEAF, p.outline, 0.45);
 
   // burlap body, its weave and gathered top
   const g = p.ctx.createLinearGradient(6, 0, 34, 0);
@@ -351,7 +346,7 @@ function animalFeed(p: Pen): void {
   // green tag hanging from the twine, with a heart print
   p.line([{ x: 16, y: 15 }, { x: 16.5, y: 19.5 }], TWINE, 0.8);
   p.roundRect(15, 19.5, 10, 8.5, 2, LEAF_TAG);
-  p.circle(17.4, 21.2, 0.9, CREAM, p.outline, 0.5);
+  p.circle(17.4, 21.2, 0.9, CREAM, p.outline);
   p.heart(20, 25.4, 2.1, CREAM, null);
 
   // wheat grains spilling across the ground
