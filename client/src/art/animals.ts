@@ -1,7 +1,16 @@
 // Farm animals (1×1 sprites, facing bottom-left in 3/4 view) and the icons of
 // what they produce.
+//
+// Each animal has one painter that takes a frame. Frame 0 is the resting art,
+// and `animal:<id>#1` / `animal:<id>#2` are the two idle frames the game cycles
+// through. Frame 1 is always a blink. Frame 2 moves one small part (a peck, a
+// tail swish, an ear flick...). Bodies never move, so the three frames line up.
 import { type IconSpec, type SpriteSpec, type Pen, shade, rng, mix } from './kit';
 import { ANIMAL_LIST } from '@farm/shared';
+
+/** 0 = resting art, 1 = blink, 2 = the animal's own small motion. */
+type Frame = 0 | 1 | 2;
+type Painter = (p: Pen, f: Frame) => void;
 
 const INK = '#2b1d14';
 const BLUSH = 'rgba(255,120,140,0.45)';
@@ -12,6 +21,15 @@ const BLUSH = 'rgba(255,120,140,0.45)';
 function eye(p: Pen, x: number, y: number, r = 1.5): void {
   p.circle(x, y, r, INK, null);
   p.circle(x - r * 0.35, y - r * 0.4, r * 0.42, '#ffffff', null);
+}
+
+/** An open eye, or on the blink frame a closed lid: a small downward arc. */
+function eyeFrame(p: Pen, f: Frame, x: number, y: number, r = 1.5, lid = INK): void {
+  if (f !== 1) {
+    eye(p, x, y, r);
+    return;
+  }
+  p.curve({ x: x - r, y: y + 0.2 }, { x, y: y + r * 1.4 }, { x: x + r, y: y + 0.2 }, lid, 0.9);
 }
 
 function blush(p: Pen, x: number, y: number, s = 1): void {
@@ -67,10 +85,38 @@ function within(p: Pen, x: number, y: number, rx: number, ry: number, draw: () =
   p.ellipse(x, y, rx, ry, null, p.outline, rot);
 }
 
+/** Draw `draw` turned by `rot` radians about the point (x, y). rot 0 changes nothing. */
+function pivot(p: Pen, x: number, y: number, rot: number, draw: () => void): void {
+  p.save();
+  p.ctx.translate(x, y);
+  p.ctx.rotate(rot);
+  p.ctx.translate(-x, -y);
+  draw();
+  p.restore();
+}
+
+/** Draw `draw` shifted by (dx, dy) logical px. */
+function moved(p: Pen, dx: number, dy: number, draw: () => void): void {
+  p.save();
+  p.ctx.translate(dx, dy);
+  draw();
+  p.restore();
+}
+
+/** Draw `draw` squashed or stretched by (sx, sy) about the point (x, y). */
+function scaled(p: Pen, x: number, y: number, sx: number, sy: number, draw: () => void): void {
+  p.save();
+  p.ctx.translate(x, y);
+  p.ctx.scale(sx, sy);
+  p.ctx.translate(-x, -y);
+  draw();
+  p.restore();
+}
+
 // ---------------------------------------------------------------------------
 // Animals
 
-function chicken(p: Pen): void {
+function chicken(p: Pen, f: Frame): void {
   local(p, () => {
     p.shadow(1, 0, 16, 6);
     const legC = '#f0a033';
@@ -92,40 +138,44 @@ function chicken(p: Pen): void {
     shadedEllipse(p, 3, -13, 13, 10, '#fffaf0');
     p.ellipse(7, -13, 6.5, 4.5, shade('#fffaf0', -0.08), p.outline, -0.35);
     p.curve({ x: 4, y: -12 }, { x: 8, y: -10 }, { x: 11, y: -14 }, shade('#fffaf0', -0.25), 0.9);
-    // comb behind the head
-    for (const [cx, cy, cr] of [
-      [-10, -32, 2.6],
-      [-7, -34, 3],
-      [-4, -32.5, 2.5],
-    ])
-      p.circle(cx, cy, cr, '#e8424a');
-    shadedEllipse(p, -7, -25, 7.5, 7.5, '#fffaf0');
-    // beak
-    p.poly(
-      [
-        { x: -13.5, y: -27 },
-        { x: -18.5, y: -24.5 },
-        { x: -13.5, y: -22.5 },
-      ],
-      '#ffbf3a',
-    );
-    p.ellipse(-12.3, -19.8, 1.7, 2.6, '#e8424a');
-    eye(p, -9.5, -26.5, 1.5);
-    eye(p, -3.6, -26.8, 1.3);
-    blush(p, -6, -22.5, 0.8);
+    // head: on frame 2 it dips forward with the beak pointing down, to peck
+    pivot(p, 2, -16, f === 2 ? -0.28 : 0, () => {
+      // comb behind the head
+      for (const [cx, cy, cr] of [
+        [-10, -32, 2.6],
+        [-7, -34, 3],
+        [-4, -32.5, 2.5],
+      ])
+        p.circle(cx, cy, cr, '#e8424a');
+      shadedEllipse(p, -7, -25, 7.5, 7.5, '#fffaf0');
+      // beak
+      p.poly(
+        [
+          { x: -13.5, y: -27 },
+          { x: -18.5, y: -24.5 },
+          { x: -13.5, y: -22.5 },
+        ],
+        '#ffbf3a',
+      );
+      p.ellipse(-12.3, -19.8, 1.7, 2.6, '#e8424a');
+      eyeFrame(p, f, -9.5, -26.5, 1.5);
+      eyeFrame(p, f, -3.6, -26.8, 1.3);
+      blush(p, -6, -22.5, 0.8);
+    });
   });
 }
 
-function cow(p: Pen): void {
+function cow(p: Pen, f: Frame): void {
   local(p, () => {
     p.shadow(1, 0, 22, 8);
     const white = '#fffaf2';
     const hoof = '#6b4a3a';
     leg(p, 11, -1, 4, 10, shade(white, -0.12), hoof);
     leg(p, 16, -3, 4, 10, shade(white, -0.12), hoof);
-    // tail
-    p.curve({ x: 19, y: -21 }, { x: 24, y: -16 }, { x: 22, y: -9 }, p.outline, 1.2);
-    p.ellipse(22, -8, 1.8, 2.4, '#5a4038');
+    // tail: on frame 2 it swishes out to the far side
+    const tip = f === 2 ? { x: 26, y: -9 } : { x: 22, y: -8 };
+    p.curve({ x: 19, y: -21 }, f === 2 ? { x: 28, y: -17 } : { x: 24, y: -16 }, { x: tip.x, y: tip.y - 1 }, p.outline, 1.2);
+    p.ellipse(tip.x, tip.y, 1.8, 2.4, '#5a4038');
     shadedEllipse(p, 4, -17, 17, 11, white);
     within(p, 4, -17, 17, 11, () => {
       p.ellipse(10, -22, 6, 4.5, '#3d302b', null, 0.4);
@@ -135,55 +185,67 @@ function cow(p: Pen): void {
     p.ellipse(7, -6.5, 3.5, 2, '#f7b2bd');
     leg(p, -6, 0, 4, 10, white, hoof);
     leg(p, 1, 1, 4, 10, white, hoof);
-    // horns & ears
-    p.curve({ x: -17, y: -31 }, { x: -19, y: -36 }, { x: -16, y: -38 }, '#efe2c2', 2.6);
-    p.curve({ x: -7, y: -31 }, { x: -6, y: -36 }, { x: -9, y: -38 }, '#efe2c2', 2.6);
-    p.ellipse(-23, -29, 4.5, 2.3, white, p.outline, 0.35);
-    p.ellipse(-1, -29.5, 4.5, 2.3, white, p.outline, -0.35);
-    p.ellipse(-23, -29, 2.5, 1.1, '#f7b2bd', null, 0.35);
-    p.ellipse(-1, -29.5, 2.5, 1.1, '#f7b2bd', null, -0.35);
-    shadedEllipse(p, -12, -25, 10, 9, white);
-    within(p, -12, -25, 10, 9, () => p.ellipse(-5, -33, 5, 4, '#3d302b', null));
-    // snout
-    p.ellipse(-13.5, -18.5, 7.5, 4.6, '#f7b2bd');
-    p.ellipse(-16, -18.5, 1.1, 1.5, shade('#f7b2bd', -0.4), null);
-    p.ellipse(-11, -18.5, 1.1, 1.5, shade('#f7b2bd', -0.4), null);
-    eye(p, -16.5, -26, 1.6);
-    eye(p, -8.5, -26.5, 1.5);
-    blush(p, -20, -22.5, 0.8);
-    blush(p, -5, -23, 0.8);
+    // head: on frame 2 it tilts and the muzzle dips a touch, as if chewing
+    pivot(p, -2, -17, f === 2 ? -0.07 : 0, () => {
+      // horns & ears
+      p.curve({ x: -17, y: -31 }, { x: -19, y: -36 }, { x: -16, y: -38 }, '#efe2c2', 2.6);
+      p.curve({ x: -7, y: -31 }, { x: -6, y: -36 }, { x: -9, y: -38 }, '#efe2c2', 2.6);
+      p.ellipse(-23, -29, 4.5, 2.3, white, p.outline, 0.35);
+      p.ellipse(-1, -29.5, 4.5, 2.3, white, p.outline, -0.35);
+      p.ellipse(-23, -29, 2.5, 1.1, '#f7b2bd', null, 0.35);
+      p.ellipse(-1, -29.5, 2.5, 1.1, '#f7b2bd', null, -0.35);
+      shadedEllipse(p, -12, -25, 10, 9, white);
+      within(p, -12, -25, 10, 9, () => p.ellipse(-5, -33, 5, 4, '#3d302b', null));
+      // snout
+      p.ellipse(-13.5, -18.5, 7.5, 4.6, '#f7b2bd');
+      p.ellipse(-16, -18.5, 1.1, 1.5, shade('#f7b2bd', -0.4), null);
+      p.ellipse(-11, -18.5, 1.1, 1.5, shade('#f7b2bd', -0.4), null);
+      eyeFrame(p, f, -16.5, -26, 1.6);
+      eyeFrame(p, f, -8.5, -26.5, 1.5);
+      blush(p, -20, -22.5, 0.8);
+      blush(p, -5, -23, 0.8);
+    });
     // bell
     p.circle(-7, -13, 2.4, '#ffd34a');
     p.circle(-7.6, -13.6, 0.7, '#fff2b0', null);
   });
 }
 
-function sheep(p: Pen): void {
+function sheep(p: Pen, f: Frame): void {
   local(p, () => {
-    p.shadow(1, 0, 20, 7);
+    // on frame 2 the fluff hops a touch: the shadow shrinks as it lifts
+    const hop = f === 2 ? -1.2 : 0;
+    p.shadow(1, 0, f === 2 ? 18.5 : 20, 7);
     const face = '#5a4842';
     leg(p, 10, -2, 3.4, 9, face);
     leg(p, 15, -3.5, 3.4, 9, face);
-    fluff(p, 4, -16, 17, 12, '#fbf6ea', 'sheep', 12);
+    moved(p, 0, hop, () => fluff(p, 4, -16, 17, 12, '#fbf6ea', 'sheep', 12));
     leg(p, -5, 0, 3.4, 9, face);
     leg(p, 1, 0.8, 3.4, 9, face);
-    // ears
-    p.ellipse(-20, -21, 4, 2, face, p.outline, 0.4);
+    // ears: the left one flicks up on frame 2
+    const flick = f === 2;
+    p.ellipse(-20, flick ? -22.8 : -21, 4, 2, face, p.outline, flick ? 1 : 0.4);
     p.ellipse(-4, -22, 4, 2, face, p.outline, -0.4);
     shadedEllipse(p, -12, -20, 7.5, 8.5, face);
     // topknot
     fluff(p, -12, -28, 7, 4.5, '#fbf6ea', 'topknot', 6);
-    eye(p, -15, -20, 1.7);
-    eye(p, -8.5, -20.5, 1.6);
-    p.circle(-15, -20, 2.4, null, '#fffaf0');
-    p.circle(-8.5, -20.5, 2.3, null, '#fffaf0');
+    if (f === 1) {
+      // blink: light closed lids, drawn without the eye rings so they read as shut
+      eyeFrame(p, f, -15, -20, 1.7, '#fffaf0');
+      eyeFrame(p, f, -8.5, -20.5, 1.6, '#fffaf0');
+    } else {
+      eyeFrame(p, f, -15, -20, 1.7);
+      eyeFrame(p, f, -8.5, -20.5, 1.6);
+      p.circle(-15, -20, 2.4, null, '#fffaf0');
+      p.circle(-8.5, -20.5, 2.3, null, '#fffaf0');
+    }
     p.ellipse(-12, -14.5, 1.6, 1, '#f3a0ad', null);
     blush(p, -17, -16.5, 0.7);
     blush(p, -6.5, -17, 0.7);
   });
 }
 
-function beehive(p: Pen): void {
+function beehive(p: Pen, f: Frame): void {
   const c = p.center;
   p.shadow(c.x, c.y, 22, 9);
   p.box(0.2, 0.2, 0.6, 0.6, 5, '#9a6a43');
@@ -221,9 +283,12 @@ function beehive(p: Pen): void {
     p.ellipse(9, -9.5, 1.5, 3, '#f6a623', shade('#f6a623', -0.35));
     p.circle(9, -6.2, 1.9, '#f6a623', shade('#f6a623', -0.35));
     p.circle(8.4, -6.8, 0.6, '#ffe2a0', null);
-    // bees
+    // bees: on frame 0 they hover on their flight paths; on frames 1 and 2 they
+    // have moved about the hive, and their wings are too fast to see clearly
+    const blur = f !== 0;
     const bee = (x: number, y: number, flip: number) => {
-      p.ellipse(x + 0.5 * flip, y - 2.6, 2, 1.4, 'rgba(255,255,255,0.85)', shade('#cfe8ff', -0.3), -0.5 * flip);
+      if (blur) p.ellipse(x + 0.5 * flip, y - 2.8, 4.2, 2.4, 'rgba(255,255,255,0.45)', null, -0.5 * flip);
+      else p.ellipse(x + 0.5 * flip, y - 2.6, 2, 1.4, 'rgba(255,255,255,0.85)', shade('#cfe8ff', -0.3), -0.5 * flip);
       p.ellipse(x, y, 3, 2.2, '#ffd23f');
       p.line([{ x: x - 0.3, y: y - 2 }, { x: x - 0.3, y: y + 2 }], INK, 1);
       p.line([{ x: x + 1.4 * flip, y: y - 1.8 }, { x: x + 1.4 * flip, y: y + 1.8 }], INK, 1);
@@ -234,34 +299,50 @@ function beehive(p: Pen): void {
       p.curve(pts[0], pts[1], pts[2], 'rgba(74,52,38,0.55)', 0.8);
       p.ctx.setLineDash([]);
     };
+    const [[x1, y1], [x2, y2]] =
+      f === 0
+        ? [
+            [-19, -48],
+            [19, -40],
+          ]
+        : f === 1
+          ? [
+              [-21, -44],
+              [17, -46],
+            ]
+          : [
+              [-16, -52],
+              [22, -33],
+            ];
     trail([
       { x: -12, y: -46 },
       { x: -22, y: -52 },
       { x: -24, y: -40 },
     ]);
-    bee(-19, -48, 1);
+    bee(x1, y1, 1);
     trail([
       { x: 14, y: -38 },
       { x: 24, y: -36 },
       { x: 22, y: -27 },
     ]);
-    bee(19, -40, -1);
+    bee(x2, y2, -1);
   });
 }
 
-function pig(p: Pen): void {
+function pig(p: Pen, f: Frame): void {
   local(p, () => {
     p.shadow(1, 0, 20, 7);
     const pink = '#f6b3bf';
     leg(p, 10, -2, 4, 7, shade(pink, -0.1));
     leg(p, 15, -3.5, 4, 7, shade(pink, -0.1));
-    // curly tail
-    const ctx = p.ctx;
-    ctx.beginPath();
-    ctx.arc(21, -17, 2.4, Math.PI * 0.9, Math.PI * 2.7);
-    ctx.strokeStyle = shade(pink, -0.35);
-    ctx.lineWidth = 1.4;
-    ctx.stroke();
+    // curly tail: on frame 2 it wiggles about where it joins the body
+    pivot(p, 19, -14, f === 2 ? 0.7 : 0, () => {
+      p.ctx.beginPath();
+      p.ctx.arc(21, -17, 2.4, Math.PI * 0.9, Math.PI * 2.7);
+      p.ctx.strokeStyle = shade(pink, -0.35);
+      p.ctx.lineWidth = 1.4;
+      p.ctx.stroke();
+    });
     shadedEllipse(p, 4, -14, 16, 11, pink);
     p.ellipse(12, -10, 3, 1.8, 'rgba(150,100,70,0.35)', null);
     p.ellipse(15, -13, 1.8, 1.2, 'rgba(150,100,70,0.3)', null);
@@ -285,18 +366,20 @@ function pig(p: Pen): void {
       shade(pink, -0.05),
     );
     shadedEllipse(p, -11, -18, 10, 9, pink);
-    // snout
-    p.ellipse(-14, -14.5, 5.2, 3.6, shade(pink, -0.08));
-    p.ellipse(-16, -14.5, 0.9, 1.4, shade(pink, -0.45), null);
-    p.ellipse(-12, -14.5, 0.9, 1.4, shade(pink, -0.45), null);
-    eye(p, -16.5, -21, 1.5);
-    eye(p, -8, -21.5, 1.5);
+    // snout: lifts a little on frame 2
+    moved(p, 0, f === 2 ? -1.2 : 0, () => {
+      p.ellipse(-14, -14.5, 5.2, 3.6, shade(pink, -0.08));
+      p.ellipse(-16, -14.5, 0.9, 1.4, shade(pink, -0.45), null);
+      p.ellipse(-12, -14.5, 0.9, 1.4, shade(pink, -0.45), null);
+    });
+    eyeFrame(p, f, -16.5, -21, 1.5);
+    eyeFrame(p, f, -8, -21.5, 1.5);
     blush(p, -20, -17, 0.75);
     blush(p, -5, -17.5, 0.75);
   });
 }
 
-function duck(p: Pen): void {
+function duck(p: Pen, f: Frame): void {
   local(p, () => {
     p.shadow(1, 0, 17, 6);
     const orange = '#f59a2e';
@@ -318,9 +401,11 @@ function duck(p: Pen): void {
     p.curve({ x: 15, y: -20 }, { x: 15, y: -25 }, { x: 18, y: -25 }, INK, 1.4);
     shadedEllipse(p, 4, -11, 13, 8.5, grey);
     within(p, 4, -11, 13, 8.5, () => p.ellipse(-7, -11, 8, 9, '#a5603c', null));
-    // wing
-    p.ellipse(7, -12, 7, 4.2, shade(grey, -0.12), p.outline, -0.2);
-    p.ellipse(9.5, -11, 3, 1.4, '#3f6fd0', null, -0.2);
+    // wing: on frame 2 it lifts a little, tipped up at the front
+    const wingY = f === 2 ? -13.6 : -12;
+    const wingRot = f === 2 ? -0.45 : -0.2;
+    p.ellipse(7, wingY, 7, 4.2, shade(grey, -0.12), p.outline, wingRot);
+    p.ellipse(9.5, wingY + 1, 3, 1.4, '#3f6fd0', null, wingRot);
     // neck & head
     p.poly(
       [
@@ -334,15 +419,22 @@ function duck(p: Pen): void {
     );
     p.line([{ x: -8.6, y: -16.5 }, { x: -2.2, y: -16 }], '#ffffff', 2);
     shadedEllipse(p, -5, -25, 7.5, 7, '#2f8f5a');
-    p.ellipse(-12.5, -23, 5, 2.3, '#ffc93a', p.outline, 0.15);
-    p.line([{ x: -16.5, y: -22.6 }, { x: -9, y: -22.2 }], shade('#ffc93a', -0.3), 0.8);
-    eye(p, -8.5, -26.5, 1.5);
-    eye(p, -2, -26.5, 1.3);
+    if (f === 2) {
+      // quack: the bill opens, with a dark mouth between upper and lower bill
+      p.ellipse(-12.5, -22.4, 4.4, 1.5, '#6b2e1c', null, 0.15);
+      p.ellipse(-12.5, -24.6, 5, 1.5, '#ffc93a', p.outline, 0.15);
+      p.ellipse(-12.5, -20.3, 3.8, 1.2, shade('#ffc93a', -0.12), p.outline, 0.15);
+    } else {
+      p.ellipse(-12.5, -23, 5, 2.3, '#ffc93a', p.outline, 0.15);
+      p.line([{ x: -16.5, y: -22.6 }, { x: -9, y: -22.2 }], shade('#ffc93a', -0.3), 0.8);
+    }
+    eyeFrame(p, f, -8.5, -26.5, 1.5);
+    eyeFrame(p, f, -2, -26.5, 1.3);
     blush(p, -5.5, -22.5, 0.7);
   });
 }
 
-function goat(p: Pen): void {
+function goat(p: Pen, f: Frame): void {
   local(p, () => {
     p.shadow(1, 0, 20, 7);
     const coat = '#efe5d2';
@@ -350,8 +442,9 @@ function goat(p: Pen): void {
     const hoof = '#5e4436';
     leg(p, 11, -2, 3.2, 12, shade(coat, -0.12), hoof);
     leg(p, 16, -3.5, 3.2, 12, shade(coat, -0.12), hoof);
-    // tail
-    p.ellipse(19, -24, 2, 3.5, coat, p.outline, 0.6);
+    // tail: on frame 2 it flicks up
+    if (f === 2) p.ellipse(19.5, -26, 2, 3.5, coat, p.outline, 1.1);
+    else p.ellipse(19, -24, 2, 3.5, coat, p.outline, 0.6);
     shadedEllipse(p, 5, -19, 15, 9, coat);
     within(p, 5, -19, 15, 9, () => {
       p.ellipse(12, -23, 6, 5, patch, null);
@@ -359,57 +452,63 @@ function goat(p: Pen): void {
     });
     leg(p, -4, 0, 3.2, 12, coat, hoof);
     leg(p, 2, 0.8, 3.2, 12, coat, hoof);
-    // horns sweeping back
-    p.curve({ x: -13, y: -35 }, { x: -12, y: -42 }, { x: -4, y: -42 }, '#8a7464', 3);
-    p.curve({ x: -7, y: -35 }, { x: -5, y: -41 }, { x: 2, y: -40 }, '#a68d7a', 3);
-    // ears (floppy, sideways)
-    p.ellipse(-21, -31, 5, 2.2, patch, p.outline, 0.5);
-    p.ellipse(-2, -32, 5, 2.2, patch, p.outline, -0.5);
-    // head (long face)
-    const ctx = p.ctx;
-    ctx.beginPath();
-    ctx.moveTo(-18, -32);
-    ctx.bezierCurveTo(-18, -39, -4, -39, -4, -32);
-    ctx.bezierCurveTo(-4, -26, -7, -20, -11, -20);
-    ctx.bezierCurveTo(-15, -20, -18, -26, -18, -32);
-    ctx.closePath();
-    ctx.fillStyle = p.vgrad(-38, -20, shade(coat, 0.2), coat);
-    ctx.fill();
-    ctx.strokeStyle = p.outline;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    // beard
-    p.poly(
-      [
-        { x: -13, y: -21 },
-        { x: -11, y: -14 },
-        { x: -9, y: -21 },
-      ],
-      '#fffaf0',
-    );
-    p.ellipse(-11, -23, 3.6, 2.3, '#f2c9b8', null);
-    p.ellipse(-12, -23.5, 0.6, 0.9, shade('#f2c9b8', -0.45), null);
-    p.ellipse(-10, -23.5, 0.6, 0.9, shade('#f2c9b8', -0.45), null);
-    eye(p, -14.5, -30, 1.4);
-    eye(p, -7.5, -30.2, 1.4);
-    blush(p, -16.5, -26.5, 0.6);
-    blush(p, -5.5, -26.5, 0.6);
+    // head: on frame 2 it dips, nose down, and the beard chews
+    pivot(p, -4, -22, f === 2 ? -0.15 : 0, () => {
+      // horns sweeping back
+      p.curve({ x: -13, y: -35 }, { x: -12, y: -42 }, { x: -4, y: -42 }, '#8a7464', 3);
+      p.curve({ x: -7, y: -35 }, { x: -5, y: -41 }, { x: 2, y: -40 }, '#a68d7a', 3);
+      // ears (floppy, sideways)
+      p.ellipse(-21, -31, 5, 2.2, patch, p.outline, 0.5);
+      p.ellipse(-2, -32, 5, 2.2, patch, p.outline, -0.5);
+      // head (long face)
+      const ctx = p.ctx;
+      ctx.beginPath();
+      ctx.moveTo(-18, -32);
+      ctx.bezierCurveTo(-18, -39, -4, -39, -4, -32);
+      ctx.bezierCurveTo(-4, -26, -7, -20, -11, -20);
+      ctx.bezierCurveTo(-15, -20, -18, -26, -18, -32);
+      ctx.closePath();
+      ctx.fillStyle = p.vgrad(-38, -20, shade(coat, 0.2), coat);
+      ctx.fill();
+      ctx.strokeStyle = p.outline;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      // beard
+      p.poly(
+        [
+          { x: -13, y: -21 },
+          { x: -11, y: -14 },
+          { x: -9, y: -21 },
+        ],
+        '#fffaf0',
+      );
+      p.ellipse(-11, -23, 3.6, 2.3, '#f2c9b8', null);
+      p.ellipse(-12, -23.5, 0.6, 0.9, shade('#f2c9b8', -0.45), null);
+      p.ellipse(-10, -23.5, 0.6, 0.9, shade('#f2c9b8', -0.45), null);
+      eyeFrame(p, f, -14.5, -30, 1.4);
+      eyeFrame(p, f, -7.5, -30.2, 1.4);
+      blush(p, -16.5, -26.5, 0.6);
+      blush(p, -5.5, -26.5, 0.6);
+    });
     // bell collar
     p.line([{ x: -14, y: -21 }, { x: -6, y: -21 }], '#d2493f', 1.5);
     p.circle(-6.5, -18.6, 1.9, '#ffd34a');
   });
 }
 
-function rabbit(p: Pen): void {
+function rabbit(p: Pen, f: Frame): void {
   local(p, () => {
     p.shadow(1, 0, 18, 7);
     const fur = '#fdf3f2';
-    // ears: one up, one flopped back
-    const ear = (x: number, y: number, rot: number, len: number) => {
-      p.ellipse(x, y, 3.2, len, fur, p.outline, rot);
-      p.ellipse(x, y + 0.5, 1.6, len - 2.5, '#f8bccb', null, rot);
+    // ears: one up, one flopped back. On frame 2 the front ear twitches over
+    // at its base.
+    const ear = (x: number, y: number, rot: number, len: number, bend = 0) => {
+      pivot(p, x, y + len, bend, () => {
+        p.ellipse(x, y, 3.2, len, fur, p.outline, rot);
+        p.ellipse(x, y + 0.5, 1.6, len - 2.5, '#f8bccb', null, rot);
+      });
     };
-    ear(-4, -40, 0.35, 8.5);
+    ear(-4, -40, 0.35, 8.5, f === 2 ? 0.45 : 0);
     fluff(p, 5, -12, 15, 11, fur, 'rabbitbody', 12);
     // tail puff
     fluff(p, 19, -14, 4, 4, '#ffffff', 'rabbittail', 5);
@@ -418,19 +517,22 @@ function rabbit(p: Pen): void {
     // front paws
     p.ellipse(-12, -3, 3.2, 2.2, fur);
     p.ellipse(-4, -2.5, 3.2, 2.2, fur);
-    eye(p, -13.5, -24.5, 1.6);
-    eye(p, -6, -25, 1.5);
-    p.poly(
-      [
-        { x: -11, y: -21 },
-        { x: -8.6, y: -21 },
-        { x: -9.8, y: -19.6 },
-      ],
-      '#f08aa0',
-      null,
-    );
-    p.curve({ x: -11.2, y: -18.6 }, { x: -9.8, y: -17.4 }, { x: -9.8, y: -19.4 }, shade('#f08aa0', -0.3), 0.7);
-    p.curve({ x: -8.4, y: -18.6 }, { x: -9.8, y: -17.4 }, { x: -9.8, y: -19.4 }, shade('#f08aa0', -0.3), 0.7);
+    eyeFrame(p, f, -13.5, -24.5, 1.6);
+    eyeFrame(p, f, -6, -25, 1.5);
+    // nose: on frame 2 it twitches, squashed wide and a little higher
+    scaled(p, -9.8, -20.5, f === 2 ? 1.25 : 1, f === 2 ? 0.8 : 1, () => {
+      p.poly(
+        [
+          { x: -11, y: -21 },
+          { x: -8.6, y: -21 },
+          { x: -9.8, y: -19.6 },
+        ],
+        '#f08aa0',
+        null,
+      );
+      p.curve({ x: -11.2, y: -18.6 }, { x: -9.8, y: -17.4 }, { x: -9.8, y: -19.4 }, shade('#f08aa0', -0.3), 0.7);
+      p.curve({ x: -8.4, y: -18.6 }, { x: -9.8, y: -17.4 }, { x: -9.8, y: -19.4 }, shade('#f08aa0', -0.3), 0.7);
+    });
     blush(p, -16, -20.5, 0.8);
     blush(p, -3.5, -21, 0.8);
     // ribbon
@@ -454,7 +556,7 @@ function rabbit(p: Pen): void {
   });
 }
 
-const ANIMAL_ART: Record<string, { paint: (p: Pen) => void; height: number }> = {
+const ANIMAL_ART: Record<string, { paint: Painter; height: number }> = {
   chicken: { paint: chicken, height: 34 },
   cow: { paint: cow, height: 40 },
   sheep: { paint: sheep, height: 32 },
@@ -465,22 +567,38 @@ const ANIMAL_ART: Record<string, { paint: (p: Pen) => void; height: number }> = 
   rabbit: { paint: rabbit, height: 44 },
 };
 
-function fallbackAnimal(id: string): (p: Pen) => void {
+function fallbackAnimal(id: string): Painter {
   const col = mix('#f4d6b0', ['#f6b3bf', '#cfe3ff', '#e6f0c0'][id.length % 3], 0.5);
-  return (p) =>
+  return (p, f) =>
     local(p, () => {
       p.shadow(0, 0, 16, 6);
       shadedEllipse(p, 2, -12, 13, 10, col);
-      shadedEllipse(p, -9, -20, 8, 8, col);
-      eye(p, -12, -21);
-      eye(p, -6, -21.5);
-      blush(p, -13, -17, 0.7);
+      // on frame 2 the head bobs up a touch
+      moved(p, 0, f === 2 ? -0.8 : 0, () => {
+        shadedEllipse(p, -9, -20, 8, 8, col);
+        eyeFrame(p, f, -12, -21);
+        eyeFrame(p, f, -6, -21.5);
+        blush(p, -13, -17, 0.7);
+      });
     });
 }
 
-export const sprites: SpriteSpec[] = ANIMAL_LIST.map((a) => {
+/**
+ * Each animal yields three sprites from its one painter: the resting art
+ * (`animal:<id>`) and the two idle frames (`#1`, `#2`). Same footprint and
+ * height on all three, so they swap in place.
+ */
+export const sprites: SpriteSpec[] = ANIMAL_LIST.flatMap((a) => {
   const art = ANIMAL_ART[a.id];
-  return { key: `animal:${a.id}`, fw: 1, fh: 1, height: art?.height ?? 36, paint: art?.paint ?? fallbackAnimal(a.id) };
+  const painter: Painter = art?.paint ?? fallbackAnimal(a.id);
+  const height = art?.height ?? 36;
+  return ([0, 1, 2] as const).map((f) => ({
+    key: f === 0 ? `animal:${a.id}` : `animal:${a.id}#${f}`,
+    fw: 1,
+    fh: 1,
+    height,
+    paint: (p: Pen) => painter(p, f),
+  }));
 });
 
 // ---------------------------------------------------------------------------
