@@ -154,3 +154,23 @@ describe('farm server', () => {
     expect(res.body.error).toBeDefined();
   });
 });
+
+describe('villager farms', () => {
+  it('build full farms out of real content', async () => {
+    const { placeable, CROPS, NPC_NEIGHBORS } = await import('@farm/shared');
+    const { ensureNpcs } = await import('../server/src/npc');
+    const { loadFarm } = await import('../server/src/repo');
+    const db = openDb(':memory:');
+    const { ids } = ensureNpcs(db, clock);
+    expect(ids).toHaveLength(NPC_NEIGHBORS.length);
+    for (const id of ids) {
+      const { state } = loadFarm(db, id);
+      const objs = Object.values(state.objects);
+      expect(objs.length, state.name).toBeGreaterThan(40);
+      for (const o of objs) {
+        if (o.kind === 'plot') expect(CROPS[o.crop!], o.crop).toBeDefined();
+        else expect(placeable(o.def), o.def).toBeDefined();
+      }
+    }
+  });
+});
