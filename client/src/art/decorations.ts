@@ -1008,9 +1008,6 @@ function weepingWillow(p: Pen): void {
   const { x, y } = p.center;
   const r = rng('willow');
   p.shadow(x, y + 2, 50, 22, 0.24);
-  trunk(p, x, y, 14, 40, '#7a5a3a');
-  thick(p, [{ x: x - 2, y: y - 34 }, { x: x - 18, y: y - 50 }], '#7a5a3a', 3);
-  thick(p, [{ x: x + 2, y: y - 34 }, { x: x + 18, y: y - 52 }], '#7a5a3a', 3);
   const g = '#8cbf4f';
   type Strand = { a: Pt; c: Pt; b: Pt };
   const make = (sx: number, sy: number, ey: number): Strand => {
@@ -1044,13 +1041,15 @@ function weepingWillow(p: Pen): void {
     }
   };
   const back: Strand[] = [];
-  for (let sx = x - 48; sx <= x + 48; sx += 4) back.push(make(sx, y - 56, y - 22 - r() * 8 + Math.abs(sx - x) * 0.08));
+  for (let sx = x - 44; sx <= x + 44; sx += 4) back.push(make(sx, y - 58 + Math.pow((sx - x) / 44, 2) * 12, y - 22 - r() * 8 + Math.abs(sx - x) * 0.08));
   curtain(back, shade(g, -0.2));
   trunk(p, x, y, 14, 40, '#7a5a3a');
+  thick(p, [{ x: x - 2, y: y - 34 }, { x: x - 18, y: y - 50 }], '#7a5a3a', 3);
+  thick(p, [{ x: x + 2, y: y - 34 }, { x: x + 18, y: y - 52 }], '#7a5a3a', 3);
   const front: Strand[] = [];
-  for (let sx = x - 50; sx <= x + 50; sx += 3.6) {
+  for (let sx = x - 46; sx <= x + 46; sx += 3.6) {
     if (Math.abs(sx - x) < 8) continue;
-    front.push(make(sx, y - 58, y - 4 - r() * 8 - Math.abs(sx - x) * 0.12 - (Math.abs(sx - x) < 20 ? 4 : 0)));
+    front.push(make(sx, y - 58 + Math.pow((sx - x) / 46, 2) * 12, y - 4 - r() * 8 - Math.abs(sx - x) * 0.12 - (Math.abs(sx - x) < 20 ? 4 : 0)));
   }
   curtain(
     front.filter((s) => s.a.x < x),
@@ -1060,8 +1059,8 @@ function weepingWillow(p: Pen): void {
     front.filter((s) => s.a.x > x),
     g,
   );
-  p.foliage(x - 27, y - 60, 18, g, 'w1', 8);
-  p.foliage(x + 27, y - 60, 18, g, 'w2', 8);
+  p.foliage(x - 29, y - 56, 19, g, 'w1', 8);
+  p.foliage(x + 29, y - 56, 19, g, 'w2', 8);
   p.foliage(x, y - 72, 25, g, 'w3', 10);
 }
 
@@ -1086,17 +1085,21 @@ function bamboo(p: Pen): void {
       p.line([{ x: sx - 1.6, y: ny - 1 }, { x: sx + 1.6, y: ny - 1 }], rgba('#ffffff', 0.35), 0.6);
     }
     // leaf sprays
-    for (const t of [0, 0.35]) {
-      const ly = sy - h + 3 + t * h;
-      if (t > 0 && r() < 0.4) continue;
-      for (const [a, len] of [
-        [-0.35, 9],
-        [0.25, 10],
-        [Math.PI + 0.35, 9],
-        [Math.PI - 0.15, 8],
-      ]) {
-        leafAt(p, sx, ly, len, a + (r() - 0.5) * 0.3, r() < 0.5 ? '#6fb34a' : '#86c85a', 0.16);
-      }
+    // a tuft at the tip plus a drooping spray from one node
+    p.line([{ x: sx, y: sy - h }, { x: sx + 1, y: sy - h - 4 }], '#6fa84a', 1);
+    for (const [a, len] of [
+      [-1.9, 8],
+      [-1.2, 9],
+    ]) {
+      leafAt(p, sx + 0.5, sy - h - 2, len, a + (r() - 0.5) * 0.2, '#86c85a', 0.17);
+    }
+    const side = dx < 0 ? -1 : 1;
+    const ny = sy - h * (0.45 + r() * 0.2);
+    const bx = sx + side * 5;
+    p.line([{ x: sx, y: ny }, { x: bx, y: ny - 3 }], '#5f9a3a', 0.8);
+    for (const a of [0.15, 0.6, 1.05]) {
+      const ang = side > 0 ? a : Math.PI - a;
+      leafAt(p, bx, ny - 3, 9 + r() * 2, ang, r() < 0.5 ? '#6fb34a' : '#86c85a', 0.16);
     }
   }
   tuft(p, x - 6, y + 4, 5);
@@ -1113,7 +1116,7 @@ function frond(p: Pen, x: number, y: number, ang: number, len: number, col: stri
     const q = qpt(a, c, b, t);
     const q2 = qpt(a, c, b, t + 0.02);
     const dir = Math.atan2(q2.y - q.y, q2.x - q.x);
-    const s = 3.6 * (1 - t * 0.6);
+    const s = 4.6 * (1 - t * 0.55);
     leafAt(p, q.x, q.y, s, dir - 1.1, col, 0.3);
     leafAt(p, q.x, q.y, s, dir + 1.1, shade(col, -0.08), 0.3);
   }
@@ -1124,8 +1127,8 @@ function pottedFern(p: Pen): void {
   p.shadow(x, y + 1, 13, 6, 0.28);
   pot(p, x, y, 9, 11);
   const fy = y - 14;
-  const angs = [-1.9, -1.2, -2.5, -0.6, -1.55, Math.PI + 0.3, -0.1, Math.PI - 0.1, 0.3];
-  angs.forEach((a, i) => frond(p, x, fy, a, 15 + (i % 3) * 2.5, i % 2 ? '#5aa847' : '#4c9a3e'));
+  const angs = [-1.9, -1.2, -2.5, -0.6, -1.55, Math.PI + 0.25, -0.05, Math.PI - 0.25, 0.25];
+  angs.forEach((a, i) => frond(p, x, fy, a, 19 + (i % 3) * 3, i % 2 ? '#5aa847' : '#4c9a3e'));
 }
 
 function cactusPot(p: Pen): void {
@@ -1202,11 +1205,12 @@ function picketFence(p: Pen): void {
   const white = boxColors(WHITE);
   white.left = '#efe9dc';
   white.right = '#cfc6b4';
-  for (const z of [4, 10.5]) p.box(0, 0.46, 1, 0.05, 2.4, white, z);
+  for (const z of [4, 11]) p.box(0, 0.46, 1, 0.05, 2.6, white, z);
   for (let i = 0; i < 5; i++) {
-    const u = (i + 0.5) / 5 - 0.045;
-    p.box(u, 0.51, 0.09, 0.04, 14, white);
-    p.poly([p.iso(u, 0.55, 14), p.iso(u + 0.09, 0.55, 14), p.iso(u + 0.045, 0.55, 17.5)], white.left);
+    const u = (i + 0.5) / 5 - 0.06;
+    p.box(u, 0.51, 0.12, 0.04, 15, white);
+    p.poly([p.iso(u, 0.55, 15), p.iso(u + 0.12, 0.55, 15), p.iso(u + 0.06, 0.55, 19)], white.left);
+    p.line([p.iso(u + 0.025, 0.55, 2), p.iso(u + 0.025, 0.55, 14)], rgba('#ffffff', 0.8), 0.7);
   }
 }
 
@@ -1337,14 +1341,19 @@ function hedgeFence(p: Pen): void {
     p.poly(pts, col, null);
     withClip(p, polyPath(pts), () => leafTexture(p, 0, -10, 64, 80, col, 'hf' + i, 80));
   });
-  // bumpy top edge
-  for (let i = 0; i <= 5; i++) {
-    const q = p.iso(i / 5, v1, ht);
-    p.circle(q.x, q.y + 0.5, 2.2, c.top, null);
-  }
-  p.line([p.iso(0, v1, ht), p.iso(1, v1, ht)], rgba('#2f5a2a', 0.45), 0.7);
   p.line([p.iso(1, v1, 0), p.iso(1, v1, ht)], rgba('#2f5a2a', 0.45), 0.7);
   p.poly([p.iso(0, v1, 0), p.iso(1, v1, 0), p.iso(1, v0, 0), p.iso(1, v0, ht), p.iso(0, v0, ht), p.iso(0, v1, ht)], null);
+  // soft leafy lumps along the top edge, plus light leaf clusters on the faces
+  const r = rng('hedge-top');
+  for (let i = 0; i < 6; i++) {
+    const q = p.iso((i + 0.5) / 6, v1 - 0.04, ht);
+    p.ellipse(q.x, q.y, 3.6, 2, shade(c.top, 0.08), null, 0.46);
+    p.ellipse(q.x - 0.8, q.y - 0.6, 1.8, 0.9, shade(c.top, 0.3), null, 0.46);
+  }
+  for (let i = 0; i < 7; i++) {
+    const q = p.iso(0.06 + r() * 0.88, v1, 3 + r() * 11);
+    p.ellipse(q.x, q.y, 1.8, 1.1, shade(c.left, 0.22), null, 0.46);
+  }
 }
 
 function gardenGate(p: Pen): void {
@@ -1408,9 +1417,9 @@ function flatTile(p: Pen, base: string, fn: () => void): void {
 function pathStone(p: Pen): void {
   const r = rng('stepping');
   for (const [u, v, s] of [
-    [0.27, 0.3, 1],
-    [0.7, 0.42, 0.9],
-    [0.38, 0.73, 1.05],
+    [0.27, 0.3, 0.9],
+    [0.74, 0.38, 0.8],
+    [0.42, 0.75, 0.95],
   ]) {
     const q = p.iso(u, v);
     const pts = wobbly(q.x, q.y, 10.5 * s, 5.4 * s, 'st' + u, 9, 0.12);
@@ -1908,7 +1917,7 @@ function hammock(p: Pen): void {
     for (let i = 0; i <= n; i++) {
       const t = i / n;
       const u = 0.35 + t * 1.3;
-      const w = 0.16 * Math.sin(t * Math.PI) + 0.02;
+      const w = 0.25 * Math.sin(t * Math.PI) + 0.02;
       const z = 21 - Math.sin(t * Math.PI) * 13;
       res.push(p.iso(u, 0.5 + side * w, z));
     }
@@ -1941,29 +1950,34 @@ function hammock(p: Pen): void {
 
 function treeSwing(p: Pen): void {
   const { x, y } = p.center;
-  p.shadow(x - 8, y - 2, 22, 10, 0.22);
-  const tq = p.iso(0.22, 0.3);
-  trunk(p, tq.x, tq.y, 9, 48, BARK);
-  // branch reaching right
-  const b0 = { x: tq.x + 2, y: tq.y - 44 };
-  const b1 = { x: tq.x + 38, y: tq.y - 48 };
-  thickCurve(p, b0, { x: tq.x + 20, y: tq.y - 52 }, b1, BARK, 3.2);
-  p.foliage(tq.x - 4, tq.y - 58, 18, '#5aaa48', 'swing1', 8);
-  p.foliage(tq.x + 22, tq.y - 60, 13, '#5aaa48', 'swing2', 7);
-  // swing
-  const s0 = p.iso(0.5, 0.58, 9);
-  const s1 = p.iso(0.82, 0.58, 9);
-  const r0 = { x: s0.x + 1, y: tq.y - 49 };
-  const r1 = { x: s1.x - 1, y: tq.y - 49.5 };
-  p.line([r0, { x: s0.x + 1, y: s0.y }], '#d6c08f', 1);
-  p.line([r1, { x: s1.x - 1, y: s1.y }], '#d6c08f', 1);
-  p.box(0.48, 0.52, 0.36, 0.12, 2, '#e07a4a', 8);
-  // rope loops on branch
-  p.ellipse(r0.x, r0.y, 1.3, 2, null, '#a08a5a');
-  p.ellipse(r1.x, r1.y, 1.3, 2, null, '#a08a5a');
+  p.shadow(x - 2, y, 26, 11, 0.22);
+  const tx = x - 13;
+  const ty = y - 3;
+  tuft(p, tx - 6, ty + 3, 5);
+  trunk(p, tx, ty, 9, 46, BARK);
+  p.foliage(tx + 6, ty - 58, 19, '#5aaa48', 'swing1', 9);
+  p.foliage(x + 13, ty - 50, 12, '#5aaa48', 'swing2', 7);
+  p.foliage(tx - 4, ty - 46, 10, '#5aaa48', 'swing3', 7);
+  // branch reaching right, under the canopy
+  const b0 = { x: tx + 2, y: ty - 32 };
+  const b1 = { x: x + 25, y: ty - 38 };
+  thickCurve(p, b0, { x: (b0.x + b1.x) / 2, y: ty - 40 }, b1, BARK, 3);
+  p.ellipse(b1.x + 1, b1.y - 1, 2.6, 1.6, LEAF, shade(LEAF, -0.4), -0.4);
+  const branchY = (bx: number) => qpt(b0, { x: (b0.x + b1.x) / 2, y: ty - 40 }, b1, (bx - b0.x) / (b1.x - b0.x)).y + 1;
+  // swing seat hanging below
+  const s0 = p.iso(0.58, 0.39, 9);
+  const s1 = p.iso(0.84, 0.39, 9);
+  for (const s of [s0, s1]) {
+    const top = { x: s.x, y: branchY(s.x) };
+    p.line([top, s], '#d6c08f', 1);
+    p.ellipse(top.x, top.y, 1.3, 2, null, '#a08a5a');
+  }
+  p.box(0.55, 0.33, 0.32, 0.12, 2, '#e07a4a', 8);
+  p.line([p.iso(0.55, 0.45, 9), p.iso(0.87, 0.45, 9)], rgba('#ffffff', 0.35), 0.6);
   // a few flowers at the base
-  p.flower(tq.x - 8, tq.y + 3, 2.2, '#f48fb8');
-  p.flower(tq.x + 7, tq.y + 4, 2.2, '#ffffff');
+  p.flower(tx - 8, ty + 4, 2.2, '#f48fb8');
+  p.flower(tx + 8, ty + 5, 2.2, '#ffffff');
+  p.flower(x + 14, y + 6, 2, '#f8d442');
 }
 
 function rockingChair(p: Pen): void {
@@ -2163,8 +2177,9 @@ function streetLamp(p: Pen): void {
   );
   p.circle(x, y - 73.5, 1.8, g);
   p.rect(x - 4.5, y - 57, 9, 1.6, g, null);
-  // a hanging flower pot
-  p.flower(x - 3.5, y - 38, 2, '#f25c9a');
+  // flowers at the foot
+  p.flower(x - 7, y + 1, 2, '#f25c9a');
+  p.flower(x + 6, y + 2, 2, '#ffffff');
 }
 
 function gardenLantern(p: Pen): void {
@@ -2211,49 +2226,63 @@ function gardenLantern(p: Pen): void {
 
 function stoneLantern(p: Pen): void {
   const { x, y } = p.center;
-  p.glow(x, y - 26, 26, GLOW, 0.3);
-  p.shadow(x, y + 1, 14, 7, 0.3);
-  p.box(0.32, 0.32, 0.36, 0.36, 4, STONE);
-  p.cylinder(x, y - 4, 4, 12, STONE);
-  p.box(0.28, 0.28, 0.44, 0.44, 3, STONE, 16);
-  // light box
-  p.box(0.34, 0.34, 0.32, 0.32, 10, STONE, 19);
-  const win = faceV(p, 0.4, 0.6, 0.66, 21.5, 27);
-  p.glow((win[0].x + win[2].x) / 2, (win[0].y + win[2].y) / 2, 12, GLOW, 0.8);
-  p.poly(win, '#ffe08a', shade(STONE, -0.4));
-  const win2 = faceU(p, 0.66, 0.4, 0.6, 21.5, 27);
-  p.poly(win2, '#ffd06a', shade(STONE, -0.4));
+  p.glow(x, y - 28, 24, GLOW, 0.3);
+  p.shadow(x, y + 1, 15, 7, 0.3);
+  p.box(0.28, 0.28, 0.44, 0.44, 4, STONE);
+  p.box(0.33, 0.33, 0.34, 0.34, 2, STONE_L, 4);
+  p.cylinder(x, y - 6, 3.6, 13, STONE);
+  for (const k of [3, 9]) p.line([{ x: x - 3.6, y: y - 6 - k }, { x: x + 3.6, y: y - 6 - k }], shade(STONE, -0.3), 0.6);
+  p.box(0.27, 0.27, 0.46, 0.46, 3.5, STONE, 19);
+  // fire box with glowing windows
+  const z0 = 22.5;
+  const z1 = 37;
+  p.box(0.32, 0.32, 0.36, 0.36, z1 - z0, STONE, z0);
+  const win = faceV(p, 0.38, 0.62, 0.68, z0 + 2.5, z1 - 4);
+  const win2 = faceU(p, 0.68, 0.38, 0.62, z0 + 2.5, z1 - 4);
+  const wc = { x: (win[0].x + win[2].x) / 2, y: (win[0].y + win[2].y) / 2 };
+  p.glow(wc.x, wc.y, 12, GLOW, 0.75);
+  p.poly(win, p.vgrad(win[3].y, win[0].y, '#fff6c8', '#ffcf6a'), shade(STONE, -0.45));
+  p.poly(win2, p.vgrad(win2[3].y, win2[0].y, '#ffe8a0', '#f5b84a'), shade(STONE, -0.45));
+  p.line([lerp(win[0], win[1], 0.5), lerp(win[3], win[2], 0.5)], shade(STONE, -0.3), 0.8);
   // roof with upturned corners
-  const z = 29;
-  const o = 0.16;
-  const l = p.iso(0.34 - o, 0.66 + o, z);
-  const b = p.iso(0.66 + o, 0.66 + o, z);
-  const r = p.iso(0.66 + o, 0.34 - o, z);
-  const peak = p.iso(0.5, 0.5, z + 9);
+  const z = z1 + 1.5;
+  const o = 0.13;
+  const l = p.iso(0.32 - o, 0.68 + o, z);
+  const b = p.iso(0.68 + o, 0.68 + o, z);
+  const r = p.iso(0.68 + o, 0.32 - o, z);
+  const peak = p.iso(0.5, 0.5, z + 11);
+  p.poly([p.iso(0.32 - o, 0.68 + o, z - 1.6), p.iso(0.68 + o, 0.68 + o, z - 1.6), p.iso(0.68 + o, 0.32 - o, z - 1.6), r, b, l], shade(STONE, -0.35));
   shape(
     p,
     (c) => {
-      c.moveTo(l.x - 2, l.y - 3);
-      c.quadraticCurveTo(l.x + 2, l.y + 1, b.x, b.y + 1);
-      c.lineTo(peak.x, peak.y);
+      c.moveTo(l.x - 2, l.y - 3.5);
+      c.quadraticCurveTo(l.x + 3, l.y + 0.5, b.x, b.y + 0.5);
+      c.quadraticCurveTo((b.x + peak.x) / 2 + 2, (b.y + peak.y) / 2, peak.x, peak.y);
+      c.quadraticCurveTo((l.x + peak.x) / 2 + 2, (l.y + peak.y) / 2 + 1, l.x - 2, l.y - 3.5);
       c.closePath();
     },
-    STONE,
+    p.vgrad(peak.y, b.y, STONE_L, STONE),
   );
   shape(
     p,
     (c) => {
-      c.moveTo(b.x, b.y + 1);
-      c.quadraticCurveTo(r.x - 2, r.y + 1, r.x + 2, r.y - 3);
-      c.lineTo(peak.x, peak.y);
+      c.moveTo(b.x, b.y + 0.5);
+      c.quadraticCurveTo(r.x - 3, r.y + 0.5, r.x + 2, r.y - 3.5);
+      c.quadraticCurveTo((r.x + peak.x) / 2 - 2, (r.y + peak.y) / 2 + 1, peak.x, peak.y);
+      c.quadraticCurveTo((b.x + peak.x) / 2 + 2, (b.y + peak.y) / 2, b.x, b.y + 0.5);
       c.closePath();
     },
     shade(STONE, -0.2),
   );
-  p.ball(peak.x, peak.y - 2, 2.6, STONE);
+  // jewel finial
+  p.cylinder(peak.x, peak.y + 1, 2.2, 1.6, STONE);
+  p.ball(peak.x, peak.y - 2.6, 2.6, STONE_L);
+  p.ellipse(peak.x, peak.y - 5.6, 0.9, 1.4, STONE_L, p.outline);
   // moss
-  p.ellipse(l.x + 6, l.y - 3, 4, 1.6, MOSS, shade(MOSS, -0.35), -0.3);
-  p.ellipse(x - 5, y - 2, 3, 1.4, MOSS, shade(MOSS, -0.35));
+  p.ellipse(l.x + 8, l.y - 4, 4.5, 1.6, MOSS, shade(MOSS, -0.35), -0.35);
+  p.ellipse(peak.x - 2, peak.y + 4, 2.6, 1.1, MOSS, null, -0.3);
+  p.ellipse(x - 7, y - 3, 3, 1.3, MOSS, shade(MOSS, -0.35));
+  tuft(p, x + 11, y + 3, 4);
 }
 
 function fireflyJar(p: Pen): void {
@@ -2591,31 +2620,53 @@ function fountain(p: Pen): void {
   p.ball(x, y - 52, 2.6, STONE_L);
   p.line([{ x, y: y - 54 }, { x, y: y - 62 }], rgba('#ffffff', 0.85), 1.6);
   for (const d of [-1, 1]) stream(x, y - 62, x + d * 9, y - 45);
-  // curtains from tier 2 to tier 1 and tier 1 to basin
-  for (const a of [0.35, 0.9, 1.6, 2.25, 2.8]) stream(x + Math.cos(a) * 13, y - 44 + Math.sin(a) * 6.5, x + Math.cos(a) * 17, y - 28 + Math.sin(a) * 8);
-  for (const a of [0.25, 0.75, 1.3, 1.85, 2.4, 2.9]) stream(x + Math.cos(a) * 24, y - 28 + Math.sin(a) * 12, x + Math.cos(a) * 31, y - 4 + Math.sin(a) * 14);
-  // splash rings
-  for (const a of [0.75, 1.85]) {
-    const sx = x + Math.cos(a) * 31;
-    const sy = y - 4 + Math.sin(a) * 14;
-    p.ellipse(sx, sy, 4, 1.6, null, rgba('#ffffff', 0.8));
-  }
+  // translucent water curtains spilling from each tier
+  const sheet = (rx0: number, ry0: number, cy0: number, rx1: number, ry1: number, cy1: number) => {
+    const top: Pt[] = [];
+    const bot: Pt[] = [];
+    for (let i = 0; i <= 12; i++) {
+      const a = 0.08 + (i / 12) * (Math.PI - 0.16);
+      top.push({ x: x + Math.cos(a) * rx0, y: cy0 + Math.sin(a) * ry0 });
+      bot.push({ x: x + Math.cos(a) * rx1, y: cy1 + Math.sin(a) * ry1 });
+    }
+    const g = p.vgrad(cy0, cy1 + ry1, 'rgba(235,250,255,0.75)', 'rgba(160,220,240,0.35)');
+    p.poly([...top, ...bot.slice().reverse()], g, null);
+    for (let i = 1; i < 12; i += 2) {
+      p.curve(top[i], { x: (top[i].x + bot[i].x) / 2 + (bot[i].x - top[i].x) * 0.3, y: top[i].y + 2 }, bot[i], rgba('#ffffff', 0.7), 0.8);
+    }
+    for (let i = 2; i < 12; i += 3) p.ellipse(bot[i].x, bot[i].y, 3, 1.2, null, rgba('#ffffff', 0.75));
+  };
+  sheet(12.5, 6, y - 44, 16, 7.5, y - 28);
+  sheet(23.5, 11.5, y - 28, 30, 14, y - 5);
   // moss on the rim
   p.ellipse(x - 38, y + 6, 6, 2.4, MOSS, shade(MOSS, -0.35));
   p.ellipse(x + 30, y + 13, 5, 2, MOSS, shade(MOSS, -0.35));
 }
 
-function pondShape(p: Pen, seed: string, rad: number): Pt[] {
+/** Squircle-ish radius so round features fill more of a square footprint. */
+function squircle(a: number): number {
+  return Math.pow(Math.pow(Math.abs(Math.cos(a)), 3) + Math.pow(Math.abs(Math.sin(a)), 3), -1 / 3);
+}
+
+function pondShape(seed: string, rad: number): Pt[] {
   // organic outline in flat space (centred in a 64×64 footprint)
-  return wobbly(32, 32, rad, rad, seed, 11, 0.1);
+  const r = rng(seed);
+  const pts: Pt[] = [];
+  const n = 14;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * TAU;
+    const k = rad * squircle(a) * (0.94 + r() * 0.1);
+    pts.push({ x: 32 + Math.cos(a) * k, y: 32 + Math.sin(a) * k });
+  }
+  return pts;
 }
 
 function pond(koi: boolean): Painter {
   return (p) => {
     const seed = koi ? 'koi' : 'lily';
     const r = rng(seed + 'p');
-    const rim = pondShape(p, seed, 27);
-    const water = pondShape(p, seed, 23);
+    const rim = pondShape(seed, 25.5);
+    const water = pondShape(seed, 21);
     flat(p, () => {
       shape(p, smoothPath(rim.map((q) => ({ x: q.x + 1, y: q.y + 1 }))), rgba('#2a3a1a', 0.18), null);
       shape(p, smoothPath(rim), '#7cbf5a', null);
@@ -2683,17 +2734,20 @@ function pond(koi: boolean): Painter {
       }
     });
     // rim stones (screen space so they stand up a little)
-    const stoneCount = koi ? 16 : 12;
-    const stones: Pt[] = [];
+    const stoneCount = koi ? 18 : 20;
+    const stones: { q: Pt; i: number }[] = [];
     for (let i = 0; i < stoneCount; i++) {
-      const a = (i / stoneCount) * TAU + r() * 0.2;
-      const rr = 25.5 + r() * 1.5;
-      stones.push(p.iso((32 + Math.cos(a) * rr) / 32, (32 + Math.sin(a) * rr) / 32));
+      const a = (i / stoneCount) * TAU + r() * 0.1;
+      const rr = (koi ? 23.5 : 23) * squircle(a) + r() * 1.2;
+      stones.push({ q: p.iso((32 + Math.cos(a) * rr) / 32, (32 + Math.sin(a) * rr) / 32), i });
     }
-    stones.sort((a, b) => a.y - b.y);
-    for (const s of stones) {
-      const sz = koi ? 4.8 + r() * 1.5 : 3.2 + r() * 1.6;
-      if (!koi && r() < 0.35) continue;
+    stones.sort((a, b) => a.q.y - b.q.y);
+    for (const { q: s, i } of stones) {
+      const sz = koi ? 5 + r() * 1.6 : 3.4 + r() * 1.4;
+      if (!koi && i % 6 === 2) {
+        tuft(p, s.x, s.y + 1, 5, '#6fb34a');
+        continue;
+      }
       p.ellipse(s.x, s.y + 0.8, sz, sz * 0.6, STONE_D, p.outline);
       p.ellipse(s.x, s.y - 0.4, sz, sz * 0.6, radial(p, s.x, s.y - 0.4, sz, koi ? '#b8b4aa' : STONE), p.outline);
     }
@@ -3245,43 +3299,62 @@ function sundial(p: Pen): void {
 }
 
 function roseArch(p: Pen): void {
-  lineShadow(p, 0.05, 0.95, 0.5, 8, 0.18);
-  const v = 0.5;
-  const postZ = 36;
+  lineShadow(p, 0.05, 0.95, 0.5, 9, 0.2);
+  const postZ = 34;
   const white = WHITE;
-  const archPts: Pt[] = [];
-  for (let i = 0; i <= 18; i++) {
-    const t = (i / 18) * Math.PI;
-    archPts.push(p.iso(0.5 - 0.36 * Math.cos(t), v, postZ + 20 * Math.sin(t)));
-  }
-  // lattice side posts
-  for (const u of [0.14, 0.86]) {
-    const a0 = p.iso(u - 0.03, v, 0);
-    const a1 = p.iso(u - 0.03, v, postZ);
-    const b0 = p.iso(u + 0.03, v, 0);
-    const b1 = p.iso(u + 0.03, v, postZ);
-    thick(p, [a0, a1], white, 1.3);
-    thick(p, [b0, b1], white, 1.3);
-    for (let z = 4; z < postZ; z += 6) {
-      p.line([p.iso(u - 0.03, v, z), p.iso(u + 0.03, v, z + 4)], white, 0.9);
+  const r = rng('arch');
+  const curve = (v: number): Pt[] => {
+    const pts: Pt[] = [p.iso(0.1, v, 0)];
+    for (let i = 0; i <= 16; i++) {
+      const t = (i / 16) * Math.PI;
+      pts.push(p.iso(0.5 - 0.4 * Math.cos(t), v, postZ + 18 * Math.sin(t)));
+    }
+    pts.push(p.iso(0.9, v, 0));
+    return pts;
+  };
+  const band = (pts: Pt[]) => {
+    p.line(pts, p.outline, 4);
+    p.line(pts, white, 2.2);
+  };
+  const vb = 0.36;
+  const vf = 0.64;
+  const back = curve(vb);
+  const front = curve(vf);
+  band(back);
+  // lattice on the side panels
+  for (const u of [0.1, 0.9]) {
+    for (let z = 5; z < postZ; z += 7) {
+      p.line([p.iso(u, vb, z), p.iso(u, vf, z + 5)], p.outline, 2);
+      p.line([p.iso(u, vb, z), p.iso(u, vf, z + 5)], white, 0.9);
     }
   }
-  p.line(archPts, p.outline, 4.4);
-  p.line(archPts, white, 2.6);
-  const inner = archPts.map((q) => ({ x: q.x, y: q.y + 4 }));
-  p.line(inner, p.outline, 2.4);
-  p.line(inner, white, 1);
-  // climbing roses: foliage clumps up the posts and over the arch
-  const r = rng('arch');
+  // cross slats over the top
+  for (let i = 2; i < back.length - 2; i += 2) {
+    p.line([back[i], front[i]], p.outline, 2.6);
+    p.line([back[i], front[i]], white, 1.2);
+  }
+  // greenery on the back arch
+  back.forEach((q, i) => {
+    if (i % 2 === 0 && i > 0 && i < back.length - 1) p.foliage(q.x, q.y, 3.2, LEAF_D, 'rab' + i, 5);
+  });
+  band(front);
+  // climbing roses on the front arch and posts
   const spots: Pt[] = [];
-  for (const u of [0.14, 0.86]) for (let z = 4; z < postZ; z += 7) spots.push(p.iso(u + (r() - 0.5) * 0.06, v, z));
-  archPts.forEach((q, i) => {
-    if (i % 2 === 0) spots.push({ x: q.x, y: q.y + 1.5 });
-  });
-  for (const q of spots) p.ellipse(q.x + (r() - 0.5) * 3, q.y, 3.2, 2.6, r() < 0.5 ? LEAF : LEAF_D, shade(LEAF_D, -0.4), r() * 3);
+  for (let i = 1; i < front.length - 1; i++) spots.push(front[i]);
+  for (const u of [0.1, 0.9]) for (let z = 4; z < postZ; z += 6) spots.push(p.iso(u, vf, z));
+  spots.forEach((q, i) => p.foliage(q.x + (r() - 0.5) * 2, q.y, 3 + r() * 1.4, i % 3 ? LEAF : '#4f9a45', 'raf' + i, 5));
   spots.forEach((q, i) => {
-    if (i % 2 === 0) roseHead(p, q.x + (r() - 0.5) * 4, q.y - 0.5, 2.2, i % 3 ? '#f27a9a' : '#e8484a');
+    if (i % 2 === 0) roseHead(p, q.x + (r() - 0.5) * 3, q.y - 1 + (r() - 0.5) * 2, 2.3, i % 3 ? '#f27a9a' : '#e8484a');
   });
+  // a few petals drifting at the foot
+  for (const [u, v] of [
+    [0.3, 0.7],
+    [0.6, 0.78],
+    [0.75, 0.3],
+  ]) {
+    const q = p.iso(u, v);
+    p.ellipse(q.x, q.y, 1.4, 0.8, '#f7a6bc', null, r() * 3);
+  }
 }
 
 function gazebo(p: Pen): void {
@@ -3436,64 +3509,88 @@ function miniGreenhouse(p: Pen): void {
   const u1 = 0.84;
   const v0 = 0.24;
   const v1 = 0.76;
-  const wall = 18;
-  const ridge = 30;
+  const base = 6;
+  const wall = 20;
+  const ridge = 32;
   const frame = '#fbf8f2';
-  const glass = rgba('#cdeef5', 0.42);
-  p.box(u0, v0, u1 - u0, v1 - v0, 2, '#c9b49a');
+  // low brick base with a soil bed on top
+  p.box(u0, v0, u1 - u0, v1 - v0, base, '#c8674a');
+  for (const z of [2, 4]) {
+    p.line([p.iso(u0, v1, z), p.iso(u1, v1, z)], shade('#c8674a', -0.35), 0.6);
+    p.line([p.iso(u1, v1, z), p.iso(u1, v0, z)], shade('#c8674a', -0.5), 0.6);
+  }
+  p.diamond(u0 + 0.03, v0 + 0.03, u1 - u0 - 0.06, v1 - v0 - 0.06, SOIL, null, base);
   // back glass walls (seen from inside)
-  p.poly(faceV(p, u0, u1, v0, 2, wall), rgba('#a8dce8', 0.5), null);
-  p.poly(faceU(p, u0, v0, v1, 2, wall), rgba('#bfe4ee', 0.5), null);
-  // plants inside
-  const plant = (u: number, v: number, kind: number) => {
-    const q = p.iso(u, v, 2);
-    pot(p, q.x, q.y, 3.4, 4);
-    if (kind === 0) {
-      p.foliage(q.x, q.y - 9, 5, LEAF, 'gh' + u, 6);
-      p.circle(q.x - 2, q.y - 9, 1.3, '#e8484a', null);
-      p.circle(q.x + 2, q.y - 7, 1.3, '#e8484a', null);
-      p.circle(q.x + 0.5, q.y - 12, 1.3, '#e8484a', null);
-    } else if (kind === 1) {
-      for (const a of [-2.4, -1.6, -0.8]) leafAt(p, q.x, q.y - 6, 7, a, LEAF_L, 0.25);
-    } else {
-      p.foliage(q.x, q.y - 8, 4.5, LEAF_D, 'gh2' + u, 6);
-      p.flower(q.x, q.y - 10, 2.2, '#f48fb8');
-    }
-  };
-  plant(0.32, 0.38, 0);
-  plant(0.65, 0.36, 2);
-  plant(0.38, 0.62, 1);
-  plant(0.7, 0.6, 0);
-  // front glass walls
-  const fv = faceV(p, u0, u1, v1, 2, wall);
-  const fu = faceU(p, u1, v0, v1, 2, wall);
+  p.poly(faceV(p, u0, u1, v0, base, wall), rgba('#a8dce8', 0.55), null);
+  p.poly(faceU(p, u0, v0, v1, base, wall), rgba('#bfe4ee', 0.55), null);
+  // plants growing inside
+  const at = (u: number, v: number) => p.iso(u, v, base);
+  const t1 = at(0.32, 0.36);
+  thick(p, [t1, { x: t1.x, y: t1.y - 14 }], '#8a5a34', 0.6);
+  p.foliage(t1.x, t1.y - 10, 6.5, LEAF, 'gh-tom', 7);
+  for (const [dx, dy] of [
+    [-3, -9],
+    [2.5, -7],
+    [0.5, -13],
+    [3.5, -11.5],
+  ]) {
+    p.ball(t1.x + dx, t1.y + dy, 1.6, '#e8484a', null);
+  }
+  const t2 = at(0.66, 0.34);
+  p.foliage(t2.x, t2.y - 7, 6, LEAF_D, 'gh-fl', 7);
+  p.flower(t2.x - 2.5, t2.y - 9, 2.4, '#f48fb8');
+  p.flower(t2.x + 2.5, t2.y - 7, 2.4, '#f8d442');
+  p.flower(t2.x, t2.y - 12, 2.2, '#ffffff', '#f6c335');
+  const t3 = at(0.4, 0.64);
+  for (const a of [-2.6, -2.1, -1.6, -1.1, -0.6]) leafAt(p, t3.x, t3.y, 7, a, LEAF_L, 0.3);
+  const t4 = at(0.7, 0.62);
+  for (const a of [-2.4, -1.6, -0.8]) leafAt(p, t4.x, t4.y, 6, a, '#5fae4a', 0.25);
+  p.ball(t4.x, t4.y - 1, 2.2, '#f39a3c', null);
+  // glass
+  const fv = faceV(p, u0, u1, v1, base, wall);
+  const fu = faceU(p, u1, v0, v1, base, wall);
   const gable = [p.iso(u1, v1, wall), p.iso(u1, v0, wall), p.iso(u1, 0.5, ridge)];
   const backRoof = [p.iso(u0, v0, wall), p.iso(u1, v0, wall), p.iso(u1, 0.5, ridge), p.iso(u0, 0.5, ridge)];
   const frontRoof = [p.iso(u0, v1, wall), p.iso(u1, v1, wall), p.iso(u1, 0.5, ridge), p.iso(u0, 0.5, ridge)];
-  p.poly(backRoof, rgba('#bfe4ee', 0.5), null);
-  p.poly(fv, glass, null);
-  p.poly(fu, rgba('#b8e0ea', 0.42), null);
-  p.poly(gable, rgba('#b8e0ea', 0.45), null);
-  p.poly(frontRoof, rgba('#dff4f8', 0.5), null);
+  const glass = (pts: Pt[], a: number, b: number) => {
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (const q of pts) {
+      minY = Math.min(minY, q.y);
+      maxY = Math.max(maxY, q.y);
+    }
+    p.poly(pts, p.vgrad(minY, maxY, rgba('#e6f8fc', a), rgba('#9ed6e6', b)), null);
+  };
+  glass(backRoof, 0.55, 0.45);
+  glass(fv, 0.35, 0.5);
+  glass(fu, 0.45, 0.6);
+  glass(gable, 0.5, 0.55);
+  glass(frontRoof, 0.65, 0.5);
   // glints
-  p.line([p.iso(0.25, v1, 6), p.iso(0.35, v1, 14)], rgba('#ffffff', 0.8), 1);
-  p.line([p.iso(0.3, 0.7, wall + 2), p.iso(0.45, 0.62, wall + 7)], rgba('#ffffff', 0.8), 1);
+  p.line([p.iso(0.24, v1, base + 3), p.iso(0.34, v1, wall - 3)], rgba('#ffffff', 0.85), 1.2);
+  p.line([p.iso(0.3, 0.7, wall + 2), p.iso(0.42, 0.6, wall + 8)], rgba('#ffffff', 0.85), 1.2);
+  p.line([p.iso(u1, 0.7, base + 3), p.iso(u1, 0.6, wall - 4)], rgba('#ffffff', 0.7), 1);
   // white frame
   const fl = (pts: Pt[], w = 1.4) => thick(p, pts, frame, w);
   for (let i = 0; i <= 3; i++) {
     const u = u0 + ((u1 - u0) * i) / 3;
-    fl([p.iso(u, v1, 2), p.iso(u, v1, wall), p.iso(u, 0.5, ridge)]);
+    fl([p.iso(u, v1, base), p.iso(u, v1, wall), p.iso(u, 0.5, ridge)]);
   }
   fl([p.iso(u0, v1, wall), p.iso(u1, v1, wall)]);
-  fl([p.iso(u0, v1, 9), p.iso(u1, v1, 9)], 1);
+  fl([p.iso(u0, v1, base), p.iso(u1, v1, base)], 1);
   fl([p.iso(u1, v1, wall), p.iso(u1, v0, wall), p.iso(u1, 0.5, ridge)]);
-  fl([p.iso(u1, v0, 2), p.iso(u1, v0, wall)]);
-  fl([p.iso(u1, 0.5, 2), p.iso(u1, 0.5, ridge)], 1);
+  fl([p.iso(u1, v1, base), p.iso(u1, v0, base), p.iso(u1, v0, wall)], 1);
+  fl([p.iso(u1, 0.5, base), p.iso(u1, 0.5, ridge)], 1);
   fl([p.iso(u0, 0.5, ridge), p.iso(u1, 0.5, ridge)]);
-  // door handle
-  const dh = p.iso(u1, 0.56, 9);
+  // door handle & ridge finial
+  const dh = p.iso(u1, 0.57, 13);
   p.circle(dh.x, dh.y, 0.9, BRASS, null);
-  p.ball(p.iso(u1, 0.5, ridge).x, p.iso(u1, 0.5, ridge).y - 2, 1.4, BRASS);
+  const rq = p.iso(u1, 0.5, ridge);
+  p.ball(rq.x, rq.y - 2, 1.5, BRASS);
+  // a pot by the door
+  const pq = p.iso(0.95, 0.62);
+  pot(p, pq.x, pq.y, 3.6, 4);
+  p.foliage(pq.x, pq.y - 8, 3.6, LEAF, 'gh-pot', 6);
 }
 
 function crate(p: Pen, u: number, v: number, du: number, dv: number, ht: number, z = 0): void {
@@ -3590,9 +3687,17 @@ function compostBin(p: Pen): void {
   p.box(u0, u0, u1 - u0, 0.05, ht, WOOD_D);
   p.box(u0, u0, 0.05, u1 - u0, ht, WOOD_D);
   // compost heap inside
-  const q = p.iso(0.5, 0.5, ht - 2);
-  p.ellipse(q.x, q.y + 1, 16, 7, '#5a3e26', null);
-  p.ellipse(q.x - 1, q.y - 1, 12, 5, '#6b4a2f', null);
+  const q0 = p.iso(0.5, 0.5, ht - 3);
+  shape(
+    p,
+    (c) => {
+      c.ellipse(q0.x, q0.y, 16, 9, 0, Math.PI, 0);
+      c.closePath();
+    },
+    radial(p, q0.x, q0.y - 4, 14, '#6b4a2f'),
+    p.outline,
+  );
+  const q = { x: q0.x, y: q0.y - 4 };
   // scraps
   p.ellipse(q.x - 6, q.y - 2, 3, 1.6, '#8cc04f', '#4a7a2a', 0.3);
   p.poly(
@@ -3901,18 +4006,30 @@ function pinwheel(p: Pen): void {
       const a = rot + (i / 4) * TAU;
       const a2 = a + Math.PI / 2;
       const tip = { x: px + Math.cos(a) * s, y: py + Math.sin(a) * s };
-      const side = { x: px + Math.cos(a2) * s * 0.55, y: py + Math.sin(a2) * s * 0.55 };
-      p.poly([{ x: px, y: py }, tip, side], cols[i], shade(cols[i], -0.45));
-      p.poly([{ x: px, y: py }, tip, { x: (tip.x + side.x) / 2 * 0.3 + px * 0.7, y: (tip.y + side.y) / 2 * 0.3 + py * 0.7 }], shade(cols[i], 0.25), null);
+      const side = { x: px + Math.cos(a2) * s * 0.72, y: py + Math.sin(a2) * s * 0.72 };
+      const bulge = { x: px + Math.cos(a + 0.8) * s * 1.05, y: py + Math.sin(a + 0.8) * s * 1.05 };
+      shape(
+        p,
+        (c) => {
+          c.moveTo(px, py);
+          c.lineTo(tip.x, tip.y);
+          c.quadraticCurveTo(bulge.x, bulge.y, side.x, side.y);
+          c.closePath();
+        },
+        cols[i],
+        shade(cols[i], -0.5),
+      );
+      // folded flap
+      p.poly([{ x: px, y: py }, tip, lerp({ x: px, y: py }, side, 0.55)], shade(cols[i], 0.3), shade(cols[i], -0.4), 0.6);
     }
-    p.circle(px, py, 1.4, '#fff3b0', p.outline);
+    p.circle(px, py, s * 0.16, '#fff3b0', p.outline);
   };
   // small one behind
-  thick(p, [{ x: x + 7, y: y + 1 }, { x: x + 7, y: y - 20 }], '#f7f0e0', 1);
-  wheel(x + 7, y - 21, 6, ['#9ad08a', '#f7c86a', '#7fb2dc', '#f28a8a'], 0.6);
-  thick(p, [{ x: x - 3, y: y + 2 }, { x: x - 3, y: y - 30 }], '#f7f0e0', 1.2);
-  for (let k = 0; k < 5; k++) p.line([{ x: x - 4, y: y - 3 - k * 6 }, { x: x - 2, y: y - 5 - k * 6 }], '#e8574e', 1);
-  wheel(x - 3, y - 32, 10, ['#f28a8a', '#7fb2dc', '#f7c86a', '#9ad08a'], 0.2);
+  thick(p, [{ x: x + 9, y: y + 1 }, { x: x + 9, y: y - 20 }], '#f7f0e0', 1);
+  wheel(x + 9, y - 21, 7, ['#9ad08a', '#f7c86a', '#7fb2dc', '#f28a8a'], 0.6);
+  thick(p, [{ x: x - 4, y: y + 2 }, { x: x - 4, y: y - 30 }], '#f7f0e0', 1.2);
+  for (let k = 0; k < 5; k++) p.line([{ x: x - 5, y: y - 3 - k * 6 }, { x: x - 3, y: y - 5 - k * 6 }], '#e8574e', 1);
+  wheel(x - 4, y - 32, 11, ['#f28a8a', '#7fb2dc', '#f7c86a', '#9ad08a'], 0.2);
 }
 
 function hotAirBalloon(p: Pen): void {
@@ -4059,9 +4176,9 @@ function totemPole(p: Pen): void {
   const seg = (y0: number, h: number, col: string) => {
     p.cylinder(x, y0, rx, h, col);
   };
-  seg(y, 18, '#a8643a');
+  seg(y, 20, '#a8643a');
   // bear face
-  const bf = y - 10;
+  const bf = y - 9;
   p.circle(x - 6, bf - 8, 2.4, '#a8643a', p.outline);
   p.circle(x + 6, bf - 8, 2.4, '#a8643a', p.outline);
   p.ellipse(x, bf + 2, 4, 3, '#e8c48e', p.outline);
@@ -4071,21 +4188,22 @@ function totemPole(p: Pen): void {
   p.circle(x - 5, bf + 0.5, 1.2, rgba('#f28a8a', 0.6), null);
   p.circle(x + 5, bf + 0.5, 1.2, rgba('#f28a8a', 0.6), null);
   // middle: frog
-  seg(y - 18, 16, '#6fb36a');
-  const ff = y - 26;
-  p.circle(x - 4, ff - 6, 2.6, '#fdfbf2', p.outline);
-  p.circle(x + 4, ff - 6, 2.6, '#fdfbf2', p.outline);
-  p.circle(x - 4, ff - 6, 1.2, '#2b2b2b', null);
-  p.circle(x + 4, ff - 6, 1.2, '#2b2b2b', null);
+  seg(y - 20, 17, '#6fb36a');
+  const ff = y - 28;
+  p.circle(x - 3.6, ff - 3, 2.4, '#fdfbf2', p.outline);
+  p.circle(x + 3.6, ff - 3, 2.4, '#fdfbf2', p.outline);
+  p.circle(x - 3.6, ff - 3, 1.1, '#2b2b2b', null);
+  p.circle(x + 3.6, ff - 3, 1.1, '#2b2b2b', null);
   p.ctx.beginPath();
-  p.ctx.moveTo(x - 5, ff - 1);
-  p.ctx.quadraticCurveTo(x, ff + 3, x + 5, ff - 1);
+  p.ctx.moveTo(x - 4.5, ff + 1.5);
+  p.ctx.quadraticCurveTo(x, ff + 5, x + 4.5, ff + 1.5);
   p.ctx.strokeStyle = p.outline;
   p.ctx.lineWidth = 1;
   p.ctx.stroke();
-  p.rect(x - rx, ff + 4, rx * 2, 1.6, '#f7c84a', null);
+  p.circle(x - 5.5, ff + 1.5, 1, rgba('#f28a8a', 0.6), null);
+  p.circle(x + 5.5, ff + 1.5, 1, rgba('#f28a8a', 0.6), null);
   // top: owl with wings
-  const ot = y - 34;
+  const ot = y - 37;
   for (const d of [-1, 1]) {
     p.poly(
       [
@@ -4258,7 +4376,7 @@ const TABLE: Record<string, [number, Painter]> = {
   // lights
   street_lamp: [80, streetLamp],
   garden_lantern: [48, gardenLantern],
-  stone_lantern: [52, stoneLantern],
+  stone_lantern: [60, stoneLantern],
   firefly_jar: [32, fireflyJar],
   string_lights: [52, stringLights],
   campfire: [34, campfire],
@@ -4282,7 +4400,7 @@ const TABLE: Record<string, [number, Painter]> = {
   sundial: [30, sundial],
   flower_arch: [62, roseArch],
   gazebo: [96, gazebo],
-  greenhouse_mini: [38, miniGreenhouse],
+  greenhouse_mini: [40, miniGreenhouse],
   apple_crate: [24, appleCrate],
   milk_cans: [30, milkCans],
   compost_bin: [24, compostBin],

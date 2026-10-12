@@ -9,6 +9,7 @@ export * from './content/events';
 export * from './content/progression';
 export * from './content/quests';
 export * from './content/gifts';
+export * from './content/orders';
 export * from './logic/catalog';
 export * from './logic/status';
 export * from './logic/quests';

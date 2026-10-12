@@ -3,6 +3,7 @@ import { iconURL } from '../art';
 import { bus } from '../bus';
 import type { Store } from '../store';
 import { setTool, tools, type Tool } from '../tools';
+import { audioSettings, setMusic } from '../sfx';
 import { fmtNum, h } from '../util';
 import {
   claimableQuests,
@@ -11,6 +12,8 @@ import {
   openFarmhouse,
   openGiftPicker,
   openNeighbors,
+  openOrders,
+  readyOrders,
   openQuests,
   openSeedPicker,
   openShop,
@@ -44,16 +47,18 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const charm = h('span');
   const stars = h('span', { class: 'stars' });
   const farmName = h('span', { class: 'farm-name' });
+  const levelPill = h(
+    'div',
+    { class: 'pill level-pill', title: 'Level & experience' },
+    levelNum,
+    h('div', null, farmName, h('div', { class: 'xpbar' }, xpFill), xpText),
+  );
+  const coinPill = h('div', { class: 'pill', title: 'Coins' }, h('img', { class: 'ico', src: iconURL('coin') }), coins);
   const hud = h(
     'div',
     { class: 'hud' },
-    h(
-      'div',
-      { class: 'pill level-pill', title: 'Level & experience' },
-      levelNum,
-      h('div', null, farmName, h('div', { class: 'xpbar' }, xpFill), xpText),
-    ),
-    h('div', { class: 'pill', title: 'Coins' }, h('img', { class: 'ico', src: iconURL('coin') }), coins),
+    levelPill,
+    coinPill,
     h('div', { class: 'pill', title: 'Farm charm' }, h('img', { class: 'ico', src: iconURL('charm') }), charm, stars),
   );
 
@@ -66,8 +71,39 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const quests = roundBtn('📜', 'Quests', openQuests);
   const neighbors = roundBtn('🏘️', 'Neighbors', openNeighbors);
   const barn = roundBtn('🧺', 'Barn', openBarn);
+  const orders = roundBtn('📋', 'Orders', openOrders);
   const daily = roundBtn('🏡', 'Farm', openFarmhouse);
-  const corner = h('div', { class: 'corner' }, quests.btn, neighbors.btn, barn.btn, daily.btn);
+  const music = roundBtn(audioSettings.music ? '🎵' : '🔇', 'Music', () => {
+    setMusic(!audioSettings.music);
+    music.btn.firstChild!.textContent = audioSettings.music ? '🎵' : '🔇';
+  });
+  music.btn.classList.add('small-round');
+  const corner = h('div', { class: 'corner' }, quests.btn, orders.btn, neighbors.btn, barn.btn, daily.btn, music.btn);
+
+  // Icons fly from the farm into the HUD when you earn things.
+  let flying = 0;
+  bus.on('fly', (icon, x, y, target) => {
+    if (flying > 14) return;
+    const el = target === 'coins' ? coinPill : target === 'xp' ? levelPill : barn.btn;
+    const r = el.getBoundingClientRect();
+    const img = h('img', { class: 'flyer', src: iconURL(icon.replace(/^icon:/, '')) });
+    img.style.left = `${x - 14}px`;
+    img.style.top = `${y - 14}px`;
+    document.body.append(img);
+    flying++;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        img.style.transform = `translate(${r.left + r.width / 2 - x}px, ${r.top + r.height / 2 - y}px) scale(0.7)`;
+      }),
+    );
+    setTimeout(() => {
+      img.remove();
+      flying--;
+      el.classList.remove('bump');
+      void el.offsetWidth;
+      el.classList.add('bump');
+    }, 620);
+  });
 
   // --- toolbar ---
   const toolButtons = new Map<string, HTMLButtonElement>();
@@ -142,7 +178,8 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     quests.btn.classList.toggle('pulse', claimableQuests() > 0);
     setBadge(neighbors.badge, socialBadge());
     setBadge(daily.badge, dailyAvailable() ? 1 : 0);
-    setBadge(barn.badge, 0);
+    setBadge(barn.badge, st.inventory.mystery_gift ?? 0);
+    setBadge(orders.badge, readyOrders());
 
     const seed = CROPS[tools.seed];
     seedImg.src = iconURL(seed?.id ?? 'strawberry');

@@ -16,6 +16,7 @@ export function fmtNum(n: number): string {
 }
 
 export function nameOf(id: string): string {
+  if (id === 'mystery_gift') return 'Mystery Gift';
   return (
     ITEMS[id]?.name ??
     DECORATIONS[id]?.name ??

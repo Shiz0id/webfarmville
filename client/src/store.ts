@@ -17,6 +17,7 @@ export interface Visit {
 type Listener = () => void;
 type EventListener = (events: GameEvent[]) => void;
 type ErrorListener = (message: string) => void;
+type ActionListener = (action: Action) => void;
 
 const FLUSH_DELAY = 250;
 const SOCIAL_POLL = 15_000;
@@ -41,6 +42,7 @@ export class Store {
   private listeners = new Set<Listener>();
   private eventListeners = new Set<EventListener>();
   private errorListeners = new Set<ErrorListener>();
+  private actionListeners = new Set<ActionListener>();
 
   constructor(me: MePayload) {
     this.username = me.user.username;
@@ -88,6 +90,11 @@ export class Store {
     return () => this.errorListeners.delete(fn);
   }
 
+  onAction(fn: ActionListener): () => void {
+    this.actionListeners.add(fn);
+    return () => this.actionListeners.delete(fn);
+  }
+
   private emit(): void {
     for (const fn of this.listeners) fn();
   }
@@ -116,6 +123,7 @@ export class Store {
       this.pending.push({ ...action, t } as TimedAction);
       this.scheduleFlush();
       this.emit();
+      for (const fn of this.actionListeners) fn(action);
       this.emitEvents(events);
       return true;
     } catch (err) {

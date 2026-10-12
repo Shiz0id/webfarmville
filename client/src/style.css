@@ -1134,3 +1134,218 @@ img.ico {
     grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
   }
 }
+
+/* ---------- juice ---------- */
+
+.flyer {
+  position: fixed;
+  width: 28px;
+  height: 28px;
+  z-index: 55;
+  pointer-events: none;
+  transition: transform 0.6s cubic-bezier(0.55, -0.35, 0.75, 1), opacity 0.6s;
+  filter: drop-shadow(0 2px 0 rgba(74, 52, 38, 0.4));
+}
+
+.bump {
+  animation: bump 0.32s ease-out;
+}
+
+@keyframes bump {
+  40% {
+    transform: scale(1.14);
+  }
+}
+
+.round-btn.small-round {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  font-size: 18px;
+}
+
+.round-btn:hover {
+  transform: translateY(-2px) rotate(-3deg);
+}
+
+.round-btn {
+  transition: transform 0.12s;
+}
+
+.tool:active,
+.card:active:not(.locked) {
+  transform: scale(0.94);
+}
+
+/* ---------- villagers ---------- */
+
+.portrait {
+  border-radius: 50%;
+  border: 2px solid var(--dark);
+  background: var(--paper);
+  flex: none;
+  object-fit: cover;
+  box-shadow: 0 3px 0 rgba(74, 52, 38, 0.25);
+}
+
+.portrait.emoji {
+  display: grid;
+  place-items: center;
+}
+
+.villager-say {
+  position: fixed;
+  left: 12px;
+  bottom: 96px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: min(380px, calc(100% - 24px));
+  z-index: 35;
+  animation: say-in 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+  cursor: pointer;
+}
+
+.villager-say.leaving {
+  animation: say-out 0.25s ease-in forwards;
+}
+
+.villager-say .portrait {
+  animation: bob 2.4s ease-in-out infinite;
+}
+
+.say-bubble {
+  position: relative;
+  background: var(--cream);
+  border: 2px solid var(--dark);
+  border-radius: 18px 18px 18px 6px;
+  padding: 8px 12px 10px;
+  box-shadow: var(--shadow);
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.35;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.say-name {
+  font-weight: 900;
+  font-size: 12px;
+  color: var(--brown);
+  background: var(--paper-2);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+@keyframes say-in {
+  from {
+    transform: translateY(30px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes say-out {
+  to {
+    transform: translateY(20px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* ---------- orders & gifts ---------- */
+
+.orders {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.order-card {
+  position: relative;
+  background: #fffaf0;
+  border: 2px solid var(--line);
+  border-radius: 6px 6px 18px 18px;
+  padding: 16px 10px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 3px 0 rgba(74, 52, 38, 0.12);
+  transform: rotate(-0.6deg);
+}
+
+.order-card:nth-child(2n) {
+  transform: rotate(0.8deg);
+}
+
+.order-card.ready {
+  border-color: var(--green-d);
+  background: #f3fbe9;
+}
+
+.order-card .pin {
+  position: absolute;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 2px solid var(--dark);
+}
+
+.order-from {
+  font-weight: 900;
+}
+
+.order-note {
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--brown);
+}
+
+.order-card .inputs {
+  justify-content: center;
+}
+
+.unwrap-art {
+  height: 150px;
+  display: grid;
+  place-items: center;
+  animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.unwrap-art img {
+  max-height: 150px;
+  max-width: 220px;
+  filter: drop-shadow(0 6px 10px rgba(74, 52, 38, 0.3));
+}
+
+.wiggle {
+  animation: wiggle 1.2s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0);
+  }
+  70% {
+    transform: rotate(-10deg);
+  }
+  80% {
+    transform: rotate(10deg);
+  }
+  90% {
+    transform: rotate(-6deg);
+  }
+}

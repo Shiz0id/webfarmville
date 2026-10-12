@@ -78,6 +78,16 @@ export const QUEST_LIST: QuestDef[] = [
     reward: { coins: 100, xp: 15 },
   },
   {
+    id: 'orders',
+    title: 'Special Delivery',
+    text: 'The villagers pin requests on the order board. Fill a few and they pay handsomely!',
+    giver: 'Penny',
+    level: 2,
+    requires: ['market_day'],
+    goals: [stat('order', 3, 'Fill 3 villager orders')],
+    reward: { coins: 200, xp: 30, items: { mystery_gift: 1 } },
+  },
+  {
     id: 'pretty',
     title: 'Pretty Up the Place',
     text: 'A farm should feel like home. Place some decorations from the shop.',

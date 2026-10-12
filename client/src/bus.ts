@@ -10,6 +10,8 @@ export interface HoverInfo {
 export interface BusEvents {
   toast: [message: string, kind?: 'info' | 'error' | 'good'];
   hover: [info: HoverInfo | null];
+  /** Fly an icon from a screen position to a HUD element. */
+  fly: [icon: string, x: number, y: number, target: 'coins' | 'xp' | 'barn'];
   openBuilding: [id: string];
   openFarmhouse: [];
   openSeedPicker: [plotId: string | null];

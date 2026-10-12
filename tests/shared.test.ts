@@ -249,3 +249,48 @@ describe('hostile input', () => {
     expect(({} as Record<string, unknown>).x).toBeUndefined();
   });
 });
+
+describe('orders and mystery gifts', () => {
+  it('keeps three deterministic orders and fulfils them', () => {
+    const a = createFarm('A', T0);
+    const b = createFarm('B', T0);
+    expect(a.orders).toHaveLength(3);
+    expect(a.orders).toEqual(b.orders);
+    let s = a;
+    const order = s.orders[0];
+    expect(() => act(s, { type: 'fulfillOrder', order: order.id })).toThrow('Need');
+    for (const [item, qty] of Object.entries(order.items)) s.inventory[item] = qty;
+    const coins = s.coins;
+    s = act(s, { type: 'fulfillOrder', order: order.id }).state;
+    expect(s.coins).toBeGreaterThanOrEqual(coins + order.coins);
+    expect(s.orders).toHaveLength(3);
+    expect(s.orders.some((o) => o.id === order.id)).toBe(false);
+    expect(s.stats.order).toBe(1);
+    if (order.bonus) expect(s.inventory[order.bonus]).toBe(1);
+    // Skipping swaps in a fresh order.
+    const skipped = s.orders[1].id;
+    s = act(s, { type: 'skipOrder', order: skipped }).state;
+    expect(s.orders.some((o) => o.id === skipped)).toBe(false);
+  });
+
+  it('upgrades old saves without orders', () => {
+    const s = createFarm('Old', T0) as Partial<ReturnType<typeof createFarm>>;
+    delete s.orders;
+    delete s.seed;
+    const next = act(s as FarmState, { type: 'rename', name: 'New' }).state;
+    expect(next.orders).toHaveLength(3);
+    expect(typeof next.seed).toBe('number');
+  });
+
+  it('unwraps mystery gifts into decorations', () => {
+    let s = createFarm('Gift', T0);
+    expect(() => act(s, { type: 'openGift' })).toThrow();
+    s.inventory.mystery_gift = 2;
+    const r = act(s, { type: 'openGift' });
+    s = r.state;
+    const unwrap = r.events.find((e) => e.type === 'unwrap') as { item: string };
+    expect(placeable(unwrap.item)?.kind).toBe('deco');
+    expect(s.inventory[unwrap.item]).toBeGreaterThanOrEqual(1);
+    expect(s.inventory.mystery_gift).toBe(1);
+  });
+});

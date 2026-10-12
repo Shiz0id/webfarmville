@@ -1,5 +1,6 @@
 import { START_SIZE } from '../content/progression';
 import type { FarmObject, FarmState, ObjectSeed } from '../types';
+import { ensureOrders } from '../content/orders';
 import { refreshQuests } from './quests';
 
 type Seed = ObjectSeed;
@@ -49,7 +50,10 @@ export function createFarm(name: string, now: number): FarmState {
     daily: { last: null, streak: 0 },
     lastSeed: 'strawberry',
     createdAt: now,
+    seed: (now % 2147483647) | 0,
+    orders: [],
   };
+  ensureOrders(state);
   refreshQuests(state, []);
   return state;
 }

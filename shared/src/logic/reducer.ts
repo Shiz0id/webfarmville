@@ -12,6 +12,7 @@ import {
   levelUpReward,
   nextExpansion,
 } from '../content/progression';
+import { MYSTERY_CHANCE, MYSTERY_GIFT, ensureOrders, generateOrder, nextRandom, rollMysteryGift } from '../content/orders';
 import { QUESTS } from '../content/quests';
 import {
   GameError,
@@ -111,6 +112,12 @@ function getObject<K extends FarmObject['kind']>(state: FarmState, id: string, k
   return obj as Extract<FarmObject, { kind: K }>;
 }
 
+function maybeMysteryGift(state: FarmState, events: GameEvent[], at: { x: number; y: number }): void {
+  if (nextRandom(state) >= MYSTERY_CHANCE) return;
+  addItem(state, MYSTERY_GIFT, 1, events, at);
+  events.push({ type: 'mystery', item: MYSTERY_GIFT });
+}
+
 function newId(state: FarmState): string {
   return `o${state.nextId++}`;
 }
@@ -158,6 +165,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
   const state: FarmState = structuredClone(prev);
   const events: GameEvent[] = [];
   const now = ctx.now;
+  ensureOrders(state);
   const wasComplete = completeQuestSet(state);
 
   switch (action.type) {
@@ -195,6 +203,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       const at = centerOf(plot);
       addItem(state, def.id, def.yield + (plot.fertilized ? 1 : 0), events, at);
       addXp(state, def.xp, events, at);
+      maybeMysteryGift(state, events, at);
       bumpStat(state, 'harvest');
       bumpStat(state, `harvest:${def.id}`);
       delete plot.crop;
@@ -220,6 +229,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       const at = centerOf(obj);
       addItem(state, def.product, def.yield, events, at);
       addXp(state, def.xp, events, at);
+      maybeMysteryGift(state, events, at);
       bumpStat(state, 'collect');
       bumpStat(state, `collect:${def.id}`);
       obj.cycleStart = now;
@@ -370,6 +380,38 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       const bonus = dailyBonus(state.daily.streak, charmStars(farmCharm(state)));
       earn(state, bonus.coins, events);
       addXp(state, bonus.xp, events);
+      break;
+    }
+
+    case 'fulfillOrder': {
+      const idx = state.orders.findIndex((o) => o.id === action.order);
+      if (idx < 0) throw new GameError('That order is gone');
+      const order = state.orders[idx];
+      for (const [item, qty] of Object.entries(order.items)) {
+        if ((state.inventory[item] ?? 0) < qty) throw new GameError(`Need ${qty} ${ITEMS[item]?.name ?? item}`);
+      }
+      for (const [item, qty] of Object.entries(order.items)) takeItem(state, item, qty);
+      earn(state, order.coins, events);
+      addXp(state, order.xp, events);
+      if (order.bonus) addItem(state, order.bonus, 1, events);
+      state.orders.splice(idx, 1, generateOrder(state));
+      bumpStat(state, 'order');
+      break;
+    }
+
+    case 'skipOrder': {
+      const idx = state.orders.findIndex((o) => o.id === action.order);
+      if (idx < 0) throw new GameError('That order is gone');
+      state.orders.splice(idx, 1, generateOrder(state));
+      break;
+    }
+
+    case 'openGift': {
+      takeItem(state, MYSTERY_GIFT, 1);
+      const deco = rollMysteryGift(state);
+      addItem(state, deco, 1);
+      events.push({ type: 'unwrap', item: deco });
+      bumpStat(state, 'unwrap');
       break;
     }
 

@@ -6,11 +6,13 @@ import { buildArt } from './art';
 import { bus } from './bus';
 import { FarmScene } from './scenes/FarmScene';
 import { Store } from './store';
+import { sfx, unlockAudioOnGesture } from './sfx';
 import { setTool } from './tools';
 import { showAuth } from './ui/auth';
 import { closeAllModals, setupTooltip, toast } from './ui/dom';
 import { mountHud } from './ui/hud';
-import { initPanels, openBuilding, openFarmhouse, openSeedPicker, showLevelUp } from './ui/panels';
+import { dailyAvailable, initPanels, showUnwrap, openBuilding, openFarmhouse, openQuests, openSeedPicker, showLevelUp } from './ui/panels';
+import { villagerSay } from './ui/villager';
 
 async function signIn(): Promise<MePayload> {
   if (getToken()) {
@@ -61,7 +63,54 @@ async function start(): Promise<void> {
     zoom: (f) => scene().zoomBy(f),
   });
 
-  store.onError((msg) => toast(msg, 'error'));
+  store.onError((msg) => {
+    toast(msg, 'error');
+    sfx.error();
+  });
+  unlockAudioOnGesture();
+  store.onAction((a) => {
+    switch (a.type) {
+      case 'plow':
+        return sfx.plow();
+      case 'plant':
+        return sfx.plant();
+      case 'harvest':
+      case 'collect':
+      case 'collectCrafts':
+      case 'clearPlot':
+        return sfx.pop();
+      case 'buy':
+      case 'placeStored':
+      case 'move':
+      case 'store':
+        return sfx.place();
+      case 'sellItem':
+      case 'sellObject':
+        return sfx.coin();
+      case 'claimQuest':
+      case 'claimDaily':
+      case 'expand':
+        return sfx.quest();
+      default:
+        return sfx.click();
+    }
+  });
+  store.onEvents((events) => {
+    for (const e of events) {
+      if (e.type === 'mystery') {
+        toast('🎁 You found a Mystery Gift! Open it from your barn.', 'good');
+        setTimeout(() => sfx.quest(), 100);
+      } else if (e.type === 'unwrap') {
+        sfx.levelUp();
+        showUnwrap(e.item);
+      }
+    }
+    if (events.some((e) => e.type === 'levelUp')) setTimeout(() => sfx.levelUp(), 150);
+    else if (events.some((e) => e.type === 'questReady')) setTimeout(() => sfx.quest(), 250);
+  });
+  document.getElementById('ui')!.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('button, .card, .chip')) sfx.click();
+  });
   bus.on('toast', (msg, kind) => toast(msg, kind));
   bus.on('openBuilding', (id) => openBuilding(id));
   bus.on('openFarmhouse', () => openFarmhouse());
@@ -70,12 +119,28 @@ async function start(): Promise<void> {
     closeAllModals();
     showLevelUp(level);
   });
-  bus.on('questReady', (id) => toast(`📜 Quest ready to claim: ${QUESTS[id]?.title ?? id}`, 'good'));
+  bus.on('questReady', (id) => {
+    const q = QUESTS[id];
+    if (!q) return;
+    villagerSay(q.giver, `You finished “${q.title}”! Come collect your reward, dear.`, { label: 'Claim reward', onClick: openQuests });
+  });
 
   void store.refreshSocial();
   if (import.meta.env.DEV || location.search.includes('debug')) Object.assign(window, { __farm: { store, scene } });
   if (store.state.stats.harvest === undefined) {
-    setTimeout(() => toast('Welcome! Your strawberries are almost ripe. Click them when they sparkle 🍓', 'good'), 800);
+    setTimeout(
+      () =>
+        villagerSay(
+          'Mayor Maple',
+          `Hoo-hoo! Welcome to Meadowbrook, ${store.username}! Your strawberries are almost ripe. Tap them when they sparkle, then check your quests.`,
+        ),
+      900,
+    );
+  } else if (dailyAvailable()) {
+    setTimeout(
+      () => villagerSay('Penny', 'Good morning, neighbor! Your daily bonus is waiting at the farmhouse.', { label: 'Open farmhouse', onClick: openFarmhouse }),
+      1200,
+    );
   }
 }
 

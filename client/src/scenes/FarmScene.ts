@@ -21,6 +21,8 @@ import {
 } from '@farm/shared';
 import { RES, artMeta, registerTextures, texture } from '../art';
 import { rng } from '../art/kit';
+import { Ambience } from './ambience';
+import { sfx } from '../sfx';
 import { bus } from '../bus';
 import type { Store } from '../store';
 import { setTool, tools } from '../tools';
@@ -47,6 +49,10 @@ interface Bubble {
 
 interface ObjSprite {
   sig: string;
+  kind: FarmObject['kind'];
+  ready: boolean;
+  smoke?: { x: number; y: number };
+  glow?: Phaser.GameObjects.Image;
   main: Phaser.GameObjects.Image;
   overlay?: Phaser.GameObjects.Image;
   bubble?: Bubble;
@@ -59,7 +65,13 @@ interface RenderSpec {
   overlay?: string;
   bubble?: { icon?: string; emoji?: string };
   progress?: number;
+  ready?: boolean;
+  smoke?: boolean;
+  glow?: boolean;
 }
+
+/** Decorations that light up at night. */
+const GLOWING = /lamp|lantern|torch|candle|diya|campfire|fire_pit|menorah|jack_o|firefly|string_lights|sparkler|decorated_pine|marigold/;
 
 const isoX = (x: number, y: number) => (x - y) * HALF_W;
 const isoY = (x: number, y: number) => (x + y) * HALF_H;
@@ -77,6 +89,11 @@ export class FarmScene extends Phaser.Scene {
   private hoverTile: Tile | null = null;
   private pointerScreen = { x: 0, y: 0 };
   private keys?: Record<string, Phaser.Input.Keyboard.Key>;
+  private ambience!: Ambience;
+  /** Ids already on screen once, so only genuinely new things pop in. */
+  private known = new Set<string>();
+  private settled = false;
+  private emitters = new Map<string, Phaser.GameObjects.Particles.ParticleEmitter>();
 
   private drag: {
     mode: 'none' | 'pending' | 'pan' | 'paint' | 'harvest' | 'pinch';
@@ -125,6 +142,90 @@ export class FarmScene extends Phaser.Scene {
     this.sync();
     this.centerCamera();
     this.spawnButterflies();
+    this.ambience = new Ambience(
+      this,
+      () => {
+        const n = this.store.viewed.size;
+        return { x: isoX(n / 2, n / 2), y: isoY(n / 2, n / 2), r: (n + 8) * HALF_W };
+      },
+      DEPTH_UI - 200,
+    );
+    this.dirty = true;
+    this.time.addEvent({ delay: 450, loop: true, callback: () => this.twinkle() });
+    this.time.addEvent({ delay: 700, loop: true, callback: () => this.puffSmoke() });
+    this.time.addEvent({ delay: 1800, loop: true, callback: () => this.animalLife() });
+  }
+
+  // -------------------------------------------------------------------------
+  // Little bits of life
+
+  private emitter(tex: string, kind: 'burst' | 'twinkle' | 'smoke' | 'dust'): Phaser.GameObjects.Particles.ParticleEmitter {
+    const key = `${tex}|${kind}`;
+    let e = this.emitters.get(key);
+    if (e) return e;
+    const configs: Record<typeof kind, Phaser.Types.GameObjects.Particles.ParticleEmitterConfig> = {
+      burst: {
+        speed: { min: 50, max: 130 },
+        angle: { min: 200, max: 340 },
+        gravityY: 260,
+        lifespan: 750,
+        scale: { start: 0.32, end: 0 },
+        rotate: { min: 0, max: 360 },
+        emitting: false,
+      },
+      twinkle: {
+        speed: { min: 2, max: 10 },
+        lifespan: 900,
+        scale: { values: [0, 0.28, 0] },
+        emitting: false,
+      },
+      smoke: {
+        speedY: { min: -26, max: -16 },
+        speedX: { min: 4, max: 14 },
+        lifespan: 2600,
+        scale: { start: 0.14, end: 0.5 },
+        alpha: { start: 0.75, end: 0 },
+        emitting: false,
+      },
+      dust: {
+        speed: { min: 20, max: 60 },
+        angle: { min: 160, max: 380 },
+        lifespan: 500,
+        scale: { start: 0.35, end: 0.05 },
+        alpha: { start: 0.9, end: 0 },
+        emitting: false,
+      },
+    };
+    e = this.add.particles(0, 0, texture(this, tex), configs[kind]);
+    e.setDepth(kind === 'dust' ? DEPTH_FLAT + 20_000 : DEPTH_UI - 5);
+    this.emitters.set(key, e);
+    return e;
+  }
+
+  private twinkle(): void {
+    const ready = [...this.sprites.values()].filter((s) => s.ready && s.main.visible);
+    if (!ready.length) return;
+    const s = ready[Math.floor(Math.random() * ready.length)];
+    const m = s.overlay ?? s.main;
+    const x = m.x + Math.random() * m.displayWidth;
+    const y = m.y - m.displayHeight * (0.3 + Math.random() * 0.6);
+    this.emitter('fx:sparkle', 'twinkle').explode(1, x, y);
+  }
+
+  private puffSmoke(): void {
+    for (const s of this.sprites.values()) {
+      if (s.smoke && Math.random() < 0.6) this.emitter('fx:smoke', 'smoke').explode(1, s.smoke.x, s.smoke.y);
+    }
+  }
+
+  private animalLife(): void {
+    const animals = [...this.sprites.values()].filter((s) => s.kind === 'animal' && s.main.alpha === 1);
+    for (const a of animals) {
+      if (Math.random() > 0.35) continue;
+      const m = a.main;
+      if (Math.random() < 0.3) m.setFlipX(!m.flipX);
+      this.tweens.add({ targets: m, y: m.y - 5, duration: 130, yoyo: true, repeat: Math.random() < 0.3 ? 1 : 0, ease: 'Quad.easeOut' });
+    }
   }
 
   update(_time: number, delta: number): void {
@@ -252,7 +353,10 @@ export class FarmScene extends Phaser.Scene {
         const spec: RenderSpec = { tex: obj.fertilized ? 'ground:plot_fert' : 'ground:plot', flat: true };
         if (st.stage === 'sprout') spec.overlay = `crop:${obj.crop}:0`;
         else if (st.stage === 'growing') spec.overlay = `crop:${obj.crop}:1`;
-        else if (st.stage === 'ready') spec.overlay = `crop:${obj.crop}:2`;
+        else if (st.stage === 'ready') {
+          spec.overlay = `crop:${obj.crop}:2`;
+          spec.ready = !visiting;
+        }
         else if (st.stage === 'withered') spec.overlay = 'crop:withered';
         if (visiting && helpKind(obj, now)) spec.bubble = { emoji: st.stage === 'withered' ? '💧' : '✨' };
         return spec;
@@ -267,24 +371,32 @@ export class FarmScene extends Phaser.Scene {
         };
         if (visiting) {
           if (helpKind(obj, now)) spec.bubble = { emoji: obj.kind === 'tree' ? '💧' : '🌾' };
-        } else if (ready && def) spec.bubble = { icon: `icon:${def.product}` };
+        } else if (ready && def) {
+          spec.bubble = { icon: `icon:${def.product}` };
+          spec.ready = true;
+        }
         return spec;
       }
       case 'building': {
         const spec: RenderSpec = { tex: `building:${obj.def}`, flat: false };
+        if (BUILDINGS[obj.def]?.starter) spec.smoke = true;
         if (visiting) return spec;
         const st = buildingStatus(obj, now);
         if (st.done > 0) {
           const job = obj.queue.find((j) => j.end <= now)!;
           const r = findRecipe(obj.def, job.recipe);
           spec.bubble = { icon: `icon:${r?.output ?? job.recipe}` };
+          spec.ready = true;
         } else if (st.active) {
           spec.progress = st.active.progress;
+          spec.smoke = true;
         }
         return spec;
       }
-      case 'deco':
-        return { tex: `deco:${obj.def}`, flat: !!DECORATIONS[obj.def]?.flat };
+      case 'deco': {
+        const def = DECORATIONS[obj.def];
+        return { tex: `deco:${obj.def}`, flat: !!def?.flat, glow: def?.category === 'lights' || GLOWING.test(obj.def) };
+      }
     }
   }
 
@@ -298,6 +410,8 @@ export class FarmScene extends Phaser.Scene {
       this.groundKey = groundKey;
       this.rebuildGround(state);
       for (const id of [...this.sprites.keys()]) this.removeSprite(id);
+      this.known.clear();
+      this.settled = false;
     }
     const now = this.store.now();
     const seen = new Set<string>();
@@ -305,6 +419,7 @@ export class FarmScene extends Phaser.Scene {
       seen.add(obj.id);
       const spec = this.renderSpec(obj, now, visiting);
       if (visiting && !helping) delete spec.bubble;
+      const night = !!spec.glow && !!this.ambience?.isNight;
       const { w, h } = footprint(obj);
       const flip = obj.kind === 'deco' && !!obj.flip;
       const moving = tools.moving === obj.id;
@@ -319,22 +434,36 @@ export class FarmScene extends Phaser.Scene {
         obj.y,
         flip,
         moving,
+        night,
       ].join('|');
       const existing = this.sprites.get(obj.id);
       if (existing?.sig === sig) continue;
+      const fresh = !this.settled ? null : !this.known.has(obj.id) ? 'new' : existing && existing.sig.split('|', 2).join() !== sig.split('|', 2).join() ? 'changed' : null;
       if (existing) this.removeSprite(obj.id);
-      this.createSprite(obj, spec, sig, w, h, flip, moving);
+      this.createSprite(obj, spec, sig, w, h, flip, moving, night, fresh);
+      this.known.add(obj.id);
     }
     for (const id of [...this.sprites.keys()]) if (!seen.has(id)) this.removeSprite(id);
+    this.settled = true;
   }
 
-  private createSprite(obj: FarmObject, spec: RenderSpec, sig: string, w: number, h: number, flip: boolean, moving: boolean) {
+  private createSprite(
+    obj: FarmObject,
+    spec: RenderSpec,
+    sig: string,
+    w: number,
+    h: number,
+    flip: boolean,
+    moving: boolean,
+    night: boolean,
+    fresh: 'new' | 'changed' | null,
+  ) {
     const main = this.add.image(0, 0, texture(this, spec.tex, w, h));
     this.placeImage(main, obj.x, obj.y, w, h);
     main.setFlipX(flip);
     main.setDepth(spec.flat ? DEPTH_FLAT + obj.x + obj.y : this.depthFor(obj.x, obj.y, w, h));
     if (moving) main.setAlpha(0.35);
-    const entry: ObjSprite = { sig, main };
+    const entry: ObjSprite = { sig, main, kind: obj.kind, ready: !!spec.ready };
 
     if (spec.overlay) {
       const ov = this.add.image(0, 0, texture(this, spec.overlay, 1, 1));
@@ -345,15 +474,53 @@ export class FarmScene extends Phaser.Scene {
     }
 
     if (obj.kind === 'animal' && !moving) {
+      // Gentle breathing.
       this.tweens.add({
         targets: main,
-        scaleY: main.scaleY * 0.96,
-        y: main.y + 0.5,
-        duration: 700 + (obj.x * 37 + obj.y * 11) % 500,
+        scaleY: main.scaleY * 0.965,
+        duration: 700 + ((obj.x * 37 + obj.y * 11) % 500),
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut',
       });
+    }
+
+    const cxw = isoX(obj.x + w / 2, obj.y + h / 2);
+    const cyw = isoY(obj.x + w / 2, obj.y + h / 2);
+    if (fresh === 'new' && !moving) {
+      // Pop into existence with a puff of dust.
+      for (const img of [main, entry.overlay]) {
+        if (!img) continue;
+        const sx = img.scaleX;
+        const sy = img.scaleY;
+        img.setScale(sx * 0.6, sy * 0.3);
+        this.tweens.add({ targets: img, scaleX: sx, scaleY: sy, duration: 380, ease: 'Back.easeOut' });
+      }
+      this.emitter('fx:dust', 'dust').explode(6, cxw, cyw);
+    } else if (fresh === 'changed' && !moving) {
+      const img = entry.overlay ?? main;
+      const sy = img.scaleY;
+      img.setScale(img.scaleX, sy * 0.85);
+      this.tweens.add({ targets: img, scaleY: sy, duration: 260, ease: 'Back.easeOut' });
+    }
+
+    if (spec.smoke) {
+      const chimney = obj.kind === 'building' && BUILDINGS[obj.def]?.starter;
+      entry.smoke = {
+        x: main.x + main.displayWidth * (chimney ? 0.63 : 0.5),
+        y: main.y - main.displayHeight + (chimney ? 22 : 16),
+      };
+    }
+    if (night) {
+      const top = main.y - main.displayHeight * 0.7;
+      entry.glow = this.add
+        .image(cxw, top, texture(this, 'fx:firefly'))
+        .setTint(0xffc46b)
+        .setScale(0.9 * Math.max(w, h))
+        .setAlpha(0.75)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(DEPTH_UI - 150);
+      this.tweens.add({ targets: entry.glow, alpha: 0.5, duration: 1400 + Math.random() * 600, yoyo: true, repeat: -1 });
     }
 
     const top = main.y - main.displayHeight + (artMeta(spec.tex).height > 40 ? 12 : 4);
@@ -399,6 +566,10 @@ export class FarmScene extends Phaser.Scene {
       s.bubble.container.destroy();
     }
     s.bar?.destroy();
+    if (s.glow) {
+      this.tweens.killTweensOf(s.glow);
+      s.glow.destroy();
+    }
     this.sprites.delete(id);
   }
 
@@ -752,7 +923,10 @@ export class FarmScene extends Phaser.Scene {
 
     if (store.isVisiting) {
       if (!obj) return;
-      if (helpKind(obj, store.now())) void store.help(obj.id);
+      if (helpKind(obj, store.now()) && (store.visit?.helpsLeft ?? 0) > 0) {
+        sfx.help();
+        void store.help(obj.id);
+      } else if (helpKind(obj, store.now())) bus.emit('toast', 'No helps left for this neighbor today. Come back tomorrow!', 'info');
       return;
     }
 
@@ -860,6 +1034,14 @@ export class FarmScene extends Phaser.Scene {
         label = `+${e.amount}`;
       }
       this.floatText(wx, wy, label, color, icon, n * 90);
+      if (e.type === 'gain') {
+        const cam = this.cameras.main;
+        const sx = (wx - cam.worldView.x) * cam.zoom;
+        const sy = (wy - cam.worldView.y) * cam.zoom;
+        const target = e.what === 'coins' ? 'coins' : e.what === 'xp' ? 'xp' : 'barn';
+        if (target === 'barn') this.emitter('fx:sparkle', 'burst').explode(5, wx, wy + 24);
+        setTimeout(() => bus.emit('fly', `icon:${e.what === 'coins' ? 'coin' : e.what}`, sx, sy, target), 150 + n * 90);
+      }
     }
   }
 

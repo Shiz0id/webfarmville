@@ -73,6 +73,21 @@ export interface FarmState {
   /** Last seed the player planted, so tapping an empty plot can replant it. */
   lastSeed: string;
   createdAt: number;
+  /** Seed for deterministic randomness (orders, mystery gifts). */
+  seed: number;
+  /** The villager order board. */
+  orders: Order[];
+}
+
+export interface Order {
+  id: number;
+  giver: string;
+  note: string;
+  items: Record<string, number>;
+  coins: number;
+  xp: number;
+  /** A decoration given as a thank-you. */
+  bonus?: string;
 }
 
 /** Something the UI may want to celebrate (floating text, sounds, popups). */
@@ -81,7 +96,9 @@ export type GameEvent =
   | { type: 'spend'; amount: number; x?: number; y?: number }
   | { type: 'levelUp'; level: number }
   | { type: 'questReady'; quest: string }
-  | { type: 'questComplete'; quest: string };
+  | { type: 'questComplete'; quest: string }
+  | { type: 'mystery'; item: string }
+  | { type: 'unwrap'; item: string };
 
 export type Action =
   | { type: 'plow'; x: number; y: number }
@@ -100,6 +117,9 @@ export type Action =
   | { type: 'expand' }
   | { type: 'claimQuest'; quest: string }
   | { type: 'claimDaily' }
+  | { type: 'fulfillOrder'; order: number }
+  | { type: 'skipOrder'; order: number }
+  | { type: 'openGift' }
   | { type: 'rename'; name: string };
 
 /** An action stamped with the client time it happened. */

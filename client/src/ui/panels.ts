@@ -32,6 +32,7 @@ import type { Store } from '../store';
 import { setTool } from '../tools';
 import { fmtDuration, fmtNum, h, nameOf, timeAgo } from '../util';
 import { confetti, openModal, toast } from './dom';
+import { portrait } from './villager';
 
 let S: Store;
 let recenter: () => void = () => {};
@@ -44,13 +45,6 @@ export function initPanels(store: Store, onVisitChange: () => void): void {
 const coin = () => h('img', { class: 'ico', src: iconURL('coin'), alt: 'coins' });
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export const GIVERS: Record<string, string> = {
-  'Mayor Maple': '🦉',
-  Henrietta: '🐔',
-  Penny: '🐷',
-  Rosie: '🐰',
-  'Grandma Fern': '🦔',
-};
 
 /** A modal whose body re-renders when the store changes (and optionally on a timer). */
 function liveModal(
@@ -420,6 +414,20 @@ export function openBarn(): void {
           );
         }
       }
+      const gifts = inv.mystery_gift ?? 0;
+      if (gifts > 0) {
+        any = true;
+        body.append(
+          h('div', { class: 'section-title' }, '🎁 Mystery gifts'),
+          h(
+            'div',
+            { class: 'row item-row gift-row' },
+            h('img', { src: iconURL('mystery_gift'), class: 'wiggle' }),
+            h('div', { class: 'grow' }, h('div', { class: 'title' }, `Mystery Gift ×${gifts}`), h('div', { class: 'sub' }, 'Found while farming. What could be inside?')),
+            h('button', { class: 'btn pink', onclick: () => S.dispatch({ type: 'openGift' }) }, 'Open!'),
+          ),
+        );
+      }
       const stored = Object.entries(inv).filter(([id, n]) => DECORATIONS[id] && n > 0);
       if (stored.length) {
         any = true;
@@ -448,6 +456,104 @@ export function openBarn(): void {
 
 function closeTop(): void {
   document.querySelector<HTMLButtonElement>('.modal-back:last-child .close')?.click();
+}
+
+// ---------------------------------------------------------------------------
+// Villager orders
+
+export function readyOrders(): number {
+  return S.state.orders?.filter((o) => Object.entries(o.items).every(([i, q]) => (S.state.inventory[i] ?? 0) >= q)).length ?? 0;
+}
+
+export function openOrders(): void {
+  liveModal(
+    'Order Board',
+    (body) => {
+      body.append(h('div', { class: 'sub', style: { fontWeight: '800', color: 'var(--muted)', marginBottom: '10px' } }, 'Villagers pay extra for deliveries, and sometimes add a little thank-you gift!'));
+      const grid = h('div', { class: 'orders' });
+      for (const o of S.state.orders ?? []) {
+        let ok = true;
+        const items = h('div', { class: 'inputs' });
+        for (const [item, qty] of Object.entries(o.items)) {
+          const have = S.state.inventory[item] ?? 0;
+          if (have < qty) ok = false;
+          items.append(h('span', { class: have < qty ? 'missing' : '', title: nameOf(item) }, h('img', { class: 'ico', src: iconURL(item) }), `${Math.min(have, qty)}/${qty}`));
+        }
+        grid.append(
+          h(
+            'div',
+            { class: `order-card${ok ? ' ready' : ''}` },
+            h('div', { class: 'pin' }),
+            portrait(o.giver, 52),
+            h('div', { class: 'order-from' }, o.giver),
+            h('div', { class: 'order-note' }, `“I need these ${o.note}!”`),
+            items,
+            h(
+              'div',
+              { class: 'reward' },
+              h('span', null, h('img', { src: iconURL('coin') }), fmtNum(o.coins)),
+              h('span', null, h('img', { src: iconURL('xp') }), `${o.xp}`),
+              o.bonus ? h('span', { title: nameOf(o.bonus) }, '+ ', h('img', { src: artURL(`deco:${o.bonus}`), style: { width: '26px', height: '26px' } })) : null,
+            ),
+            h(
+              'div',
+              { class: 'inline', style: { justifyContent: 'center', marginTop: '6px' } },
+              h(
+                'button',
+                {
+                  class: `btn green${ok ? ' pulse' : ''}`,
+                  disabled: !ok,
+                  onclick: () => {
+                    if (S.dispatch({ type: 'fulfillOrder', order: o.id })) {
+                      confetti(30);
+                      toast(`${o.giver}: “Thank you so much!” 💕`, 'good');
+                    }
+                  },
+                },
+                'Deliver',
+              ),
+              h('button', { class: 'btn small', title: 'Swap for a new order', onclick: () => S.dispatch({ type: 'skipOrder', order: o.id }) }, '↻'),
+            ),
+          ),
+        );
+      }
+      body.append(grid);
+    },
+    { icon: iconURL('mystery_gift') },
+  );
+}
+
+/** Celebrate unwrapping a mystery gift. */
+export function showUnwrap(item: string): void {
+  const d = DECORATIONS[item];
+  const m = openModal('Mystery Gift!', { narrow: true });
+  m.body.append(
+    h(
+      'div',
+      { class: 'levelup' },
+      h('div', { class: 'unwrap-art' }, h('img', { src: artURL(`deco:${item}`) })),
+      h('div', { style: { fontWeight: '900', fontSize: '20px' } }, d?.name ?? item),
+      d?.charm ? h('div', { class: 'sub', style: { fontWeight: '800', color: 'var(--muted)', margin: '4px 0 12px' } }, `💗 +${d.charm} charm · added to your barn`) : null,
+      h(
+        'div',
+        { class: 'inline', style: { justifyContent: 'center' } },
+        h('button', { class: 'btn', onclick: () => m.close() }, 'Keep it'),
+        h(
+          'button',
+          {
+            class: 'btn green',
+            onclick: () => {
+              m.close();
+              document.querySelectorAll<HTMLButtonElement>('.modal-back .close').forEach((b) => b.click());
+              startPlacing(item, d?.name ?? item, 'inventory', () => {});
+            },
+          },
+          'Place it now',
+        ),
+      ),
+    ),
+  );
+  confetti(70);
 }
 
 // ---------------------------------------------------------------------------
@@ -581,7 +687,7 @@ export function openQuests(): void {
           h(
             'div',
             { class: `quest${done ? ' done' : ''}` },
-            h('div', { class: 'giver', title: q.giver }, GIVERS[q.giver] ?? '🧑‍🌾'),
+            h('div', { class: 'giver', title: q.giver }, portrait(q.giver, 56)),
             h(
               'div',
               { style: { flex: '1' } },
