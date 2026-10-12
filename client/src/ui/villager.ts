@@ -59,10 +59,12 @@ export function villagerSay(name: string, text: string, action?: { label: string
   document.getElementById('ui')!.append(el);
   current = el;
   // Type the text out like a villager chatting.
-  let i = 0;
+  // Typing speed is based on elapsed time so a busy frame can't stall it.
+  const start = performance.now();
   const type = () => {
-    textEl.textContent = text.slice(0, ++i);
-    if (i < text.length) setTimeout(type, 18);
+    const n = Math.min(text.length, Math.ceil((performance.now() - start) / 18));
+    textEl.textContent = text.slice(0, n);
+    if (n < text.length) setTimeout(type, 30);
   };
   type();
   timer = window.setTimeout(close, 9000);

@@ -1414,3 +1414,9 @@ img.ico {
   position: relative;
   z-index: 2;
 }
+
+.btn.tab.active {
+  background: var(--green);
+  color: #fff;
+  text-shadow: 0 1px 0 var(--dark);
+}

@@ -17,7 +17,7 @@ const TINT: Record<DayPhase, { color: number; alpha: number }> = {
   dawn: { color: 0xffc89a, alpha: 0.1 },
   day: { color: 0xffffff, alpha: 0 },
   dusk: { color: 0xff8a5c, alpha: 0.14 },
-  night: { color: 0x1b2456, alpha: 0.38 },
+  night: { color: 0x141c4a, alpha: 0.5 },
 };
 
 type Season = 'spring' | 'summer' | 'autumn' | 'winter';
