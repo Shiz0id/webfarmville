@@ -8,43 +8,50 @@ All of the art is drawn in code at startup, so there are no image assets to down
 
 ## Features
 
-- **Crops**: 16 crops, from 1-minute strawberries to 12-hour cranberries. Crops grow in real time (even while
-  you're offline) and wither if you leave them too long. Drag across a field to plant or harvest it all at once.
-- **Animals & trees**: 8 animals (including a beehive) and 8 fruit trees that produce on a cycle.
-- **Crafting**: 7 workshops (windmill, dairy, bakery, jam kitchen, loom, juice stand and café) with 30 recipes
-  and queued production slots.
-- **Villager order board**: deliver produce and goods to the villagers for bonus coins, and sometimes a
-  thank-you decoration.
-- **Mystery gifts**: surprise presents that drop while you farm. Unwrap one to get a random decoration.
-- **About 215 decorations** in three collections:
-  - *Core*: flowers, plants, fences, paths, furniture, lights, water features, garden pieces and whimsy.
-  - *Seasonal & holiday lifestyle*: Lunar New Year, Valentine's Day, St. Patrick's Day, the Spring Egg Hunt,
-    the Summer Festival, the Harvest Festival, Halloween, the Festival of Lights, the Winter Holidays and New
-    Year. These include festive scenes like hot cocoa stands, pumpkin-carving tables and picnics. Like Animal
-    Crossing, each set can only be bought while its event is running.
-  - *Gardening*: a Gardening Mama-inspired set of terracotta pots, seedling trays, bean teepees, smiling
-    veggie planters, a bee hotel, blue-ribbon pumpkins and a glass greenhouse.
+- **Crops**: 16 crops plus 16 seasonal specials, from 1-minute strawberries to 12-hour cranberries. Crops grow in
+  real time (even while you're offline) and wither if left too long. Drag across a field to plant or harvest it
+  all.
+- **Animals & trees**: 8 animals and 8 fruit trees that produce on a cycle. Animals blink, swish their tails and
+  hop around.
+- **Crafting**: 7 workshops with 30 recipes and queued production slots.
+- **Cooking mini-games** in the spirit of Cooking Mama. Chop, stir, crack eggs, whisk, knead, flip and mind the
+  heat to turn farm ingredients into 15 home-cooked dishes. Cook perfectly and you make two.
+- **Mama Marigold**: a jolly bear who strolls onto your farm each day to brag about her garden and bring you a
+  home-cooked meal. You can visit her kitchen garden too.
+- **Villager order board**: deliver produce, goods and dishes to the villagers for bonus coins and thank-you
+  decorations.
+- **Mystery gifts**: surprise presents that drop while you farm and unwrap into decorations.
+- **About 320 decorations** in six collections:
+  - *core*: flowers, plants, fences, paths, furniture, lights, water and whimsy
+  - *holiday lifestyle*
+  - *Gardening Mama-style horticulture*
+  - *Halloween Spooktacular*
+  - *Countryside nostalgia*: red barn, tractor, treehouse and a playground
+  - *Festivals & parties*
 
-  Decorations add **charm**, which earns star ratings and a bigger daily bonus. A **Decor Catalog** tracks
-  every decoration you've collected.
-- **Villagers**: Mayor Maple, Henrietta, Penny, Rosie and Grandma Fern have painted portraits. They give the
-  24-quest storyline, post orders and cheer you on in speech bubbles.
+  Windmills spin, flames flicker, fountains splash, ghosts float and trees sway. A **Decor Catalog** tracks
+  everything you've collected.
+- **15 seasonal events**: Lunar New Year, Valentine's Day, St. Patrick's Day, Cherry Blossom Viewing, the
+  Spring Egg Hunt, Earth Day, the Summer Festival, the Star Festival, the Mid-Autumn Moon Festival, the Harvest
+  Festival, Halloween, the Festival of Lights, Thanksgiving, the Winter Holidays and New Year. Each one has:
+  - its own **currency** that drops while you farm, and a **token shop** of exclusives
+  - an event crop and costumed **visitors** (trick-or-treaters, carolers, lion dancers, egg hunters and more)
+  - animals in **costumes**
+  - a quest chain
+  - its own music-box tune, particles, lighting and title screen
+- **Villagers**: Mayor Maple, Henrietta, Penny, Rosie, Grandma Fern and Mama Marigold, each with a painted
+  portrait, quests and a themed farm you can visit and help.
+- **Ribbons**: FarmVille-style yellow, white, red and blue ribbons for lifetime milestones.
 - **Coziness**:
   - A procedural music box and synthesized sound effects (no audio files).
-  - Day/night lighting from your local clock, with lamps that glow and fireflies at night.
-  - Seasonal falling leaves, petals or snow, and drifting cloud shadows.
-  - Butterflies, a puppy and kitten who wander your farm (tap them!), and animals that hop.
-  - Chimney smoke, sparkling ripe crops, and coins and items that fly to your HUD.
-- **Progression**: 50 levels with unlocks, plus land expansions from 14×14 up to 30×30.
-- **Neighbors**:
-  - Send neighbor requests, visit friends' farms, and fertilize, revive, water or feed their crops and animals
-    (5 helps per neighbor per day, rewarded with coins and XP).
-  - Send one free gift per neighbor per day.
-  - A farm-news feed tells you who helped you.
-  - Everyone starts as neighbors with **Mayor Maple**, an NPC with a showcase farm.
-- **Server-authoritative**: the same game rules run on the client (for instant feedback) and on the server (to
-  validate them). Randomness such as orders and gifts uses a seed stored in each farm, so both sides always roll
-  the same result.
+  - Day/night lighting from your local clock, with glowing lamps and fireflies.
+  - Seasonal weather and grass, drifting clouds and butterflies, and a puppy and kitten who wander your farm.
+  - Coins that fly to your HUD, and farm postcards you can save.
+- **Progression**: 50 levels, land expansions from 14×14 up to 30×30, a daily bonus and a charm rating.
+- **Neighbors**: visit friends' farms and fertilize, revive, water or feed them (5 helps per neighbor per day),
+  send daily gifts, and read the farm-news feed.
+- **Server-authoritative**: the same rules run on the client for instant feedback and on the server to validate
+  them, with seeded randomness so both sides always agree.
 
 ## Tech
 
@@ -92,7 +99,8 @@ There are also two helper scripts:
 
 - `node scripts/art-sheet.mjs <module|all> out.png` renders a contact sheet of the generated art. Modules are
   `crops`, `trees`, `animals`, `buildings`, `goods`, `ground`, `decorations`, `seasonal`, `lifestyle`,
-  `horticulture`, `portraits`, `pets` and `fx`. You can also view
+  `horticulture`, `spooky_a`/`spooky_b`, `country_a`/`country_b`, `festivals_a`/`festivals_b`, `halloween`,
+  `events_a` through `events_e`, `cooking`, `portraits`, `pets` and `fx`. You can also view
   it live at http://localhost:5173/art-preview.html?mod=all.
 - `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Point it at a
   running game with `?debug` in the URL, for example `http://localhost:3001/?debug` after `npm run build &&
@@ -105,7 +113,8 @@ There are also two helper scripts:
 - **Drag** empty ground (or right-drag) to pan the camera. **Scroll** or pinch to zoom. **WASD** or the arrow
   keys also pan.
 - **R** flips a decoration while placing or moving it. **Esc** or right-click cancels.
-- Add `?hour=22` to the URL to preview night time (or any hour of the day).
+- Add `?hour=22` to the URL to preview night time (or any hour of the day), and `?event=winter` (or any event id)
+  to preview an event's look, music and visitors any time of year.
 
 ## Adding content
 
