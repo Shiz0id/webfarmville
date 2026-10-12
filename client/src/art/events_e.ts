@@ -250,7 +250,7 @@ function pineSprout(p: Pen): void {
       const a = -Math.PI / 2 + t * 1.05;
       const l = 5.8 - Math.abs(t) * 1.1;
       const tip = { x: base.x + Math.cos(a) * l, y: base.y + Math.sin(a) * l };
-      spike(p, base, tip, 1.3, i % 2 ? '#b4f274' : '#d4fca0');
+      spike(p, base, tip, 1.3, i % 2 ? '#8fdc52' : '#aef06c');
       p.line(
         [
           { x: base.x + Math.cos(a) * l * 0.25, y: base.y + Math.sin(a) * l * 0.25 },
