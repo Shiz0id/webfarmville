@@ -8,7 +8,6 @@ import { type IconSpec, type Pen, type Pt, type SpriteSpec, rgba, shade } from '
 import { NURSERY_DECORATIONS } from '@farm/shared';
 
 type Fill = string | CanvasGradient | null;
-type Ctx = CanvasRenderingContext2D;
 
 const WALL = '#ffd3e1';
 const WALL_LINE = '#f0a6bf';
@@ -52,21 +51,6 @@ const tint = (f: Face, col: string): string => shade(col, f.dim);
 
 function quad(p: Pen, f: Face, s0: number, s1: number, z0: number, z1: number, fill: Fill, stroke: string | null = p.outline): void {
   p.poly([f.pt(s0, z0), f.pt(s1, z0), f.pt(s1, z1), f.pt(s0, z1)], fill, stroke);
-}
-
-function shape(p: Pen, build: (c: Ctx) => void, fill: Fill, stroke: string | null = p.outline, width = p.lineWidth): void {
-  const c = p.ctx;
-  c.beginPath();
-  build(c);
-  if (fill) {
-    c.fillStyle = fill;
-    c.fill();
-  }
-  if (stroke) {
-    c.strokeStyle = stroke;
-    c.lineWidth = width;
-    c.stroke();
-  }
 }
 
 /** A line with an outline underneath (rails, rope, trim). */
