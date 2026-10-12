@@ -22,6 +22,8 @@ export interface BusEvents {
   questReady: [quest: string];
   /** The farm scene finished create(). */
   sceneReady: [];
+  /** A decoration was clicked with the hand tool on your own farm. */
+  decoClick: [id: string, def: string];
 }
 
 type Handler<K extends keyof BusEvents> = (...args: BusEvents[K]) => void;

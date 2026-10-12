@@ -14,6 +14,7 @@ import {
   goodiePose,
   type KittyDef,
 } from '../content/kitties';
+import { townDone } from '../content/town';
 import { weatherKittyAppeal } from '../content/weather';
 import { registerFeature } from '../logic/features';
 import { GameError, type FarmState } from '../types';
@@ -92,7 +93,7 @@ export function kittyVisitors(state: FarmState, t: number, allEvents = false): R
   const start = slot * KITTY_SLOT;
   if (k.food.from >= start + KITTY_SLOT || start >= k.food.until || !hasBowl(state)) return out;
   const taken = new Set(k.adopted);
-  const appeal = food.appeal + weatherKittyAppeal(start);
+  const appeal = food.appeal + weatherKittyAppeal(start) + (townDone(state, 'kitty_shelter') ? 0.1 : 0);
   for (const [id, def] of goodies(state)) {
     if (def === 'kitty_bowl') continue;
     if (hash(`${state.createdAt}:${id}:${slot}:come`) >= appeal) continue;

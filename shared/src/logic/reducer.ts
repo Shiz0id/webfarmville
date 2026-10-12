@@ -437,6 +437,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       if (order.bonus) addItem(state, order.bonus, 1, events);
       state.orders.splice(idx, 1, generateOrder(state));
       bumpStat(state, 'order');
+      events.push({ type: 'orderDone', giver: order.giver });
       break;
     }
 

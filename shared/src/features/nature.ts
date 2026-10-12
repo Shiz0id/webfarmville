@@ -15,6 +15,7 @@ import {
   type NatureKind,
 } from '../content/nature';
 import { EVENTS, isEventActive } from '../content/events';
+import { townDone } from '../content/town';
 import { weatherRarityBoost } from '../content/weather';
 import { registerFeature, type FeatureKit } from '../logic/features';
 import { GameError, type ActionContext, type FarmState, type GameEvent } from '../types';
@@ -72,7 +73,7 @@ function bonus(state: FarmState, table: Record<string, number>): number {
 }
 
 export function dailyLimit(state: FarmState, kind: NatureKind): number {
-  return kind === 'fish' ? DAILY_CASTS + bonus(state, CAST_BONUS) : DAILY_NETS + bonus(state, NET_BONUS);
+  return kind === 'fish' ? DAILY_CASTS + bonus(state, CAST_BONUS) + (townDone(state, 'pond_bridge') ? 3 : 0) : DAILY_NETS + bonus(state, NET_BONUS);
 }
 
 /** Casts or nets left today. */

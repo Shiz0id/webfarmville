@@ -17,6 +17,9 @@ import {
   FISH_LIST,
   BUG_LIST,
   NATURE_DECORATIONS,
+  FRIEND_DECORATIONS,
+  MARKET_DECORATIONS,
+  PROJECT_LIST,
   KITTY_LIST,
   GOODIE_LIST,
   KITTY_FOODS,
@@ -117,6 +120,9 @@ export function expectedKeys(mod: string): string[] {
       'kitty:food_full',
       'fx:purr',
     ],
+    friends: () => [...FRIEND_DECORATIONS.map((d) => `deco:${d.id}`), 'icon:letter', 'icon:letter_open', 'icon:friendship'],
+    market: () => [...MARKET_DECORATIONS.map((d) => `deco:${d.id}`), 'icon:market', 'market:crate', 'market:basket', 'market:sign'],
+    town: () => [...PROJECT_LIST.map((p) => `town:${p.id}`), 'icon:town'],
     portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());

@@ -121,7 +121,8 @@ export type GameEvent =
   | { type: 'unwrap'; item: string }
   | { type: 'ribbon'; ribbon: string; tier: number }
   | { type: 'cooked'; dish: string; tier: string; qty: number }
-  | { type: 'meal'; dish: string };
+  | { type: 'meal'; dish: string }
+  | { type: 'orderDone'; giver: string };
 
 export type Action =
   | ExtraActions[keyof ExtraActions]

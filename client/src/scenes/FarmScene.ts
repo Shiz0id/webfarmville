@@ -1133,7 +1133,7 @@ export class FarmScene extends Phaser.Scene {
         else if (obj.kind === 'building') {
           if (BUILDINGS[obj.def]?.starter) bus.emit('openFarmhouse');
           else bus.emit('openBuilding', obj.id);
-        }
+        } else if (obj.kind === 'deco' && !store.isVisiting) bus.emit('decoClick', obj.id, obj.def);
         return;
       }
       case 'move': {

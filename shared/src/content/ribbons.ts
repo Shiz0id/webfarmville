@@ -33,6 +33,8 @@ export const RIBBON_LIST: RibbonDef[] = [
   { id: 'sweet_tooth', name: 'Sweet Tooth', noun: 'candy collected', stat: 'candy', tiers: [25, 150, 500, 2000] },
   { id: 'angler', name: 'Angler', noun: 'fish caught', stat: 'fish', tiers: [10, 60, 250, 1000] },
   { id: 'bug_catcher', name: 'Bug Catcher', noun: 'critters caught', stat: 'bug', tiers: [10, 60, 250, 1000] },
+  { id: 'good_friend', name: 'Good Friend', noun: 'gifts given', stat: 'gift', tiers: [5, 30, 120, 400] },
+  { id: 'shopkeeper', name: 'Shopkeeper', noun: 'goods sold at your stall', stat: 'stallSold', tiers: [20, 150, 600, 2500] },
   { id: 'cat_lover', name: 'Cat Lover', noun: 'kitty visits', stat: 'kittyVisit', tiers: [10, 75, 300, 1200] },
   { id: 'trick_or_treat', name: 'Spooky Host', noun: 'trick-or-treaters greeted', stat: 'treat', tiers: [3, 15, 50, 150] },
 ];

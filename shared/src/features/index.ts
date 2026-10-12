@@ -3,3 +3,6 @@
 export * from './nature';
 export * from './kitties';
 export * from './weather';
+export * from './friends';
+export * from './market';
+export * from './town';

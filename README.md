@@ -33,6 +33,16 @@ All of the art is drawn in code at startup, so there are no image assets to down
   - Snow days make cooking worth more XP.
   - Rainbows add +1 to every harvest.
   - Cats shelter on your goodies when it's wet or snowy.
+- **Villager friendships**:
+  - Chat with the six villagers and give each one gift a day. Everyone has five loved items to discover, and gifts
+    on a birthday count triple. Filling a villager's order also makes them happier.
+  - At 2, 4, 6, 8 and 10 hearts they mail you a letter with a present, up to a unique keepsake decoration.
+    Letters arrive in your farm mailbox.
+- **Farmers' Market Stall**: put goods out at a bargain, fair or fancy price, and villagers buy them one at a time
+  over the day. Sunny days bring more shoppers, and everyone craves something different each day, which sells for
+  double.
+- **Town Projects**: chip in goods and coins to improve Meadowbrook: the pond bridge, a market square, a kitty
+  shelter, an orchard, a community kitchen and a bandstand. Each finished project gives your farm a lasting perk.
 - **Mystery gifts**: surprise presents that drop while you farm and unwrap into decorations.
 - **About 320 decorations** in six collections:
   - *core*: flowers, plants, fences, paths, furniture, lights, water and whimsy
