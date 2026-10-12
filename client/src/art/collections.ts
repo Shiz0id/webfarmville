@@ -195,6 +195,14 @@ function iconGardenGlove(p: Pen): void {
   p.roundRect(8.5, 13, 23, 17, 7, lin(p, 8, 13, 31, 30, [[0, '#cbf2df'], [1, MINT]]));
   p.roundRect(8.5, 26.5, 23, 7.5, 2.5, PINK);
   for (let x = 11.5; x <= 28.5; x += 3.2) p.circle(x, 30.25, 0.6, CHALK, null);
+  // the gaps between the fingers
+  for (const [x, y] of [
+    [15, 9],
+    [20, 7.5],
+    [25, 9],
+  ]) {
+    p.line([pt(x, y), pt(x, 13.2)], O, 0.9);
+  }
   p.line([pt(14, 21.5), pt(18.5, 19.8)], shade(MINT, -0.28), 0.9);
   p.line([pt(24.5, 21.5), pt(27.5, 19.8)], shade(MINT, -0.28), 0.9);
   p.line([pt(11, 14.8), pt(10.8, 10.2)], 'rgba(255,255,255,0.75)', 1.2);
@@ -531,28 +539,30 @@ function iconPieTin(p: Pen): void {
   // tin thickness, then the rim on top
   p.ellipse(20, 28.5, 16, 6.8, shade(SILVER, -0.3), O);
   p.ellipse(20, 26.5, 16, 6.8, lin(p, 4, 20, 36, 32, [[0, SILVER_L], [0.5, SILVER], [1, SILVER_D]]), O);
-  // the berry filling
-  p.ellipse(20, 26.5, 12, 4.9, radial(p, 20, 26.5, 12, '#f08aa8', '#c44d7c'), O);
-  // golden lattice crust over the filling
+  // the pie: a crust side, a golden crust ring and the berry filling
+  p.ellipse(20, 28.8, 12.6, 5.2, '#d99a4a', O);
+  p.ellipse(20, 26.6, 12.6, 5.2, '#f2bd62', O);
+  p.ellipse(20, 26.6, 9.8, 3.9, radial(p, 20, 26.6, 10, '#f08aa8', '#c44d7c'), O);
+  // golden lattice strips over the filling
   const c = p.ctx;
   c.save();
   c.beginPath();
-  c.ellipse(20, 26.5, 12, 4.9, 0, 0, TAU);
+  c.ellipse(20, 26.6, 9.8, 3.9, 0, 0, TAU);
   c.clip();
   c.strokeStyle = GOLD_L;
-  c.lineWidth = 2.2;
+  c.lineWidth = 1.7;
   c.beginPath();
-  for (let x = 2; x <= 40; x += 6.5) {
-    c.moveTo(x, 18);
-    c.lineTo(x + 12, 36);
-    c.moveTo(x + 12, 18);
-    c.lineTo(x, 36);
+  for (let x = 4; x <= 36; x += 8) {
+    c.moveTo(x, 20);
+    c.lineTo(x + 10, 34);
+    c.moveTo(x + 10, 20);
+    c.lineTo(x, 34);
   }
   c.stroke();
   c.restore();
-  p.ball(12.5, 24.5, 1.8, BERRY);
-  p.ball(27.5, 29, 1.8, BERRY);
-  glint(p, 10, 25, 2.8, 1.1, -0.2);
+  p.ball(13, 27.5, 1.6, BERRY);
+  p.ball(27, 25.5, 1.6, BERRY);
+  glint(p, 10.5, 24.5, 2.8, 1.1, -0.2);
 }
 
 function iconBerryThimble(p: Pen): void {

@@ -1,5 +1,9 @@
 import {
   ANIMAL_LIST,
+  BABY_ANIMALS,
+  BABY_NAMES,
+  babyGrowMs,
+  babyPrice,
   BUILDINGS,
   BUILDING_LIST,
   CHARM_TIERS,
@@ -164,8 +168,8 @@ function tabsBar<T extends string>(tabs: { id: T; label: string }[], active: T, 
 
 type ShopTab = 'seeds' | 'trees' | 'animals' | 'buildings' | 'decor' | 'land';
 
-function startPlacing(def: string, name: string, source: 'shop' | 'inventory', close: () => void): void {
-  setTool('place', { place: { def, source } });
+function startPlacing(def: string, name: string, source: 'shop' | 'inventory', close: () => void, baby = false): void {
+  setTool('place', { place: { def, source, ...(baby ? { baby } : {}) } });
   close();
   toast(`Place your ${name}. Press R to flip, Esc or right-click to stop.`, 'info');
 }
@@ -179,6 +183,7 @@ export function openShop(tab: ShopTab = 'seeds'): void {
   const now = S.now();
   const active = DECORATION_LIST.some((d) => d.event && isEventActive(EVENTS[d.event], now));
   let decoCat: DecoCategory = active ? 'seasonal' : 'flowers';
+  let babies = false;
   const tabs = tabsBar<ShopTab>(
     [
       { id: 'seeds', label: '🌱 Seeds' },
@@ -221,6 +226,39 @@ export function openShop(tab: ShopTab = 'seeds'): void {
       } else if (current === 'trees' || current === 'animals') {
         const list = current === 'trees' ? TREE_LIST : ANIMAL_LIST;
         const grid = h('div', { class: 'grid' });
+        if (current === 'animals') {
+          const chip = (label: string, on: boolean) =>
+            h(
+              'button',
+              {
+                class: `chip${babies === on ? ' active' : ''}`,
+                onclick: () => {
+                  babies = on;
+                  m.rerender();
+                },
+              },
+              label,
+            );
+          body.append(h('div', { class: 'chips' }, chip('🐮 Grown-ups', false), chip('🍼 Babies', true)));
+          if (babies) {
+            body.append(h('div', { class: 'nu-hint' }, '🍼 Babies cost half as much. Give them cuddles every hour and they grow up into grown-ups that make goods. A Nursery Barn nearby makes every cuddle count double!'));
+            for (const p of ANIMAL_LIST.filter((a) => BABY_ANIMALS.includes(a.id))) {
+              const baby = BABY_NAMES[p.id];
+              grid.append(
+                card({
+                  img: artURL(`animal:${p.id}`),
+                  name: `Baby ${baby}`,
+                  price: babyPrice(p),
+                  locked: levelLock(p.level),
+                  meta: [`🍼 Grows up in ${fmtDuration(babyGrowMs(p))}`, `Then makes ${nameOf(p.product)}`],
+                  onClick: () => startPlacing(p.id, `baby ${baby.toLowerCase()}`, 'shop', m.close, true),
+                }),
+              );
+            }
+            body.append(grid);
+            return;
+          }
+        }
         for (const p of list) {
           const prod = h('span', null, h('img', { class: 'ico', src: iconURL(p.product) }), ` ${p.yield}× every ${fmtDuration(p.cycleSec * 1000)}`);
           grid.append(

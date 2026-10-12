@@ -5,6 +5,8 @@ export type Tool = 'hand' | 'plow' | 'seed' | 'water' | 'move' | 'store' | 'sell
 export interface PlaceMode {
   def: string;
   source: 'shop' | 'inventory';
+  /** Buying a baby animal rather than a grown-up. */
+  baby?: boolean;
 }
 
 export const tools: {

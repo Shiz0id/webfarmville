@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
 import {
+  BABY_NAMES,
+  cuddleReadyAt,
+  isBaby,
+  babyGrowMs,
   isBloom,
   isWatered,
   isWell,
@@ -82,7 +86,12 @@ interface RenderSpec {
   glow?: boolean;
   /** Tint the base image (e.g. rain-darkened soil). */
   tint?: number;
+  /** Draw smaller than usual, standing on the tile's centre (baby animals). */
+  scale?: number;
 }
+
+/** How big baby animals are drawn, compared with grown-ups. */
+const BABY_SCALE = 0.62;
 
 /** Decorations that bob gently in the air. */
 const FLOATERS = /ghost|balloon|sky_lantern|kite|lantern_tree|bubble|pinata|paper_cranes|float/;
@@ -482,8 +491,15 @@ export class FarmScene extends Phaser.Scene {
           tex: obj.kind === 'tree' ? `tree:${obj.def}${ready ? ':ready' : ''}` : `animal:${obj.def}`,
           flat: false,
         };
+        const baby = obj.kind === 'animal' && isBaby(obj, now);
+        if (baby) {
+          spec.scale = BABY_SCALE;
+          spec.progress = Math.max(0, Math.min(1, 1 - (obj.grownAt! - now) / babyGrowMs(def)));
+        }
         if (visiting) {
           if (helpKind(obj, now)) spec.bubble = { emoji: obj.kind === 'tree' ? '💧' : '🌾' };
+        } else if (baby) {
+          if (cuddleReadyAt(obj) <= now) spec.bubble = { emoji: '💗' };
         } else if (ready && def) {
           spec.bubble = { icon: `icon:${def.product}` };
           spec.ready = true;
@@ -549,6 +565,7 @@ export class FarmScene extends Phaser.Scene {
         moving,
         night,
         spec.tint,
+        spec.scale,
       ].join('|');
       const existing = this.sprites.get(obj.id);
       if (existing?.sig === sig) continue;
@@ -578,6 +595,11 @@ export class FarmScene extends Phaser.Scene {
     main.setDepth(spec.flat ? DEPTH_FLAT + obj.x + obj.y : this.depthFor(obj.x, obj.y, w, h));
     if (moving) main.setAlpha(0.35);
     if (spec.tint !== undefined) main.setTint(spec.tint);
+    if (spec.scale) {
+      // Shrink around the middle of the tile so little ones stand on their spot.
+      const cx = main.x + main.displayWidth / 2;
+      main.setOrigin(0.5, 1).setScale(spec.scale / RES).setPosition(cx, main.y - HALF_H * (1 - spec.scale));
+    }
     const entry: ObjSprite = { sig, main, kind: obj.kind, ready: !!spec.ready };
 
     if (spec.overlay) {
@@ -589,7 +611,7 @@ export class FarmScene extends Phaser.Scene {
     }
 
     const feature = this.feature;
-    if (obj.kind === 'animal' && !moving && feature && !this.store.isVisiting) {
+    if (obj.kind === 'animal' && !moving && feature && !this.store.isVisiting && !spec.scale) {
       const c = costumeFor(obj.id, obj.def, feature);
       entry.costume = this.add
         .image(main.x + main.displayWidth / 2 + c.dx, main.y - 16 + c.dy, texture(this, c.key))
@@ -864,6 +886,15 @@ export class FarmScene extends Phaser.Scene {
       case 'animal': {
         const def = obj.kind === 'tree' ? TREES[obj.def] : ANIMALS[obj.def];
         const st = producerStatus(obj, now);
+        if (obj.kind === 'animal' && isBaby(obj, now)) {
+          const baby = BABY_NAMES[obj.def] ?? `Baby ${def.name}`;
+          const lines = [`🍼 Grows up in ${fmtDuration(obj.grownAt! - now)}`];
+          if (visiting) {
+            if (helpKind(obj, now)) lines.push('Click to feed!');
+          } else if (cuddleReadyAt(obj) <= now) lines.push('💗 Click for a cuddle!');
+          else lines.push(`Napping · next cuddle in ${fmtDuration(cuddleReadyAt(obj) - now)}`);
+          return { title: obj.nick ? `${obj.nick} the ${baby} 💕` : `Baby ${baby}`, lines };
+        }
         const lines = [
           st.ready
             ? visiting
@@ -1158,6 +1189,7 @@ export class FarmScene extends Phaser.Scene {
           if (BUILDINGS[obj.def]?.starter) bus.emit('openFarmhouse');
           else bus.emit('openBuilding', obj.id);
         } else if (obj.kind === 'deco' && !store.isVisiting) bus.emit('decoClick', obj.id, obj.def);
+        else if (obj.kind === 'tree' || obj.kind === 'animal') bus.emit('producerClick', obj.id);
         return;
       }
       case 'move': {
@@ -1204,8 +1236,9 @@ export class FarmScene extends Phaser.Scene {
         if (!p) return;
         const o = this.ghostOrigin(tile, p.w, p.h);
         const flip = p.w === p.h && tools.flip;
-        const ok =
-          mode.source === 'shop'
+        const ok = mode.baby
+          ? store.dispatch({ type: 'buyBaby', def: p.def, x: o.x, y: o.y, flip })
+          : mode.source === 'shop'
             ? store.dispatch({ type: 'buy', def: p.def, x: o.x, y: o.y, flip })
             : store.dispatch({ type: 'placeStored', def: p.def, x: o.x, y: o.y, flip });
         if (!ok) return;

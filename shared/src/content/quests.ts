@@ -592,6 +592,17 @@ export const QUEST_LIST: QuestDef[] = [
     goals: [stat('lonely', 1, 'Help a lonely animal find a home')],
     reward: { coins: 200, xp: 30 },
   },
+  // Baby animals
+  {
+    id: 'little_ones',
+    title: 'Little Ones',
+    text: "Baby animals need lots of love to grow big and strong. Pop by for a cuddle every hour or so and they'll grow up in no time!",
+    giver: 'Henrietta',
+    level: 3,
+    requires: ['welcome'],
+    goals: [stat('cuddle', 3, 'Cuddle a baby animal'), stat('raised', 1, 'Raise a baby into a grown-up')],
+    reward: { coins: 250, xp: 40 },
+  },
   ...EVENT_FEATURE_LIST.filter((f) => f.event !== 'halloween').flatMap((f) => eventQuests(f)),
 ];
 

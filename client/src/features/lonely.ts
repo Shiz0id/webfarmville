@@ -6,9 +6,11 @@ import Phaser from 'phaser';
 import {
   ADOPT_XP,
   ANIMALS,
+  BABY_NAMES,
   FRIENDS,
   LONELY_HOMES,
   REHOME_XP,
+  canPlace,
   lonelyDue,
   lonelyWaiting,
   rehomeCoins,
@@ -89,7 +91,8 @@ class LonelyLayer {
     this.y = n / 2 + (Math.random() - 0.5) * 4;
     const sc = this.scene;
     this.img = sc.add.image(0, 0, texture(sc, `animal:${l.animal}`)).setOrigin(0.5, 1).setScale(1 / RES).setAlpha(0);
-    this.img.setInteractive({ useHandCursor: true });
+    // Pixel-perfect, so taps on the grass around it reach whatever is behind.
+    this.img.setInteractive({ useHandCursor: true, pixelPerfect: true });
     this.img.on('pointerdown', (_p: unknown, _x: number, _y: number, ev: Phaser.Types.Input.EventData) => {
       if (tools.tool !== 'hand' || S.visit) return;
       ev.stopPropagation();
@@ -100,7 +103,8 @@ class LonelyLayer {
     this.bubble = this.makeBubble();
     sc.tweens.add({ targets: this.img, alpha: 1, duration: 600 });
     this.place();
-    this.walkTo(n / 2 + (Math.random() - 0.5) * 3, n / 2 + (Math.random() - 0.5) * 3);
+    const to = freeTileNear(n / 2, n / 2, 3) ?? freeTileNear(n / 2, n / 2, n);
+    if (to) this.walkTo(to.x, to.y);
   }
 
   private makeBubble(): Phaser.GameObjects.Container {
@@ -147,10 +151,9 @@ class LonelyLayer {
 
   private wander(): void {
     if (!this.img || this.walking || modalOpen() || Math.random() < 0.4) return;
-    const n = S.state.size;
-    const tx = Math.max(1, Math.min(n - 1.5, this.x + (Math.random() - 0.5) * 4));
-    const ty = Math.max(1, Math.min(n - 1.5, this.y + (Math.random() - 0.5) * 4));
-    this.walkTo(tx, ty);
+    // Only ever settle on open grass, never on a plot or anything else.
+    const to = freeTileNear(Math.round(this.x), Math.round(this.y), 2);
+    if (to) this.walkTo(to.x, to.y);
   }
 
   /** Trot off the farm (to a villager's home) and fade away. */
@@ -190,6 +193,16 @@ class LonelyLayer {
   }
 }
 
+/** A random free tile within `r` tiles of (cx, cy), or null if there is none. */
+function freeTileNear(cx: number, cy: number, r: number): { x: number; y: number } | null {
+  const n = S.state.size;
+  const options: { x: number; y: number }[] = [];
+  for (let y = Math.max(1, Math.floor(cy - r)); y <= Math.min(n - 2, Math.ceil(cy + r)); y++)
+    for (let x = Math.max(1, Math.floor(cx - r)); x <= Math.min(n - 2, Math.ceil(cx + r)); x++)
+      if (canPlace(S.state, x, y, 1, 1)) options.push({ x, y });
+  return options.length ? options[Math.floor(Math.random() * options.length)] : null;
+}
+
 // ---------------------------------------------------------------------------
 // Panels
 
@@ -217,7 +230,7 @@ function openLonely(x: number, y: number): void {
         { class: 'lo-choice' },
         h('div', { class: 'lo-choice-em' }, '🏡'),
         h('div', { class: 'title' }, `Adopt ${l.name}`),
-        h('div', { class: 'sub' }, `${l.name} settles in on your farm with a little ${ANIMALS[l.animal].product.replace(/_/g, ' ')} to say thank you.`),
+        h('div', { class: 'sub' }, `${l.name} settles in on your farm as a baby ${BABY_NAMES[l.animal]?.toLowerCase() ?? kind}. Give lots of cuddles and watch them grow up!`),
         h('div', { class: 'lo-reward' }, h('img', { class: 'ico', src: iconURL('xp') }), ` +${ADOPT_XP} XP · free ${kind}`),
         h(
           'button',
@@ -264,7 +277,7 @@ function adopted(e: Extract<GameEvent, { type: 'lonelyAdopted' }>): void {
     const p = sc.tileToWorld(obj.x + 0.5, obj.y + 0.5);
     sc.burst('fx:heart', 10, p.x, p.y - 20);
   }
-  toast(`💕 ${e.name} the ${kindName(e.animal)} has a forever home on your farm!`, 'good');
+  toast(`💕 Little ${e.name} has a forever home on your farm! Tap for a cuddle every hour to help them grow up.`, 'good');
 }
 
 function rehomed(e: Extract<GameEvent, { type: 'lonelyRehomed' }>): void {
