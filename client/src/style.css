@@ -1420,3 +1420,75 @@ img.ico {
   color: #fff;
   text-shadow: 0 1px 0 var(--dark);
 }
+
+/* ---------- halloween & ribbons ---------- */
+
+.candy-pill {
+  background: linear-gradient(#fff3e0, #ffe0b8);
+  cursor: pointer;
+}
+
+.price.candy {
+  color: #b4530f;
+}
+
+.candy-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 2px dashed #f97316;
+  background: linear-gradient(90deg, #2d1b4e, #4c2a74);
+  color: #ffe9c7;
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.candy-banner b {
+  font-size: 16px;
+  color: #ffb347;
+}
+
+.candy-banner img {
+  width: 42px;
+  height: 42px;
+}
+
+.candy-count {
+  margin-left: auto;
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffb347;
+  white-space: nowrap;
+}
+
+.rosettes {
+  display: flex;
+  gap: 2px;
+}
+
+.rosettes img {
+  width: 30px;
+  height: 30px;
+}
+
+.rosettes img.not-won {
+  filter: grayscale(1) opacity(0.25);
+}
+
+.ribbon-row.ready {
+  border-color: var(--gold-d);
+  background: #fff8dc;
+}
+
+body.halloween .modal-head {
+  background: linear-gradient(90deg, #ffd7a3, #e9d5ff);
+}
+
+body.halloween .toolbar,
+body.halloween .pill,
+body.halloween .round-btn {
+  box-shadow: 0 4px 0 rgba(76, 42, 116, 0.35), 0 10px 24px rgba(40, 10, 60, 0.2);
+}

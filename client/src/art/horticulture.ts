@@ -146,6 +146,101 @@ function post(p: Pen, x: number, y: number, ht: number, w = 3.5): void {
   p.rect(x - w / 2, y - ht, w, ht, hgrad(p, x - w / 2, x + w / 2, shade(WOOD, 0.18), shade(WOOD_D, 0)));
 }
 
+type Xy = { x: number; y: number };
+
+/** A thin outlined straight stroke (handles, rails, stakes). */
+function stroke(p: Pen, a: Xy, b: Xy, color: string, w: number): void {
+  p.line([a, b], O, w + 1.2);
+  p.line([a, b], color, w);
+}
+
+/** A tiny picture for a seed packet. */
+function packetPicture(p: Pen, kind: number, x: number, y: number): void {
+  switch (kind) {
+    case 0:
+      p.flower(x, y, 2.2, '#ff8fb1', '#ffd23f');
+      break;
+    case 1:
+      p.ball(x, y, 2.2, '#ff4d4d');
+      p.star(x, y - 2, 1, LEAF_D, null);
+      break;
+    case 2:
+      p.poly([{ x: x - 2, y: y - 2 }, { x: x + 2, y: y - 2 }, { x, y: y + 2.6 }], '#ff9a3c', O, 0.6);
+      leafAt(p, x, y - 2, 3, UP, 1, LEAF);
+      break;
+    case 3:
+      p.flower(x, y, 2.4, '#ffd23f', '#8a5530');
+      break;
+    case 4:
+      p.ellipse(x, y, 2.4, 1.8, '#b8f08a', O);
+      p.ellipse(x, y - 0.4, 1.1, 0.8, '#e8ffd0', null);
+      break;
+    case 5:
+      p.ball(x, y - 0.5, 1.8, '#ff4d6d');
+      p.ellipse(x, y + 1.8, 0.9, 1.2, '#fff5f5', null);
+      break;
+    default:
+      p.ellipse(x, y, 3, 1.5, '#7cc96b', O, -0.4);
+      p.circle(x - 1, y, 0.4, '#ffffff', null);
+      p.circle(x + 0.8, y - 0.4, 0.4, '#ffffff', null);
+  }
+}
+
+/** One seed packet hanging on a rack face: body, header band, picture and a label. */
+function packet(p: Pen, col: string, kind: number, at: (t: number, z: number) => Xy, t0: number, t1: number, z0: number): void {
+  const h = 15;
+  p.poly([at(t0, z0), at(t1, z0), at(t1, z0 - h), at(t0, z0 - h)], col);
+  p.poly([at(t0, z0), at(t1, z0), at(t1, z0 - 4), at(t0, z0 - 4)], shade(col, 0.3), O, 0.6);
+  const m = at((t0 + t1) / 2, z0 - 7.5);
+  packetPicture(p, kind, m.x, m.y);
+  p.poly([at(t0 + 0.02, z0 - 11.5), at(t1 - 0.02, z0 - 11.5), at(t1 - 0.02, z0 - 13.2), at(t0 + 0.02, z0 - 13.2)], WHITE, O, 0.5);
+}
+
+/** A fuzzy striped bee with wings and a smiling face, centred on (x, y). */
+function bee(p: Pen, x: number, y: number, r: number): void {
+  for (const dx of [-1, 1]) p.ellipse(x + dx * r * 0.5, y - r * 1.1, r * 0.8, r * 0.5, rgba('#ffffff', 0.9), O, dx * 0.4);
+  p.ball(x, y, r, '#ffd23f');
+  for (const dx of [-0.42, 0.22]) p.ellipse(x + dx * r, y, r * 0.2, r * 0.8, INK, null);
+  face(p, x, y + r * 0.1, r / 6.5);
+}
+
+function herbBasil(p: Pen, x: number, y: number): void {
+  for (let k = 0; k < 6; k++) leafAt(p, x, y, 6.5, UP + (k - 2.5) * 0.6, 2.7, k % 2 ? '#4fb84a' : '#6cd46a');
+}
+
+function herbRosemary(p: Pen, x: number, y: number): void {
+  for (let k = 0; k < 7; k++) {
+    const a = UP + (k - 3) * 0.32;
+    p.line([{ x, y }, { x: x + Math.cos(a) * 9, y: y + Math.sin(a) * 9 }], '#2f7a4a', 1.5);
+  }
+}
+
+function herbThyme(p: Pen, x: number, y: number): void {
+  p.foliage(x, y - 3, 4.2, '#9bd68a', 'thyme', 6);
+  for (const [dx, dy] of [
+    [-2, -6],
+    [2, -5],
+    [0, -1],
+  ] as const) {
+    p.circle(x + dx, y + dy, 0.7, '#ffb8d6', null);
+  }
+}
+
+function herbLavender(p: Pen, x: number, y: number): void {
+  for (const dx of [-2.5, 0, 2.5]) {
+    const tip = { x: x + dx * 1.4, y: y - 14 };
+    p.line([{ x: x + dx * 0.3, y }, tip], '#8fb86a', 1.2);
+    p.ellipse(tip.x, tip.y, 1.5, 3.4, '#a77bdb', O, dx * 0.05);
+  }
+}
+
+/** A little wooden stake with a coloured tag for a herb bed. */
+function herbTag(p: Pen, x: number, y: number, dot: string): void {
+  stroke(p, { x: x + 6, y }, { x: x + 6, y: y - 10 }, WOOD_D, 1.2);
+  p.rect(x + 4.5, y - 10, 6, 4.4, WHITE, O);
+  p.circle(x + 6.5, y - 7.8, 1.1, dot, null);
+}
+
 // ---------------------------------------------------------------------------
 // Painters (one per decoration id)
 
@@ -215,69 +310,78 @@ const smilingSunflowerPot: Painter = (p) => {
   sparkle(p, hx - 17, hy - 2, 2);
 };
 
-/** Wall-mounted tap with a dripping spout, a hose reel and a cute watering can. */
+/** A little wooden stand with a tap, a coiled green hose reel and a big round watering can with a face. */
 const wateringStation: Painter = (p) => {
   const c = p.center;
-  p.shadow(c.x, c.y + 2, 20, 8, 0.26);
-  p.box(0.06, 0.02, 0.88, 0.16, 32, WOOD);
-  // tap pipe standing proud of the wall
-  const tp = p.iso(0.3, 0.22, 0);
-  p.rect(tp.x - 2, tp.y - 30, 4, 22, SILVER);
-  p.ellipse(tp.x, tp.y - 30, 3.5, 2, '#ff6b8b');
-  p.curve({ x: tp.x, y: tp.y - 14 }, { x: tp.x + 3, y: tp.y - 12 }, { x: tp.x + 6, y: tp.y - 10 }, O, 3.2);
-  p.curve({ x: tp.x, y: tp.y - 14 }, { x: tp.x + 3, y: tp.y - 12 }, { x: tp.x + 6, y: tp.y - 10 }, SILVER, 1.6);
-  p.ellipse(tp.x + 6, tp.y - 6, 1.4, 2, '#5fc3ef', null);
-  // hose reel on a drum
-  const rl = p.iso(0.78, 0.5, 0);
-  p.cylinder(rl.x, rl.y, 7.5, 8, '#3fa6e0');
-  for (let k = 0; k < 3; k++) p.ellipse(rl.x, rl.y - 3.5 - k * 2, 5.5, 3, null, LEAF_D, 0);
-  p.curve({ x: rl.x + 6, y: rl.y - 2 }, { x: rl.x + 8, y: rl.y + 6 }, { x: rl.x + 4, y: rl.y + 12 }, O, 3.2);
-  p.curve({ x: rl.x + 6, y: rl.y - 2 }, { x: rl.x + 8, y: rl.y + 6 }, { x: rl.x + 4, y: rl.y + 12 }, LEAF, 1.8);
-  // watering can with a face
-  const wc = p.iso(0.45, 0.72, 0);
-  p.ellipse(wc.x, wc.y + 1, 12, 4.5, rgba('#5fc3ef', 0.45), null);
-  p.curve({ x: wc.x - 8, y: wc.y - 8 }, { x: wc.x - 2, y: wc.y - 24 }, { x: wc.x + 7, y: wc.y - 9 }, O, 3.4);
-  p.curve({ x: wc.x - 8, y: wc.y - 8 }, { x: wc.x - 2, y: wc.y - 24 }, { x: wc.x + 7, y: wc.y - 9 }, '#5fc3ef', 1.8);
-  p.line([{ x: wc.x + 6, y: wc.y - 4 }, { x: wc.x + 16, y: wc.y - 14 }], O, 4.4);
-  p.line([{ x: wc.x + 6, y: wc.y - 4 }, { x: wc.x + 16, y: wc.y - 14 }], '#5fc3ef', 2.2);
-  p.ellipse(wc.x + 17, wc.y - 15, 3.4, 2.2, '#5fc3ef', O, -0.7);
-  p.cylinder(wc.x, wc.y, 9, 12, '#5fc3ef');
-  face(p, wc.x, wc.y - 6, 0.85);
-  sparkle(p, wc.x - 14, wc.y - 22, 2.4);
-  p.glow(tp.x + 6, tp.y - 2, 4, '#5fc3ef', 0.4);
+  p.shadow(c.x, c.y + 2, 22, 8, 0.26);
+  const top = 10;
+  p.box(0.1, 0.12, 0.8, 0.78, top, '#f2c98a');
+  // standpipe and tap at the back
+  const sp = p.iso(0.2, 0.2, top);
+  p.rect(sp.x - 2, sp.y - 22, 4, 22, SILVER);
+  p.ellipse(sp.x, sp.y - 22, 4, 2.2, '#ff6b8b');
+  stroke(p, { x: sp.x, y: sp.y - 13 }, { x: sp.x + 9, y: sp.y - 16 }, SILVER, 2);
+  p.ellipse(sp.x + 9.5, sp.y - 13, 1.3, 2.2, '#5fc3ef', null);
+  // coiled green hose reel on the right
+  const rl = p.iso(0.85, 0.4, top);
+  p.cylinder(rl.x, rl.y, 7.5, 9, '#3fa6e0');
+  thin(p, 1.6, () => {
+    for (let k = 0; k < 3; k++) p.ellipse(rl.x, rl.y - 3 - k * 2.2, 5.5, 2.8, null, LEAF_D, 0);
+  });
+  thick(p, { x: rl.x + 6, y: rl.y }, { x: rl.x + 12, y: rl.y + 10 }, { x: rl.x + 4, y: rl.y + 13 }, LEAF, 2);
+  // big round watering can with a face, handle and spout drawn behind the body
+  const wc = p.iso(0.42, 0.8, top);
+  thick(p, { x: wc.x - 9, y: wc.y - 10 }, { x: wc.x - 2, y: wc.y - 27 }, { x: wc.x + 7, y: wc.y - 12 }, '#5fc3ef', 2.2);
+  thick(p, { x: wc.x + 8, y: wc.y - 2 }, { x: wc.x + 12, y: wc.y - 10 }, { x: wc.x + 15, y: wc.y - 15 }, '#5fc3ef', 2.6);
+  p.ellipse(wc.x + 16, wc.y - 16, 3.2, 2, '#5fc3ef', O, -0.8);
+  for (const [dx, dy] of [
+    [-1.2, 0],
+    [0.4, 0.8],
+    [1.6, -0.6],
+  ] as const) {
+    p.circle(wc.x + 16 + dx, wc.y - 16 + dy, 0.5, INK, null);
+  }
+  p.cylinder(wc.x, wc.y, 11, 14, '#5fc3ef');
+  face(p, wc.x, wc.y - 7, 1);
+  // puddle with sparkles
+  p.ellipse(wc.x - 2, wc.y + 6, 15, 5, rgba('#5fc3ef', 0.4), null);
+  p.circle(wc.x + 12, wc.y + 5, 1.2, '#9fe0ff', null);
+  sparkle(p, wc.x - 15, wc.y + 1, 2.2);
+  sparkle(p, c.x + 19, c.y - 22, 2.2);
 };
 
-/** A wooden board on the wall with a trowel, rake, fork and a pair of pink gloves. */
+/** A cute pegboard on two little legs with tools hanging from pegs by bright handles. */
 const toolRack: Painter = (p) => {
   const c = p.center;
-  p.shadow(c.x, c.y + 1, 17, 7, 0.26);
-  p.box(0.14, 0.2, 0.72, 0.1, 42, WOOD);
-  for (const z of [14, 30]) p.line([p.iso(0.16, 0.3, z), p.iso(0.84, 0.3, z)], shade(WOOD, -0.3), 0.8);
-  const hang = 0.36;
-  const at = (u: number, z: number) => p.iso(u, hang, z);
-  // trowel
-  let a = at(0.3, 24);
-  let b = at(0.3, 36);
-  p.line([a, b], WOOD, 2.6);
-  p.poly([at(0.3, 24), at(0.27, 14), at(0.3, 9), at(0.33, 14)], SILVER);
-  // rake
-  a = at(0.5, 38);
-  b = at(0.5, 12);
-  p.line([a, b], WOOD, 2.4);
-  for (const du of [-0.06, 0, 0.06]) p.line([at(0.5 + du, 12), at(0.5 + du, 3)], SILVER, 1.6);
-  // fork
-  a = at(0.7, 34);
-  b = at(0.7, 10);
-  p.line([a, b], WOOD, 2.4);
-  for (const du of [-0.05, 0.05]) p.line([at(0.7 + du, 10), at(0.7 + du, 2)], SILVER, 1.4);
-  // gloves hooked on the right
-  for (const [gx, gc] of [[0.86, '#ff8fb1']] as const) {
-    const g = at(gx, 22);
-    p.ball(g.x - 3, g.y, 3.4, gc, O);
-    p.ball(g.x + 3, g.y + 1, 3.4, gc, O);
-    for (let k = 0; k < 3; k++) p.circle(g.x - 3 + k * 0.1, g.y - 3.5 - k * 0.4, 0.5, null, null);
+  p.shadow(c.x, c.y + 2, 17, 7, 0.26);
+  const bz = 8;
+  for (const u of [0.18, 0.72]) p.box(u, 0.22, 0.08, 0.08, bz, WOOD_D);
+  p.box(0.1, 0.22, 0.8, 0.08, 46, '#f7d38c', bz);
+  for (let i = 0; i < 5; i++) {
+    for (const z of [14, 24, 34, 44]) {
+      const q = p.iso(0.2 + i * 0.15, 0.3, z);
+      p.circle(q.x, q.y, 0.9, shade(WOOD_D, -0.1), null);
+    }
   }
-  sparkle(p, c.x + 16, c.y - 28, 2.4);
+  const at = (u: number, z: number) => p.iso(u, 0.33, z);
+  // trowel: pink handle, silver blade
+  stroke(p, at(0.27, 46), at(0.27, 30), '#ff6b8b', 2.8);
+  p.poly([at(0.25, 30), at(0.22, 22), at(0.27, 17), at(0.32, 22), at(0.29, 30)], SILVER);
+  // rake: green handle and three tines
+  stroke(p, at(0.44, 50), at(0.44, 24), '#5cbf4f', 2.6);
+  for (const u of [0.4, 0.44, 0.48]) p.line([at(u, 24), at(u, 15)], SILVER, 1.2);
+  // fork: blue handle and three tines
+  stroke(p, at(0.62, 46), at(0.62, 26), '#4fb3e8', 2.6);
+  for (const u of [0.58, 0.62, 0.66]) p.line([at(u, 26), at(u, 17)], SILVER, 1.2);
+  // coiled yellow twine on a peg
+  const tw = at(0.8, 36);
+  for (let k = 0; k < 3; k++) p.ellipse(tw.x, tw.y - k * 2, 4.2, 2.2, '#ffd23f', O);
+  p.line([{ x: tw.x + 3, y: tw.y }, { x: tw.x + 5, y: tw.y + 9 }], '#ffd23f', 1.4);
+  // pink gloves hanging from the top corner
+  const g = at(0.84, 48);
+  p.ball(g.x - 2.5, g.y, 2.6, '#ff8fb1');
+  p.ball(g.x + 2.5, g.y + 1, 2.6, '#ff8fb1');
+  sparkle(p, c.x + 18, c.y - 30, 2.4);
 };
 
 /** A ring cage of wire rounds around a bushy tomato plant with red fruit. */
@@ -452,30 +556,27 @@ const veggieFriends: Painter = (p) => {
   sparkle(p, c.x + 17, c.y - 26, 2.4);
 };
 
-/** A hanging board of colourful seed packets, with a tiny flower on top. */
+/** A light wooden rack with seven bright seed packets (four on one face, three on the other) with tiny pictures. */
 const seedPacketStand: Painter = (p) => {
   const c = p.center;
-  p.shadow(c.x, c.y + 1, 15, 6.5, 0.26);
-  p.box(0.2, 0.2, 0.6, 0.1, 46, WOOD_D);
-  const packets: [number, string][] = [
-    [0.27, '#ff6b8b'],
-    [0.43, '#ffb347'],
-    [0.59, '#5cbf4f'],
-    [0.72, '#4fb3e8'],
-  ];
-  packets.forEach(([u, col], i) => {
-    const z0 = 38 - (i % 2) * 2;
-    const q = (uu: number, z: number) => p.iso(uu, 0.3, z);
-    p.poly([q(u, z0), q(u + 0.12, z0), q(u + 0.12, z0 - 14), q(u, z0 - 14)], col);
-    p.poly([q(u, z0), q(u + 0.12, z0), q(u + 0.12, z0 - 3), q(u, z0 - 3)], shade(col, 0.25), null);
-    const m = q(u + 0.06, z0 - 8);
-    p.circle(m.x, m.y, 2.6, WHITE, O);
-    p.flower(m.x, m.y, 2.2, shade(col, -0.1), '#ffd23f');
-  });
-  const top = p.iso(0.5, 0.25, 46);
-  pot(p, top.x, top.y + 1, 4.5, 5, '#e8834f');
-  sprout(p, top.x, top.y - 4, 4, LEAF);
-  sparkle(p, c.x + 16, c.y - 12, 2.2);
+  p.shadow(c.x, c.y + 2, 17, 6.5, 0.26);
+  p.box(0.1, 0.2, 0.7, 0.6, 3, '#f2c98a');
+  const left = (t: number, z: number) => p.iso(t, 0.8, z);
+  const right = (t: number, z: number) => p.iso(0.8, t, z);
+  // top rails and corner posts
+  stroke(p, left(0.1, 46), left(0.8, 46), '#f2c98a', 2.2);
+  stroke(p, right(0.2, 46), right(0.8, 46), '#f2c98a', 2.2);
+  post(p, left(0.1, 0).x, left(0.1, 0).y, 48, 3);
+  post(p, left(0.8, 0).x, left(0.8, 0).y, 48, 3);
+  post(p, right(0.2, 0).x, right(0.2, 0).y, 48, 3);
+  const cols = ['#ff6b8b', '#ffb347', '#5cbf4f', '#4fb3e8', '#b57bff', '#ffd23f', '#ff8a5c'];
+  for (let i = 0; i < 4; i++) packet(p, cols[i], i, left, 0.12 + i * 0.18, 0.27 + i * 0.18, 40);
+  for (let i = 0; i < 3; i++) packet(p, cols[4 + i], 4 + i, right, 0.22 + i * 0.2, 0.38 + i * 0.2, 40);
+  // a tiny sprout pot on top
+  const top = p.iso(0.45, 0.5, 3);
+  pot(p, top.x, top.y + 1, 4.5, 4.5, '#e8834f');
+  sprout(p, top.x, top.y - 3, 4, LEAF);
+  sparkle(p, c.x + 18, c.y - 16, 2.2);
 };
 
 /** A potting table on legs with a soil bag, a seedling pot and a trowel. */
@@ -597,59 +698,64 @@ const coldFrame: Painter = (p) => {
   sparkle(p, c.x + 16, c.y - 18, 2.4);
 };
 
-/** A wooden bee house with a red roof, bamboo tube holes and a little bee. */
+/** A cute bee house: a wooden cottage with a pitched roof, round bamboo tube holes and two fuzzy bees. */
 const beeHotel: Painter = (p) => {
   const c = p.center;
-  p.shadow(c.x, c.y + 2, 15, 6.5, 0.26);
-  p.box(0.15, 0.15, 0.7, 0.7, 30, WOOD);
-  p.hipRoof(0.15, 0.15, 0.7, 0.7, 30, 14, '#e05a47', 0.08);
-  for (const z of [6, 13, 20]) {
-    for (const u of [0.3, 0.5, 0.7]) {
-      const q = p.iso(u, 0.85, z);
-      p.ellipse(q.x, q.y, 2.2, 1.5, '#e8c77a', O, -0.46);
-      p.ellipse(q.x, q.y, 1, 0.6, INK, null, -0.46);
+  p.shadow(c.x, c.y + 2, 16, 6.5, 0.26);
+  p.box(0.16, 0.16, 0.68, 0.68, 22, '#f2c98a');
+  for (const z of [5, 11, 17]) {
+    for (const u of [0.28, 0.44, 0.6]) {
+      const q = p.iso(u, 0.84, z);
+      p.ellipse(q.x, q.y, 2.5, 1.8, '#e8c77a', O, -0.46);
+      p.ellipse(q.x, q.y, 1.1, 0.75, INK, null, -0.46);
     }
   }
-  const b = p.iso(0.95, 1.05, 12);
-  p.ellipse(b.x - 3, b.y - 4, 2.4, 1.6, rgba('#ffffff', 0.85), O, -0.5);
-  p.ellipse(b.x + 1, b.y - 5, 2.4, 1.6, rgba('#ffffff', 0.85), O, 0.5);
-  p.ball(b.x - 1, b.y, 3.4, '#ffd23f');
-  p.line([{ x: b.x - 2.5, y: b.y - 1.5 }, { x: b.x - 2.5, y: b.y + 3 }], INK, 1.2);
-  p.line([{ x: b.x + 0.5, y: b.y - 2 }, { x: b.x + 0.5, y: b.y + 3 }], INK, 1.2);
-  sparkle(p, c.x + 17, c.y - 36, 2.2);
+  p.gableRoof(0.16, 0.16, 0.68, 0.68, 22, 15, '#e05a47', '#f2c98a', 0.1);
+  const b1 = p.iso(1.0, 0.62, 10);
+  bee(p, b1.x, b1.y, 4.2);
+  const b2 = p.iso(0.4, 1.1, 30);
+  bee(p, b2.x, b2.y, 3.6);
+  sparkle(p, c.x + 20, c.y - 36, 2.2);
 };
 
-/** A red house with spots, a little door and a ladybug friend in the yard. */
+/** A round red cottage with black spots, an arched door, a cone roof and a smiling ladybug on the roof. */
 const ladybugHouse: Painter = (p) => {
   const c = p.center;
-  p.shadow(c.x, c.y + 2, 15, 6.5, 0.26);
-  p.box(0.12, 0.12, 0.76, 0.76, 24, '#ef4b3e');
-  p.gableRoof(0.12, 0.12, 0.76, 0.76, 24, 13, '#3d3050', '#ef4b3e', 0.08);
-  for (const [u, v, z] of [
-    [0.32, 0.88, 14],
-    [0.68, 0.88, 14],
-    [0.5, 0.88, 6],
-  ] as const) {
-    const q = p.iso(u, v, z);
-    p.circle(q.x, q.y, 2.2, INK, null);
-  }
-  // round door on the front
-  const d = p.iso(0.5, 0.88, 0);
-  p.roundRect(d.x - 4, d.y - 10, 8, 10, 3.5, '#ffe6a6', O);
-  // ladybug in the yard
-  const lb = p.iso(1.0, 1.02, 0);
-  p.ball(lb.x, lb.y - 3.4, 4, '#ff3b30');
-  p.circle(lb.x, lb.y - 7.4, 2, INK, null);
+  p.shadow(c.x, c.y + 2, 16, 6.5, 0.26);
+  const base = c.y + 2;
+  const wall = 22;
+  p.cylinder(c.x, base, 14, wall, '#ef4b3e');
+  const rimY = base - wall;
   for (const [dx, dy] of [
-    [-1.6, -3.2],
-    [1.6, -3.2],
-    [0, -1],
+    [-8, -6],
+    [5, -12],
+    [-2, -16],
+    [9, -4],
   ] as const) {
-    p.circle(lb.x + dx, lb.y + dy, 0.6, INK, null);
+    p.circle(c.x + dx, base - 10 + dy, 2.2, INK, null);
   }
-  p.line([{ x: lb.x - 0.8, y: lb.y - 9 }, { x: lb.x - 3, y: lb.y - 12 }], INK, 0.8);
-  p.line([{ x: lb.x + 0.8, y: lb.y - 9 }, { x: lb.x + 3, y: lb.y - 12 }], INK, 0.8);
-  sparkle(p, c.x + 16, c.y - 36, 2.2);
+  p.roundRect(c.x - 4, base - 10, 8, 10, 3.5, '#ffe6a6', O);
+  // cone roof with a soft front edge
+  const cc = p.ctx;
+  cc.beginPath();
+  cc.moveTo(c.x - 16, rimY);
+  cc.lineTo(c.x, rimY - 20);
+  cc.lineTo(c.x + 16, rimY);
+  cc.ellipse(c.x, rimY, 16, 6, 0, 0, Math.PI, false);
+  cc.closePath();
+  fs(p, '#3d3050', O, 1);
+  p.line([{ x: c.x - 9, y: rimY - 6 }, { x: c.x - 3, y: rimY - 16 }], rgba('#ffffff', 0.35), 1.6);
+  // ladybug friend on the roof slope
+  const lx = c.x + 10;
+  const ly = rimY - 8;
+  p.line([{ x: lx - 1, y: ly - 4 }, { x: lx - 3, y: ly - 8 }], INK, 0.8);
+  p.line([{ x: lx + 1, y: ly - 4 }, { x: lx + 3, y: ly - 8 }], INK, 0.8);
+  p.ball(lx, ly, 4.6, '#ff3b30');
+  p.circle(lx - 2.6, ly + 1, 1, INK, null);
+  p.circle(lx + 2.6, ly + 1.4, 1, INK, null);
+  p.circle(lx, ly + 3, 0.9, INK, null);
+  face(p, lx, ly - 0.8, 0.5);
+  sparkle(p, c.x - 14, rimY - 14, 2.2);
 };
 
 /** A three-tier wooden stand with clay pots of flowers on each shelf. */
@@ -817,39 +923,37 @@ const prizePumpkin: Painter = (p) => {
   sparkle(p, base.x - 20, cy - 20, 2.6);
 };
 
-/** A stone spiral bed with four herbs and a little label stake. */
+/** A raised spiral of stacked stones climbing toward the centre, with four herbs planted at its corners. */
 const herbSpiral: Painter = (p) => {
   const c = p.center;
   p.shadow(c.x, c.y + 2, 30, 11, 0.24);
   p.diamond(0.02, 0.02, 1.96, 1.96, '#cfc6b5', O);
-  p.diamond(0.2, 0.2, 1.6, 1.6, SOIL, null);
-  const stones: { u: number; v: number; r: number }[] = [];
-  for (let i = 0; i < 26; i++) {
-    const t = i / 25;
-    const a = t * Math.PI * 2 * 1.8;
-    const rad = 0.78 * (1 - t) + 0.14;
-    stones.push({ u: 1 + Math.cos(a) * rad, v: 1 + Math.sin(a) * rad, r: 0.9 + (i % 3) * 0.15 });
+  p.diamond(0.12, 0.12, 1.76, 1.76, SOIL, null);
+  const beds: [number, number, (p: Pen, x: number, y: number) => void, string][] = [
+    [0.36, 0.36, herbBasil, '#5cbf4f'],
+    [1.64, 0.36, herbRosemary, '#2f7a4a'],
+    [0.36, 1.64, herbThyme, '#9bd68a'],
+    [1.64, 1.64, herbLavender, '#a77bdb'],
+  ];
+  for (const [u, v, paint, dot] of beds) {
+    const q = p.iso(u, v, 0);
+    paint(p, q.x, q.y);
+    herbTag(p, q.x, q.y, dot);
+  }
+  const stones: { u: number; v: number; z: number; r: number }[] = [];
+  const n = 40;
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    const a = t * Math.PI * 2 * 2.2;
+    const rad = 0.8 * (1 - t) + 0.12;
+    stones.push({ u: 1 + Math.cos(a) * rad, v: 1 + Math.sin(a) * rad, z: 2 + t * 32, r: 5.2 - t * 2 });
   }
   stones.sort((a, b) => a.u + a.v - (b.u + b.v));
-  for (const s of stones) {
-    const q = p.iso(s.u, s.v, 0);
-    p.ellipse(q.x, q.y, 4 * s.r, 2.6 * s.r, (s.u + s.v) % 2 ? '#e0d6c2' : '#bfb29a', O);
-  }
-  const herbs: [number, number, string][] = [
-    [0.55, 0.55, '#5cbf4f'],
-    [1.45, 0.5, '#3f9a3c'],
-    [0.6, 1.45, '#8fd46b'],
-    [1.45, 1.45, '#6cb86a'],
-  ];
-  herbs.forEach(([u, v, col], i) => {
-    const q = p.iso(u, v, 0);
-    p.foliage(q.x, q.y - 6, 5.5, col, 'herb' + i, 6);
+  stones.forEach((s, i) => {
+    const q = p.iso(s.u, s.v, s.z);
+    p.ball(q.x, q.y, s.r, i % 3 === 0 ? '#e0d6c2' : i % 3 === 1 ? '#cdbfa6' : '#b9ab92');
   });
-  const sp = p.iso(1, 1, 0);
-  p.line([sp, { x: sp.x, y: sp.y - 16 }], WOOD_D, 1.4);
-  p.rect(sp.x - 1, sp.y - 16, 8, 5, WHITE, O);
-  p.circle(sp.x + 3, sp.y - 13.5, 1.3, '#5cbf4f', null);
-  sparkle(p, c.x + 26, c.y - 24, 2.4);
+  sparkle(p, c.x + 26, c.y - 26, 2.4);
 };
 
 /** A round rose head: a ring of soft petals with a swirl in the middle. */
@@ -1026,42 +1130,75 @@ const harvestScale: Painter = (p) => {
   sparkle(p, c.x + 18, c.y - 30, 2.2);
 };
 
-/** A white-framed glass greenhouse with plants, a little door and shiny panes. */
+/** A glass greenhouse: white-framed light blue panes on walls and a glass roof, with plants inside and potted plants outside. */
 const glassGreenhouse: Painter = (p) => {
   const c = p.center;
   p.shadow(c.x, c.y + 3, 46, 16, 0.26);
-  const glass = rgba('#bfe9ff', 0.5);
   const frame = '#fbfdff';
-  p.box(0.1, 0.1, 1.8, 1.8, 5, '#eef6fb');
-  // plants inside, drawn before the glass so they look sheltered
+  const glass = rgba('#c4ecff', 0.42);
+  const roofGlass = rgba('#d4f3ff', 0.55);
+  const wallH = 40;
+  const ridgeH = 66;
+  p.box(0.08, 0.08, 1.84, 1.84, 4, '#eef6fb');
+  // plants and flowers inside, drawn before the glass so they look sheltered
   for (const [u, v, col] of [
     [0.6, 0.6, '#4fa84a'],
-    [1.4, 0.55, '#5cbf4f'],
-    [0.55, 1.4, '#6cc35a'],
+    [1.35, 0.55, '#5cbf4f'],
+    [0.55, 1.35, '#6cc35a'],
     [1.35, 1.35, '#3f9a3c'],
   ] as const) {
     const q = p.iso(u, v, 5);
     p.foliage(q.x, q.y - 12, 9, col, 'gh' + u + v, 7);
   }
-  p.flower(p.iso(0.95, 1.05, 5).x, p.iso(0.95, 1.05, 5).y - 26, 3.4, '#ff8fb1', '#fff3a6');
-  p.flower(p.iso(1.6, 0.85, 5).x, p.iso(1.6, 0.85, 5).y - 20, 3, '#ffd66b', '#ff8a2a');
-  const fl = (u: number, z: number) => p.iso(u, 1.9, z);
-  const fr = (v: number, z: number) => p.iso(1.9, v, z);
-  // left glass face (along u) with a door
-  p.poly([fl(0.1, 5), fl(1.9, 5), fl(1.9, 40), fl(0.1, 40)], glass, frame, 1.6);
-  p.poly([fl(0.9, 5), fl(1.3, 5), fl(1.3, 26), fl(0.9, 26)], WOOD, O, 1);
-  p.circle(fl(1.2, 15).x, fl(1.2, 15).y, 0.8, '#ffd23f', null);
-  for (const u of [0.5, 0.9, 1.3, 1.7]) p.line([fl(u, 5), fl(u, 40)], frame, 1.4);
-  p.line([fl(0.1, 22), fl(1.9, 22)], frame, 1.4);
-  // right glass face (along v)
-  p.poly([fr(0.1, 5), fr(1.9, 5), fr(1.9, 40), fr(0.1, 40)], glass, frame, 1.6);
-  for (const v of [0.5, 0.9, 1.3, 1.7]) p.line([fr(v, 5), fr(v, 40)], frame, 1.4);
-  p.line([fr(0.1, 22), fr(1.9, 22)], frame, 1.4);
-  p.line([fr(0.2, 34), fr(0.7, 24)], rgba('#ffffff', 0.9), 2);
-  p.line([fl(0.2, 36), fl(0.6, 26)], rgba('#ffffff', 0.9), 2);
-  // roof
-  p.hipRoof(0.1, 0.1, 1.8, 1.8, 40, 26, '#f7fbff', 0.06);
-  sparkle(p, c.x + 26, c.y - 62, 3);
+  const f1 = p.iso(0.95, 1.05, 5);
+  p.flower(f1.x, f1.y - 26, 3.4, '#ff8fb1', '#fff3a6');
+  const f2 = p.iso(1.6, 0.85, 5);
+  p.flower(f2.x, f2.y - 20, 3, '#ffd66b', '#ff8a2a');
+
+  const fl = (u: number, z: number) => p.iso(u, 1.92, z);
+  const fr = (v: number, z: number) => p.iso(1.92, v, z);
+  // back roof slope (faces away from us)
+  const eLb = p.iso(0.08, 0.08, wallH);
+  const eRb = p.iso(1.92, 0.08, wallH);
+  const rA = p.iso(0.08, 1.0, ridgeH);
+  const rB = p.iso(1.92, 1.0, ridgeH);
+  p.poly([eLb, eRb, rB, rA], rgba('#b6e4fa', 0.45), frame, 1.2);
+  // left wall (front-left face): glass with mullions, a rail and a door
+  p.poly([fl(0.08, 4), fl(1.92, 4), fl(1.92, wallH), fl(0.08, wallH)], glass, frame, 1.6);
+  p.line([fl(0.08, 22), fl(1.92, 22)], frame, 1.4);
+  for (const u of [0.5, 1.7]) p.line([fl(u, 4), fl(u, wallH)], frame, 1.4);
+  p.poly([fl(0.9, 4), fl(1.3, 4), fl(1.3, 28), fl(0.9, 28)], WOOD, O, 1);
+  p.circle(fl(1.22, 15).x, fl(1.22, 15).y, 0.8, '#ffd23f', null);
+  p.line([fl(0.2, 36), fl(0.5, 26)], rgba('#ffffff', 0.9), 2);
+  p.line([fl(1.0, 36), fl(1.2, 28)], rgba('#ffffff', 0.7), 1.2);
+  // right wall (u = 1.92 face) and its gable triangle
+  p.poly([fr(0.08, 4), fr(1.92, 4), fr(1.92, wallH), fr(0.08, wallH)], glass, frame, 1.6);
+  p.line([fr(0.08, 22), fr(1.92, 22)], frame, 1.4);
+  for (const v of [0.6, 1.3]) p.line([fr(v, 4), fr(v, wallH)], frame, 1.4);
+  p.line([fr(0.3, 34), fr(0.8, 26)], rgba('#ffffff', 0.9), 2);
+  p.poly([eRb, fr(1.92, wallH), rB], roofGlass, frame, 1.2);
+  // front roof slope with rafters and shine streaks
+  const eLf = fl(0.08, wallH);
+  const eRf = fl(1.92, wallH);
+  p.poly([eLf, eRf, rB, rA], roofGlass, frame, 1.4);
+  for (const u of [0.5, 0.9, 1.3, 1.7]) {
+    const e = fl(u, wallH);
+    p.line([e, p.iso(u, 1.0, ridgeH)], frame, 1.3);
+  }
+  const slope = (u: number, s: number) => p.iso(u, 1.92 - 0.92 * s, wallH + (ridgeH - wallH) * s);
+  p.line([slope(0.25, 0.2), slope(0.4, 0.6)], rgba('#ffffff', 0.95), 1.8);
+  p.line([slope(1.0, 0.3), slope(1.2, 0.7)], rgba('#ffffff', 0.9), 1.6);
+  p.line([slope(1.5, 0.2), slope(1.6, 0.5)], rgba('#ffffff', 0.9), 1.4);
+  p.line([rA, rB], frame, 2.4);
+  // potted plants outside the front and side
+  const pa = p.iso(0.35, 1.98, 0);
+  pot(p, pa.x, pa.y, 4.6, 6, '#f0925f');
+  p.foliage(pa.x, pa.y - 9, 4.5, LEAF, 'ghpa', 6);
+  p.flower(pa.x + 3, pa.y - 13, 2, '#ff8fb1', '#fff3a6');
+  const pb = p.iso(1.98, 1.2, 0);
+  pot(p, pb.x, pb.y, 4.6, 6, '#f0925f');
+  p.foliage(pb.x, pb.y - 9, 4.5, '#6cc35a', 'ghpb', 6);
+  sparkle(p, c.x + 24, c.y - 46, 3);
   sparkle(p, c.x - 28, c.y - 30, 2.4);
 };
 
@@ -1109,7 +1246,7 @@ const ART: Record<string, { h: number; paint: Painter }> = {
   seedling_tray: { h: 40, paint: seedlingTray },
   smiling_sunflower_pot: { h: 80, paint: smilingSunflowerPot },
   watering_station: { h: 70, paint: wateringStation },
-  tool_rack: { h: 56, paint: toolRack },
+  tool_rack: { h: 60, paint: toolRack },
   tomato_cage: { h: 60, paint: tomatoCage },
   bean_teepee: { h: 80, paint: beanTeepee },
   raised_veg_bed: { h: 50, paint: raisedVegBed },

@@ -12,6 +12,8 @@ import {
   ITEMS,
   ITEM_LIST,
   QUESTS,
+  RIBBON_COLORS,
+  RIBBON_LIST,
   TREE_LIST,
   buildingStatus,
   charmStars,
@@ -82,6 +84,7 @@ interface CardOpts {
   img: string;
   name: string;
   price?: number;
+  candy?: number;
   meta?: (string | Node)[];
   locked?: string | false;
   charm?: number;
@@ -98,7 +101,11 @@ function card(o: CardOpts): HTMLElement {
     o.owned ? h('span', { class: 'owned' }, `×${o.owned}`) : null,
     h('div', { class: 'art' }, h('img', { src: o.img, alt: o.name, loading: 'lazy' })),
     h('div', { class: 'name' }, o.name),
-    o.price !== undefined ? h('div', { class: 'price' }, coin(), o.price === 0 ? 'Free' : fmtNum(o.price)) : null,
+    o.candy
+      ? h('div', { class: 'price candy' }, h('img', { class: 'ico', src: iconURL('candy') }), fmtNum(o.candy))
+      : o.price !== undefined
+        ? h('div', { class: 'price' }, coin(), o.price === 0 ? 'Free' : fmtNum(o.price))
+        : null,
     ...(o.meta ?? []).map((m) => h('div', { class: 'meta' }, m)),
   );
   el.addEventListener('click', () => {
@@ -106,6 +113,10 @@ function card(o: CardOpts): HTMLElement {
     else o.onClick?.();
   });
   return el;
+}
+
+function eventLive(ev: string): boolean {
+  return S.allEvents || isEventActive(EVENTS[ev], S.now()) || new URLSearchParams(location.search).get('event') === ev;
 }
 
 function levelLock(level: number): string | false {
@@ -181,10 +192,11 @@ export function openShop(tab: ShopTab = 'seeds'): void {
       if (current === 'seeds') {
         const grid = h('div', { class: 'grid' });
         for (const c of CROP_LIST) {
+          if (c.event && !eventLive(c.event)) continue;
           grid.append(
             card({
               img: iconURL(c.id),
-              name: c.name,
+              name: c.event ? `🎃 ${c.name}` : c.name,
               price: c.cost,
               locked: levelLock(c.level),
               meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth ${c.yield * ITEMS[c.id].sell}`],
@@ -268,13 +280,26 @@ export function openShop(tab: ShopTab = 'seeds'): void {
                 h('span', null, on ? 'Available now!' : eventReturn(ev)),
               ),
             );
+            const evItems = items.filter((x) => x.event === evId).sort((a, b) => Number(!!b.candy) - Number(!!a.candy));
+            if (on && evItems.some((x) => x.candy)) {
+              body.append(
+                h(
+                  'div',
+                  { class: 'candy-banner' },
+                  h('img', { src: iconURL('candy') }),
+                  h('div', null, h('b', null, 'Candy Shop'), h('div', null, 'Exclusive treats, paid in candy. Harvest, collect and greet trick-or-treaters to earn more!')),
+                  h('div', { class: 'candy-count' }, fmtNum(S.state.inventory.candy ?? 0)),
+                ),
+              );
+            }
             const grid = h('div', { class: 'grid', style: { marginBottom: '14px' } });
-            for (const d of items.filter((x) => x.event === evId)) {
+            for (const d of evItems) {
               grid.append(
                 card({
                   img: artURL(`deco:${d.id}`),
                   name: d.name,
                   price: d.cost,
+                  candy: d.candy,
                   charm: d.charm,
                   owned: owned(d.id),
                   locked: on ? false : eventReturn(ev),
@@ -349,6 +374,7 @@ export function openSeedPicker(plotId: string | null): void {
   const m = openModal('Plant seeds', { icon: iconURL('strawberry') });
   const grid = h('div', { class: 'grid' });
   for (const c of CROP_LIST) {
+    if (c.event && !eventLive(c.event)) continue;
     grid.append(
       card({
         img: iconURL(c.id),
@@ -1059,11 +1085,74 @@ export function decoCollected(id: string): boolean {
   return Object.values(st.objects).some((o) => o.kind === 'deco' && o.def === id);
 }
 
-export function openCatalog(): void {
+export function claimableRibbons(): number {
+  const st = S.state;
+  return RIBBON_LIST.filter((r) => {
+    const tier = st.ribbons?.[r.id] ?? 0;
+    return tier < 4 && (st.stats[r.stat] ?? 0) >= r.tiers[tier];
+  }).length;
+}
+
+function renderRibbons(body: HTMLElement): void {
+  const st = S.state;
+  body.append(h('div', { class: 'sub', style: { fontWeight: '800', color: 'var(--muted)', marginBottom: '10px' } }, 'Earn yellow, white, red and blue ribbons for your farming milestones!'));
+  for (const r of RIBBON_LIST) {
+    const tier = st.ribbons?.[r.id] ?? 0;
+    const value = st.stats[r.stat] ?? 0;
+    const next = tier < 4 ? r.tiers[tier] : null;
+    const ready = next !== null && value >= next;
+    const rosettes = h(
+      'div',
+      { class: 'rosettes' },
+      ...RIBBON_COLORS.map((c, i) => h('img', { src: iconURL(`ribbon_${c}`), class: i < tier ? 'won' : 'not-won', title: `${c} ribbon: ${fmtNum(r.tiers[i])} ${r.noun}` })),
+    );
+    body.append(
+      h(
+        'div',
+        { class: `row ribbon-row${ready ? ' ready' : ''}` },
+        rosettes,
+        h(
+          'div',
+          { class: 'grow' },
+          h('div', { class: 'title' }, r.name),
+          h('div', { class: 'sub' }, next === null ? `All ribbons won! ${fmtNum(value)} ${r.noun}` : `${fmtNum(Math.min(value, next))} / ${fmtNum(next)} ${r.noun}`),
+          next !== null ? h('div', { class: 'progress' }, h('div', { style: { width: `${Math.min(100, (value / next) * 100)}%` } })) : null,
+        ),
+        ready
+          ? h(
+              'button',
+              {
+                class: 'btn gold pulse',
+                onclick: () => {
+                  if (S.dispatch({ type: 'claimRibbon', ribbon: r.id })) confetti(60);
+                },
+              },
+              `Claim ${RIBBON_COLORS[tier]}!`,
+            )
+          : null,
+      ),
+    );
+  }
+}
+
+export function openCatalog(start: 'catalog' | 'ribbons' = 'catalog'): void {
   let cat: DecoCategory = 'flowers';
+  let view = start;
+  const tabs = tabsBar<'catalog' | 'ribbons'>(
+    [
+      { id: 'catalog', label: '📖 Decor Catalog' },
+      { id: 'ribbons', label: '🎀 Ribbons' },
+    ],
+    view,
+    (t) => {
+      view = t;
+      m.rerender();
+    },
+  );
   const m = liveModal(
-    'Decor Catalog',
+    'Collections',
     (body) => {
+      if (view === 'ribbons') return renderRibbons(body);
       const total = DECORATION_LIST.length;
       const have = DECORATION_LIST.filter((d) => decoCollected(d.id)).length;
       body.append(
@@ -1113,6 +1202,6 @@ export function openCatalog(): void {
       }
       body.append(grid);
     },
-    { icon: iconURL('charm') },
+    { icon: iconURL('charm'), tabs },
   );
 }

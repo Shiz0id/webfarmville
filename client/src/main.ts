@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
-import { QUESTS } from '@farm/shared';
+import { QUESTS, RIBBONS, RIBBON_COLORS } from '@farm/shared';
 import './style.css';
 import { ApiError, api, getToken, setToken, type MePayload } from './api';
 import { buildArt } from './art';
 import { bus } from './bus';
 import { FarmScene } from './scenes/FarmScene';
 import { Store } from './store';
-import { sfx, unlockAudioOnGesture } from './sfx';
+import { halloweenOn } from './scenes/halloween';
+import { setSpookyMusic, sfx, unlockAudioOnGesture } from './sfx';
 import { setTool } from './tools';
 import { showAuth } from './ui/auth';
 import { closeAllModals, setupTooltip, toast } from './ui/dom';
@@ -38,6 +39,9 @@ async function start(): Promise<void> {
   document.getElementById('boot')?.remove();
 
   const store = new Store(me);
+  const spooky = halloweenOn(store.now(), store.allEvents);
+  setSpookyMusic(spooky);
+  document.body.classList.toggle('halloween', spooky);
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game',
@@ -100,6 +104,10 @@ async function start(): Promise<void> {
       if (e.type === 'mystery') {
         toast('🎁 You found a Mystery Gift! Open it from your barn.', 'good');
         setTimeout(() => sfx.quest(), 100);
+      } else if (e.type === 'ribbon') {
+        const r = RIBBONS[e.ribbon];
+        toast(`🎀 You won the ${RIBBON_COLORS[e.tier - 1]} ${r?.name ?? ''} ribbon!`, 'good');
+        sfx.levelUp();
       } else if (e.type === 'unwrap') {
         sfx.levelUp();
         showUnwrap(e.item);
@@ -127,7 +135,17 @@ async function start(): Promise<void> {
 
   void store.refreshSocial();
   if (import.meta.env.DEV || location.search.includes('debug')) Object.assign(window, { __farm: { store, scene } });
-  if (store.state.stats.harvest === undefined) {
+  if (spooky && !store.state.quests.completed.includes('spooky_sprouts') && store.state.stats.harvest !== undefined) {
+    setTimeout(
+      () =>
+        villagerSay(
+          'Mayor Maple',
+          "Hoo-HOO! Happy Halloween! Candy Corn is sprouting, trick-or-treaters are coming by, and the Candy Shop is open. Check your spooky quests!",
+          { label: 'Spooky quests 🎃', onClick: openQuests },
+        ),
+      1100,
+    );
+  } else if (store.state.stats.harvest === undefined) {
     setTimeout(
       () =>
         villagerSay(

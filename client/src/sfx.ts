@@ -160,6 +160,24 @@ const PATTERNS = [
   [0, 2, 1, 3, 2, 3, 1, 2],
   [0, 1, 2, 1, 3, 2, 1, 2],
 ];
+// Halloween: a playful minor-key waltz of a music box (Am – F – Dm – E).
+const SPOOKY_CHORDS = [
+  [57, 60, 64, 69],
+  [53, 57, 60, 65],
+  [50, 53, 57, 62],
+  [52, 56, 59, 64],
+];
+const SPOOKY_PATTERNS = [
+  [0, 2, 3, 2, 1, 2],
+  [0, 3, 2, 1, 2, 3],
+];
+let spooky = false;
+
+/** Switch the music box to its Halloween tune. */
+export function setSpookyMusic(on: boolean): void {
+  spooky = on;
+}
+
 let musicTimer = 0;
 let step = 0;
 let nextTime = 0;
@@ -167,18 +185,23 @@ let nextTime = 0;
 function scheduleMusic(): void {
   const a = ctx();
   if (!a) return;
-  const beat = 0.34;
+  const beat = spooky ? 0.3 : 0.34;
+  const barLen = spooky ? 6 : 8;
   while (nextTime < a.currentTime + 0.4) {
-    const bar = Math.floor(step / 8);
-    const chord = CHORDS[bar % CHORDS.length];
-    const pattern = PATTERNS[Math.floor(bar / 4) % PATTERNS.length];
-    const note = chord[pattern[step % 8]] + 12;
+    const bar = Math.floor(step / barLen);
+    const chords = spooky ? SPOOKY_CHORDS : CHORDS;
+    const patterns = spooky ? SPOOKY_PATTERNS : PATTERNS;
+    const chord = chords[bar % chords.length];
+    const pattern = patterns[Math.floor(bar / 4) % patterns.length];
+    const note = chord[pattern[step % barLen]] + 12;
     const delay = Math.max(0, nextTime - a.currentTime);
     tone(NOTE(note), 0.9, { type: 'sine', vol: 0.11, delay, bus: 'music', attack: 0.004 });
     tone(NOTE(note + 12), 0.4, { type: 'sine', vol: 0.025, delay, bus: 'music', attack: 0.004 });
-    if (step % 8 === 0) tone(NOTE(chord[0] - 12), 2.4, { type: 'triangle', vol: 0.05, delay, bus: 'music' });
+    if (step % barLen === 0) tone(NOTE(chord[0] - 12), 2.4, { type: 'triangle', vol: 0.05, delay, bus: 'music' });
+    // A spooky little "ooo" on some bars.
+    if (spooky && step % 24 === 3) tone(NOTE(chord[2] + 24), 1.6, { type: 'sine', vol: 0.018, delay, bus: 'music', slide: 0.94, attack: 0.3 });
     // Occasional rests keep it from feeling mechanical.
-    nextTime += step % 16 === 15 ? beat * 2 : beat;
+    nextTime += step % (barLen * 2) === barLen * 2 - 1 ? beat * 2 : beat;
     step++;
   }
 }

@@ -24,6 +24,14 @@ function titleScenery(): HTMLElement[] {
     ['tree:apple_tree:ready', '86%', '60%', '110px'],
     ['deco:scarecrow', '16%', '40%', '90px'],
   ];
+  if (new Date().getMonth() === 9 || new URLSearchParams(location.search).get('event') === 'halloween') {
+    decos.push(
+      ['deco:pumpkin_pile', '22%', '74%', '90px'],
+      ['deco:friendly_ghost', '66%', '24%', '70px'],
+      ['deco:haunted_house', '2%', '36%', '150px'],
+      ['deco:spooky_tree', '88%', '30%', '110px'],
+    );
+  }
   decos.forEach(([key, left, top, size], i) => {
     if (!hasArt(key)) return;
     const img = h('img', { class: 'title-deco', src: artURL(key), alt: '' });

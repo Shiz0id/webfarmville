@@ -3,6 +3,7 @@ import { iconURL } from '../art';
 import { bus } from '../bus';
 import type { Store } from '../store';
 import { setTool, tools, type Tool } from '../tools';
+import { halloweenOn } from '../scenes/halloween';
 import { audioSettings, setMusic } from '../sfx';
 import { fmtNum, h } from '../util';
 import {
@@ -14,6 +15,7 @@ import {
   openNeighbors,
   openOrders,
   openCatalog,
+  claimableRibbons,
   readyOrders,
   openQuests,
   openSeedPicker,
@@ -55,12 +57,20 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     h('div', null, farmName, h('div', { class: 'xpbar' }, xpFill), xpText),
   );
   const coinPill = h('div', { class: 'pill', title: 'Coins' }, h('img', { class: 'ico', src: iconURL('coin') }), coins);
+  const candy = h('span');
+  const candyPill = h(
+    'div',
+    { class: 'pill candy-pill', title: 'Halloween candy: spend it in the Candy Shop (Market › Decor › Seasonal)', onclick: () => openShop('decor') },
+    h('img', { class: 'ico', src: iconURL('candy') }),
+    candy,
+  );
   const hud = h(
     'div',
     { class: 'hud' },
     levelPill,
     coinPill,
     h('div', { class: 'pill', title: 'Farm charm' }, h('img', { class: 'ico', src: iconURL('charm') }), charm, stars),
+    candyPill,
   );
 
   // --- top-right buttons ---
@@ -74,7 +84,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const barn = roundBtn('🧺', 'Barn', openBarn);
   const orders = roundBtn('📋', 'Orders', openOrders);
   const daily = roundBtn('🏡', 'Farm', openFarmhouse);
-  const catalog = roundBtn('📖', 'Catalog', openCatalog);
+  const catalog = roundBtn('📖', 'Collections', () => openCatalog(claimableRibbons() ? 'ribbons' : 'catalog'));
   const music = roundBtn(audioSettings.music ? '🎵' : '🔇', 'Music', () => {
     setMusic(!audioSettings.music);
     music.btn.firstChild!.textContent = audioSettings.music ? '🎵' : '🔇';
@@ -171,6 +181,9 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     xpFill.style.width = `${Math.min(100, ((st.xp - lo) / Math.max(1, hi - lo)) * 100)}%`;
     xpText.textContent = `${fmtNum(st.xp - lo)} / ${fmtNum(hi - lo)} XP`;
     coins.textContent = fmtNum(st.coins);
+    const candyCount = st.inventory.candy ?? 0;
+    candy.textContent = fmtNum(candyCount);
+    candyPill.style.display = candyCount > 0 || halloweenOn(store.now(), store.allEvents) ? 'flex' : 'none';
     const c = farmCharm(st);
     charm.textContent = fmtNum(c);
     const s = charmStars(c);
@@ -182,6 +195,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     setBadge(daily.badge, dailyAvailable() ? 1 : 0);
     setBadge(barn.badge, st.inventory.mystery_gift ?? 0);
     setBadge(orders.badge, readyOrders());
+    setBadge(catalog.badge, claimableRibbons());
 
     const seed = CROPS[tools.seed];
     seedImg.src = iconURL(seed?.id ?? 'strawberry');
