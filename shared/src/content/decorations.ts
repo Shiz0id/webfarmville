@@ -4,6 +4,7 @@
 import { HORTICULTURE_DECORATIONS, LIFESTYLE_DECORATIONS } from './decorations2';
 import { COUNTRY_DECORATIONS, FESTIVAL_DECORATIONS, SPOOKY_DECORATIONS } from './decorations3';
 import { NATURE_DECORATIONS } from './nature';
+import { KITTY_DECORATIONS } from './kitties';
 import { table } from './table';
 
 export type DecoCategory =
@@ -19,6 +20,7 @@ export type DecoCategory =
   | 'horticulture'
   | 'country'
   | 'party'
+  | 'kitty'
   | 'seasonal';
 
 export interface DecoDef {
@@ -35,7 +37,7 @@ export interface DecoDef {
   /** Only purchasable while this seasonal event is running. */
   event?: string;
   /** Later decoration collections (painted in their own art module). */
-  set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals' | 'nature';
+  set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals' | 'nature' | 'kitty';
   /** Earned, never sold: how to get it (e.g. "Discover 10 kinds of fish"). */
   reward?: string;
   /** Bought with the event's currency (e.g. Halloween candy) instead of coins. */
@@ -246,6 +248,7 @@ export const DECORATION_LIST: DecoDef[] = [
   ...COUNTRY_DECORATIONS,
   ...FESTIVAL_DECORATIONS,
   ...NATURE_DECORATIONS,
+  ...KITTY_DECORATIONS,
 ];
 
 export const DECORATIONS: Record<string, DecoDef> = table(DECORATION_LIST);
@@ -255,6 +258,7 @@ export const DECO_CATEGORIES: { id: DecoCategory; name: string }[] = [
   { id: 'horticulture', name: 'Gardening' },
   { id: 'country', name: 'Countryside' },
   { id: 'party', name: 'Party' },
+  { id: 'kitty', name: 'Kitty Corner' },
   { id: 'flowers', name: 'Flowers' },
   { id: 'plants', name: 'Plants' },
   { id: 'fences', name: 'Fences' },

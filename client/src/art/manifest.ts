@@ -17,7 +17,13 @@ import {
   FISH_LIST,
   BUG_LIST,
   NATURE_DECORATIONS,
+  KITTY_LIST,
+  GOODIE_LIST,
+  KITTY_FOODS,
 } from '@farm/shared';
+
+/** Every cat sprite frame (key `cat:<id>:<frame>`); `#1` frames animate. */
+export const KITTY_FRAMES = ['sit', 'loaf', 'sleep', 'sleep#1', 'play', 'play#1', 'walk', 'walk#1'];
 
 /** Pieces of the fishing mini-game scene, painted as icons (key `fishing:<name>`). */
 export const FISHING_PROPS = ['bobber', 'splash', 'shadow', 'reeds', 'lily_pad', 'dock'];
@@ -97,6 +103,20 @@ export function expectedKeys(mod: string): string[] {
       ...FISHING_PROPS.map((k) => `fishing:${k}`),
     ],
     nature_bugs: () => [...BUG_LIST.map((b) => `icon:${b.id}`), ...NATURE_DECORATIONS.map((d) => `deco:${d.id}`), 'icon:journal', 'icon:net', 'icon:rod'],
+    kitty_cats: () => [
+      ...KITTY_LIST.flatMap((c) => KITTY_FRAMES.map((f) => `cat:${c.id}:${f}`)),
+      ...KITTY_LIST.map((c) => `icon:cat_${c.id}`),
+      'pet:cat_stand',
+      'pet:cat_walk',
+      'pet:cat_sleep',
+    ],
+    kitty_goodies: () => [
+      ...GOODIE_LIST.map((x) => `deco:${x.id}`),
+      ...KITTY_FOODS.map((f) => `icon:${f.id}`),
+      'icon:paw',
+      'kitty:food_full',
+      'fx:purr',
+    ],
     portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());
