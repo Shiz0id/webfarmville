@@ -633,58 +633,61 @@ function catTower(p: Pen): void {
   p.restore();
 }
 
-/** A canoe seen from the side-above: pointed upturned ends, an open shaded interior. */
-function canoe(p: Pen, cx: number, y: number, half: number, color: string): void {
-  const c = p.ctx;
-  const L = { x: cx - half, y: y - 5 };
-  const R = { x: cx + half, y: y - 5 };
-  // outer hull
-  c.beginPath();
-  c.moveTo(L.x, L.y);
-  c.quadraticCurveTo(cx, y - 11, R.x, R.y);
-  c.quadraticCurveTo(cx, y + 9, L.x, L.y);
-  c.closePath();
-  c.fillStyle = color;
-  c.fill();
-  c.strokeStyle = p.outline;
-  c.lineWidth = 1;
-  c.stroke();
-  // lighter band along the hull and a darker stripe underneath
-  c.beginPath();
-  c.moveTo(L.x, L.y + 1);
-  c.quadraticCurveTo(cx, y + 3, R.x, R.y + 1);
-  c.quadraticCurveTo(cx, y + 7, L.x, L.y + 1);
-  c.closePath();
-  c.fillStyle = shade(color, -0.2);
-  c.fill();
-  // open interior: the inner rim and the shadowed floor
-  const il = { x: L.x + 5, y: L.y + 2 };
-  const ir = { x: R.x - 5, y: R.y + 2 };
-  c.beginPath();
-  c.moveTo(il.x, il.y);
-  c.quadraticCurveTo(cx, y - 6, ir.x, ir.y);
-  c.quadraticCurveTo(cx, y - 1, il.x, il.y);
-  c.closePath();
-  c.fillStyle = shade(color, -0.45);
-  c.fill();
-  c.strokeStyle = p.outline;
-  c.lineWidth = 0.8;
-  c.stroke();
-  p.curve(L, { x: cx, y: y - 12 }, R, shade(color, 0.45), 0.9);
+/** One canoe lying along the v axis: a loft of cross-sections with pointed, upturned ends and an open top. */
+function loftCanoe(p: Pen, uc: number, v0: number, v1: number, zKeel: number, color: string): void {
+  const N = 16;
+  const HW = 0.19;
+  const hw = (t: number): number => HW * Math.pow(Math.sin(Math.PI * t), 0.55);
+  const top = (t: number): number => zKeel + 1 + 10 * Math.pow(Math.sin(Math.PI * t), 0.4);
+  const keel = (t: number): number => zKeel + 1.5 * (1 - Math.pow(Math.sin(Math.PI * t), 0.5));
+  const vAt = (t: number): number => v0 + (v1 - v0) * t;
+  const ts: number[] = [];
+  for (let i = 0; i <= N; i++) ts.push(i / N);
+  // outer hull on the side that faces the viewer
+  const outer: Pt[] = ts.map((t) => p.iso(uc + hw(t), vAt(t), top(t)));
+  for (const t of [...ts].reverse()) outer.push(p.iso(uc + hw(t) * 0.35, vAt(t), keel(t)));
+  p.poly(outer, color, p.outline, 1);
+  // shaded lower band of the hull
+  const band: Pt[] = ts.map((t) => p.iso(uc + hw(t) * 0.9, vAt(t), (top(t) + keel(t)) * 0.5));
+  for (const t of [...ts].reverse()) band.push(p.iso(uc + hw(t) * 0.35, vAt(t), keel(t)));
+  p.poly(band, shade(color, -0.22), null);
+  // open interior: the rim, then a lower floor
+  const rimR: Pt[] = ts.map((t) => p.iso(uc + hw(t), vAt(t), top(t)));
+  const rimL: Pt[] = ts.map((t) => p.iso(uc - hw(t), vAt(t), top(t)));
+  p.poly([...rimR, ...[...rimL].reverse()], shade(color, -0.55), p.outline, 0.9);
+  const floorR: Pt[] = ts.map((t) => p.iso(uc + hw(t) * 0.6, vAt(t), top(t) - 2));
+  const floorL: Pt[] = ts.map((t) => p.iso(uc - hw(t) * 0.6, vAt(t), top(t) - 2));
+  p.poly([...floorR, ...[...floorL].reverse()], shade(color, -0.25), null);
+  // bright gunwale and a glossy streak on the outer side
+  p.line(rimR, shade(color, 0.5), 1.2);
+  p.line(
+    ts.slice(3, 13).map((t) => p.iso(uc + hw(t) * 0.92, vAt(t), (top(t) + keel(t)) * 0.5 + 1)),
+    rgba('#ffffff', 0.6),
+    1,
+  );
 }
 
+/** A chunky wooden end frame in the plane v = const: two splayed legs and a tie beam. */
+function rackFrame(p: Pen, v: number): void {
+  rod(p, p.iso(0.1, v, 0), p.iso(0.3, v, 22), WOOD_D, 3);
+  rod(p, p.iso(0.9, v, 0), p.iso(0.7, v, 22), WOOD_D, 3);
+  rod(p, p.iso(0.18, v, 10), p.iso(0.82, v, 10), WOOD, 2.4);
+}
+
+/** A wooden A-frame rack with two canoes resting on its cradle rails, and a paddle leaning on it. */
 function canoeRack(p: Pen): void {
-  contact(p, 24, 0.24);
-  const { x: cx, y: cy } = p.center;
-  rod(p, { x: cx - 19, y: cy + 1 }, { x: cx - 19, y: cy - 44 }, WOOD_D, 2.6);
-  rod(p, { x: cx + 19, y: cy + 1 }, { x: cx + 19, y: cy - 44 }, WOOD_D, 2.6);
-  rod(p, { x: cx - 19, y: cy - 20 }, { x: cx + 19, y: cy - 20 }, WOOD_L, 2.2);
-  rod(p, { x: cx - 19, y: cy - 38 }, { x: cx + 19, y: cy - 38 }, WOOD_L, 2.2);
-  canoe(p, cx, cy - 24, 22, '#e8553f');
-  canoe(p, cx, cy - 42, 21, '#3f9cc8');
-  // a paddle leaning on the rack
-  rod(p, { x: cx + 25, y: cy + 1 }, { x: cx + 20, y: cy - 44 }, WOOD_L, 1.8);
-  p.ellipse(cx + 20, cy - 48, 3.2, 5.2, '#f2a33a', p.outline, 0.1);
+  contact(p, 26, 0.26);
+  rackFrame(p, 0.12);
+  // two cradle rails running front to back, lifted on the frames
+  p.box(0.25, 0.05, 0.1, 0.9, 3, WOOD_L, 22);
+  p.box(0.65, 0.05, 0.1, 0.9, 3, WOOD_L, 22);
+  loftCanoe(p, 0.3, 0.06, 0.94, 25, '#e8553f');
+  loftCanoe(p, 0.7, 0.06, 0.94, 25, '#2fa7a0');
+  rackFrame(p, 0.88);
+  // paddle leaning against the near frame
+  rod(p, p.iso(0.96, 0.96, 0), p.iso(0.9, 0.96, 38), WOOD_L, 2);
+  const bl = p.iso(0.9, 0.96, 40);
+  p.ellipse(bl.x, bl.y, 3.2, 5.2, '#f2a33a', p.outline, 0.1);
 }
 
 // ---------------------------------------------------------------------------
@@ -739,32 +742,39 @@ function magnoliaBloom(p: Pen, x: number, y: number, r: number, tilt: number): v
 }
 
 function magnoliaTree(p: Pen): void {
-  contact(p, 24, 0.28);
+  contact(p, 26, 0.3);
   const { x: cx, y: cy } = p.center;
   const dark = '#4d3a2c';
-  ribbon(p, { x: cx, y: cy + 1 }, { x: cx - 1, y: cy - 16 }, { x: cx + 1, y: cy - 32 }, 7, 4, barkGrad(p, cx, 3.5, dark));
-  ribbon(p, { x: cx, y: cy - 28 }, { x: cx - 6, y: cy - 40 }, { x: cx - 17, y: cy - 48 }, 3.6, 1.4, dark);
-  ribbon(p, { x: cx + 1, y: cy - 30 }, { x: cx + 7, y: cy - 46 }, { x: cx + 5, y: cy - 66 }, 3.2, 1.2, dark);
-  ribbon(p, { x: cx + 1, y: cy - 32 }, { x: cx + 10, y: cy - 38 }, { x: cx + 18, y: cy - 44 }, 2.6, 1.2, dark);
-  // a few glossy dark leaves at the branch tips
-  for (const [x, y, a] of [
-    [cx - 17, cy - 48, -2.6],
-    [cx + 5, cy - 66, -1.9],
-    [cx + 18, cy - 44, -0.4],
-    [cx - 8, cy - 42, -2.2],
+  ribbon(p, { x: cx, y: cy + 1 }, { x: cx - 1, y: cy - 16 }, { x: cx + 1, y: cy - 30 }, 7, 4, barkGrad(p, cx, 3.5, dark));
+  // limbs fanning out into the crown
+  for (const [ctlX, ctlY, endX, endY, w] of [
+    [-6, -38, -17, -50, 3.2],
+    [-3, -42, -10, -60, 2.8],
+    [2, -46, 3, -68, 2.6],
+    [6, -42, 12, -60, 2.8],
+    [8, -36, 17, -48, 3],
+    [-8, -32, -20, -40, 2.4],
+    [9, -30, 20, -36, 2.4],
   ] as const) {
-    blade(p, x, y, 6.5, a, 2.6, '#2f6b3a');
+    ribbon(p, { x: cx, y: cy - 28 }, { x: cx + ctlX, y: cy + ctlY }, { x: cx + endX, y: cy + endY }, w, 1.2, dark);
   }
-  for (const [dx, dy, tilt] of [
-    [-16, -46, 0.2],
-    [10, -60, 0.9],
-    [-3, -70, 0.5],
-    [16, -40, 1.3],
-    [-8, -62, 0.1],
-    [4, -42, 0.7],
-  ] as const) {
-    magnoliaBloom(p, cx + dx, cy + dy, 7.2, tilt);
+  // a full, rounded crown of glossy dark leaves
+  const deep = '#2c6640';
+  const mid = '#3d8552';
+  const light = '#5aa26a';
+  p.foliage(cx - 12, cy - 42, 13, deep, 'mag-a', 8);
+  p.foliage(cx + 12, cy - 42, 13, deep, 'mag-b', 8);
+  p.foliage(cx, cy - 52, 17, mid, 'mag-c', 9);
+  p.foliage(cx - 5, cy - 60, 9, light, 'mag-d', 7);
+  // a crowd of big cup-shaped blooms over the crown, back to front
+  const r = rng('magnolia-blooms');
+  const spots: Pt[] = [];
+  for (let k = 0; k < 16; k++) {
+    const a = (k / 16) * TAU + r() * 0.4;
+    const d = 0.5 + r() * 0.5;
+    spots.push({ x: cx + Math.cos(a) * 20 * d, y: cy - 52 + Math.sin(a) * 16 * d });
   }
+  spots.sort((a, b) => a.y - b.y).forEach((q, i) => magnoliaBloom(p, q.x, q.y, 5.6, i * 0.6));
   // fallen petals on the grass
   const pr = rng('magnolia-petals');
   for (let k = 0; k < 6; k++) {
@@ -894,10 +904,10 @@ const TABLE: Record<string, [number, Painter]> = {
   bunny_hutch: [40, bunnyHutch],
   dog_house: [38, dogHouse],
   cat_tower: [62, catTower],
-  canoe_rack: [46, canoeRack],
+  canoe_rack: [44, canoeRack],
   oak_tree: [80, (p) => drawOak(p, OAK_GREEN, 'oak', false)],
   autumn_oak: [80, (p) => drawOak(p, OAK_GOLD, 'autumn', true)],
-  magnolia_tree: [72, magnoliaTree],
+  magnolia_tree: [74, magnoliaTree],
   wisteria_arch: [52, wisteriaArch],
   lilac_bush: [36, lilacBush],
   palm_tree: [66, palmTree],
