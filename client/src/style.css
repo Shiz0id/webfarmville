@@ -2564,6 +2564,8 @@ span.cl-keepsake { font-size: 26px; text-align: center; }
 .nu-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
 .nu-row { display: flex; align-items: center; gap: 10px; background: #fffdf6; border: 2px solid var(--line); border-radius: 14px; padding: 6px 10px; }
 .nu-img { width: 40px; height: 40px; object-fit: contain; flex: none; }
+/* Painted babies sit small inside their sprite; zoom in on them. */
+.nu-img.baby { transform: scale(1.6); transform-origin: 50% 60%; }
 .nu-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .nu-name { font-weight: 900; font-size: 14px; }
 .nu-snug { font-size: 11px; color: #c0577a; }

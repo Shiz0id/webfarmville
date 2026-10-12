@@ -18,7 +18,7 @@ import {
   type GameEvent,
   type ProducerObject,
 } from '@farm/shared';
-import { artURL, borrowArt } from '../art';
+import { artURL, borrowArt, hasArt } from '../art';
 import { bus } from '../bus';
 import { sfx } from '../sfx';
 import { confetti, openModal, toast } from '../ui/dom';
@@ -123,7 +123,9 @@ function openNursery(): void {
               return h(
                 'div',
                 { class: 'nu-row' },
-                h('img', { class: 'nu-img', src: artURL(`animal:${o.def}`) }),
+                hasArt(`baby:${o.def}`)
+                  ? h('img', { class: 'nu-img baby', src: artURL(`baby:${o.def}`) })
+                  : h('img', { class: 'nu-img', src: artURL(`animal:${o.def}`) }),
                 h(
                   'div',
                   { class: 'nu-info' },
