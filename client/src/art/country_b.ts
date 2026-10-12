@@ -16,7 +16,6 @@ const TAU = Math.PI * 2;
 const WOOD = '#b98352';
 const WOOD_D = '#8d5c36';
 const WOOD_L = '#d9aa74';
-const BARK = '#6b4a36';
 const IRON = '#3d4549';
 const STONE = '#b3afa4';
 const BRASS = '#e0ab45';
@@ -352,6 +351,16 @@ function haystack(p: Pen): void {
   c.strokeStyle = p.outline;
   c.lineWidth = 1.1;
   c.stroke();
+  // loose straw poking out of the top and sides
+  for (const [x, y, a] of [
+    [cx - 12, cy - 33, -1.9],
+    [cx + 4, cy - 34, -1.5],
+    [cx + 14, cy - 30, -0.9],
+    [cx - 22, cy - 24, -2.6],
+    [cx + 24, cy - 18, -0.3],
+  ] as const) {
+    p.line([{ x, y }, { x: x + Math.cos(a) * 6, y: y + Math.sin(a) * 6 }], '#c99a3a', 0.9);
+  }
   p.curve({ x: cx - 17, y: cy - 22 }, { x: cx - 12, y: cy - 29 }, { x: cx - 3, y: cy - 30 }, rgba('#ffffff', 0.5), 1.4);
   bow(p, { x: cx - 22, y: cy - 11 }, { x: cx, y: cy - 6 }, { x: cx + 22, y: cy - 11 }, '#8d5c36', 1.6);
   // pitchfork stuck in the front of the stack
@@ -436,17 +445,22 @@ function weathervane(p: Pen): void {
   const { x: cx, y: cy } = p.center;
   p.cylinder(cx, cy, 6.5, 4.5, STONE);
   rod(p, { x: cx, y: cy - 3 }, { x: cx, y: cy - 58 }, IRON, 2);
-  // compass ring with N, E, S, W
+  // compass ring with N, E, S, W on little cream tags so they read over the pole
   p.ellipse(cx, cy - 34, 11, 4.6, BRASS);
   p.ellipse(cx, cy - 34, 6.5, 2.7, null, shade(BRASS, -0.35));
-  p.text('N', cx, cy - 43, 6, '#4a3426');
-  p.text('S', cx, cy - 25, 6, '#4a3426');
-  p.text('E', cx + 16, cy - 34, 6, '#4a3426');
-  p.text('W', cx - 16, cy - 34, 6, '#4a3426');
+  for (const [s, x, y] of [
+    ['N', cx, cy - 43],
+    ['S', cx, cy - 25],
+    ['E', cx + 16, cy - 34],
+    ['W', cx - 16, cy - 34],
+  ] as const) {
+    p.circle(x, y, 4.2, CREAM, WOOD_D);
+    p.text(s, x, y + 0.3, 5.5, '#4a3426');
+  }
   // rooster on top, facing right
   p.save();
-  p.ctx.translate(cx, cy - 61);
-  p.ctx.scale(1.2, 1.2);
+  p.ctx.translate(cx, cy - 60);
+  p.ctx.scale(1.5, 1.5);
   p.poly(
     [
       { x: -5, y: 0 },
@@ -562,10 +576,10 @@ function dogHouse(p: Pen): void {
   p.box(0.12, 0.2, 0.76, 0.6, 19, RED);
   for (const z of [6, 12.5]) p.line([p.iso(0.12, 0.8, z), p.iso(0.88, 0.8, z)], shade(RED, -0.3), 0.6);
   archOnV(p, 0.34, 0.66, 0.8, 0, 12.5, '#3a2a22');
-  // name sign above the door
-  p.poly([p.iso(0.3, 0.8, 14), p.iso(0.7, 0.8, 14), p.iso(0.7, 0.8, 19), p.iso(0.3, 0.8, 19)], CREAM, WOOD_D, 1);
-  const sc = p.iso(0.5, 0.8, 16.5);
-  p.text('Rex', sc.x, sc.y, 5, '#8a3b2a');
+  // name sign on the right wall (the roof's front slope would hide one above the door)
+  p.poly([p.iso(0.88, 0.36, 9), p.iso(0.88, 0.64, 9), p.iso(0.88, 0.64, 15), p.iso(0.88, 0.36, 15)], CREAM, WOOD_D, 1);
+  const sc = p.iso(0.88, 0.5, 12);
+  p.text('Rex', sc.x, sc.y + 0.5, 5.5, '#8a3b2a');
   p.gableRoof(0.1, 0.12, 0.8, 0.7, 19, 10, '#9d3a2f', RED, 0.08);
   const bw = p.iso(0.4, 0.96, 0);
   bowl(p, bw.x, bw.y);
@@ -587,9 +601,13 @@ function catTower(p: Pen): void {
   p.curve({ x: cx + 11, y: cy - 55 }, { x: cx + 19, y: cy - 48 }, { x: cx + 17, y: cy - 31 }, '#7a6a5a', 0.6);
   p.ball(cx + 17, cy - 28, 4.2, '#ff7aa2');
   p.curve({ x: cx + 13.4, y: cy - 29.6 }, { x: cx + 17, y: cy - 26.8 }, { x: cx + 20.6, y: cy - 27.6 }, rgba('#ffffff', 0.55), 0.6);
-  // sleeping kitten on the top perch
+  // sleeping kitten on the top perch, scaled up a touch so it reads at tile size
   const kx = cx - 1;
   const ky = cy - 58;
+  p.save();
+  p.ctx.translate(kx, ky);
+  p.ctx.scale(1.3, 1.3);
+  p.ctx.translate(-kx, -ky);
   ribbon(p, { x: kx + 7, y: ky + 1 }, { x: kx + 15, y: ky + 2 }, { x: kx + 13, y: ky - 8 }, 2.6, 1.6, ORANGE);
   p.ellipse(kx, ky, 8, 4.6, ORANGE);
   for (const dx of [-3, 1.5, 5]) p.curve({ x: kx + dx, y: ky - 4 }, { x: kx + dx + 1.5, y: ky }, { x: kx + dx, y: ky + 3 }, shade(ORANGE, -0.35), 0.8);
@@ -612,31 +630,47 @@ function catTower(p: Pen): void {
   p.circle(kx - 7, ky - 3, 5.2, ORANGE);
   p.ellipse(kx - 3, ky + 3, 2, 1.2, CREAM);
   sleepFace(p, kx - 7, ky - 2.5, 4);
+  p.restore();
 }
 
+/** A canoe seen from the side-above: pointed upturned ends, an open shaded interior. */
 function canoe(p: Pen, cx: number, y: number, half: number, color: string): void {
   const c = p.ctx;
-  const L = { x: cx - half, y: y - 3 };
-  const R = { x: cx + half, y: y - 3 };
+  const L = { x: cx - half, y: y - 5 };
+  const R = { x: cx + half, y: y - 5 };
+  // outer hull
   c.beginPath();
   c.moveTo(L.x, L.y);
-  c.quadraticCurveTo(cx, y + 1, R.x, R.y);
-  c.quadraticCurveTo(cx, y + 14, L.x, L.y);
+  c.quadraticCurveTo(cx, y - 11, R.x, R.y);
+  c.quadraticCurveTo(cx, y + 9, L.x, L.y);
   c.closePath();
   c.fillStyle = color;
   c.fill();
   c.strokeStyle = p.outline;
   c.lineWidth = 1;
   c.stroke();
-  // the inside of the hull, shaded
+  // lighter band along the hull and a darker stripe underneath
   c.beginPath();
-  c.moveTo(L.x + 3, L.y + 1);
-  c.quadraticCurveTo(cx, y + 4, R.x - 3, R.y + 1);
-  c.quadraticCurveTo(cx, y + 9, L.x + 3, L.y + 1);
+  c.moveTo(L.x, L.y + 1);
+  c.quadraticCurveTo(cx, y + 3, R.x, R.y + 1);
+  c.quadraticCurveTo(cx, y + 7, L.x, L.y + 1);
   c.closePath();
-  c.fillStyle = shade(color, -0.25);
+  c.fillStyle = shade(color, -0.2);
   c.fill();
-  p.curve(L, { x: cx, y: y + 1 }, R, shade(color, 0.4), 1.1);
+  // open interior: the inner rim and the shadowed floor
+  const il = { x: L.x + 5, y: L.y + 2 };
+  const ir = { x: R.x - 5, y: R.y + 2 };
+  c.beginPath();
+  c.moveTo(il.x, il.y);
+  c.quadraticCurveTo(cx, y - 6, ir.x, ir.y);
+  c.quadraticCurveTo(cx, y - 1, il.x, il.y);
+  c.closePath();
+  c.fillStyle = shade(color, -0.45);
+  c.fill();
+  c.strokeStyle = p.outline;
+  c.lineWidth = 0.8;
+  c.stroke();
+  p.curve(L, { x: cx, y: y - 12 }, R, shade(color, 0.45), 0.9);
 }
 
 function canoeRack(p: Pen): void {
@@ -697,10 +731,11 @@ function drawOak(p: Pen, pal: OakPalette, seed: string, fallen: boolean): void {
 function magnoliaBloom(p: Pen, x: number, y: number, r: number, tilt: number): void {
   for (let k = 0; k < 6; k++) {
     const a = tilt + (k / 6) * TAU;
-    p.ellipse(x + Math.cos(a) * r * 0.5, y + Math.sin(a) * r * 0.5, r * 0.55, r * 0.34, k % 2 ? '#f4a9c0' : '#fbd6e2', p.outline, a);
+    p.ellipse(x + Math.cos(a) * r * 0.5, y + Math.sin(a) * r * 0.5, r * 0.6, r * 0.36, k % 2 ? '#f4a9c0' : '#fbd6e2', p.outline, a);
   }
-  p.ellipse(x, y, r * 0.6, r * 0.46, '#fffaf6', p.outline);
-  p.circle(x, y, r * 0.2, '#e77b9c', null);
+  p.ellipse(x, y, r * 0.62, r * 0.48, '#fffaf6', p.outline);
+  p.ellipse(x, y + r * 0.08, r * 0.3, r * 0.22, '#fbe3ec', null);
+  p.circle(x, y, r * 0.18, '#e77b9c', null);
 }
 
 function magnoliaTree(p: Pen): void {
@@ -728,7 +763,7 @@ function magnoliaTree(p: Pen): void {
     [-8, -62, 0.1],
     [4, -42, 0.7],
   ] as const) {
-    magnoliaBloom(p, cx + dx, cy + dy, 6, tilt);
+    magnoliaBloom(p, cx + dx, cy + dy, 7.2, tilt);
   }
   // fallen petals on the grass
   const pr = rng('magnolia-petals');
