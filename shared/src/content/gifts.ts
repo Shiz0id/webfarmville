@@ -1,6 +1,8 @@
 // Free daily gifts neighbors can send each other. Gift ids refer to an item or
 // a decoration id, both of which land in the recipient's inventory.
 
+import { table } from './table';
+
 export interface GiftDef {
   id: string;
   qty: number;
@@ -24,4 +26,4 @@ export const GIFT_LIST: GiftDef[] = [
   { id: 'apple', qty: 4, level: 2 },
 ];
 
-export const GIFTS: Record<string, GiftDef> = Object.fromEntries(GIFT_LIST.map((g) => [g.id, g]));
+export const GIFTS: Record<string, GiftDef> = table(GIFT_LIST);

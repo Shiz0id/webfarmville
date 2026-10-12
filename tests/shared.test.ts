@@ -225,3 +225,27 @@ describe('neighbor help', () => {
     expect(s.inventory.wheat).toBe(CROPS.wheat.yield + 1);
   });
 });
+
+describe('hostile input', () => {
+  it('rejects prototype keys without touching state or Object.prototype', () => {
+    const s = createFarm('Test', T0);
+    const before = JSON.stringify(s);
+    const attempts: unknown[] = [
+      { type: 'plant', id: 'o14', crop: 'constructor' },
+      { type: 'plant', id: 'o14', crop: '__proto__' },
+      { type: 'buy', def: 'toString', x: 12, y: 12 },
+      { type: 'move', id: '__proto__', x: 1, y: 1 },
+      { type: 'move', id: 'constructor', x: 1, y: 1 },
+      { type: 'collect', id: 'hasOwnProperty' },
+      { type: 'sellItem', item: '__proto__', qty: 1 },
+      { type: 'sellItem', item: 'strawberry', qty: 1.5 },
+      { type: 'claimQuest', quest: 'constructor' },
+      { type: 'plow', x: '1', y: 1 },
+      { type: 'nope' },
+      null,
+    ];
+    for (const a of attempts) expect(() => act(s, a as Action), JSON.stringify(a)).toThrow();
+    expect(JSON.stringify(s)).toBe(before);
+    expect(({} as Record<string, unknown>).x).toBeUndefined();
+  });
+});

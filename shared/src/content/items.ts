@@ -2,6 +2,8 @@
 // animal products and crafted goods. Decorations held in storage use their
 // decoration id instead and are looked up in DECORATIONS.
 
+import { table } from './table';
+
 export type ItemCategory = 'crop' | 'fruit' | 'animal' | 'good';
 
 export interface ItemDef {
@@ -86,4 +88,4 @@ export const ITEM_LIST: ItemDef[] = [
   item('lavender_tea', 'Lavender Honey Tea', 'good', 240),
 ];
 
-export const ITEMS: Record<string, ItemDef> = Object.fromEntries(ITEM_LIST.map((i) => [i.id, i]));
+export const ITEMS: Record<string, ItemDef> = table(ITEM_LIST);

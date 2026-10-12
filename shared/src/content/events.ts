@@ -1,6 +1,8 @@
 // Seasonal events. Event decorations can only be bought while their event is
 // running (like Animal Crossing's seasonal items); once placed they stay forever.
 
+import { table } from './table';
+
 export interface EventDef {
   id: string;
   name: string;
@@ -23,7 +25,7 @@ export const EVENT_LIST: EventDef[] = [
   { id: 'new_year', name: 'New Year', start: [12, 26], end: [1, 7], color: '#c084fc' },
 ];
 
-export const EVENTS: Record<string, EventDef> = Object.fromEntries(EVENT_LIST.map((e) => [e.id, e]));
+export const EVENTS: Record<string, EventDef> = table(EVENT_LIST);
 
 const key = (m: number, d: number) => m * 100 + d;
 

@@ -1,3 +1,5 @@
+import { table } from './table';
+
 export interface RecipeDef {
   id: string;
   /** Output item id. */
@@ -158,7 +160,7 @@ export const BUILDING_LIST: BuildingDef[] = [
   },
 ];
 
-export const BUILDINGS: Record<string, BuildingDef> = Object.fromEntries(BUILDING_LIST.map((b) => [b.id, b]));
+export const BUILDINGS: Record<string, BuildingDef> = table(BUILDING_LIST);
 
 export function findRecipe(buildingId: string, recipeId: string): RecipeDef | undefined {
   return BUILDINGS[buildingId]?.recipes.find((rc) => rc.id === recipeId);

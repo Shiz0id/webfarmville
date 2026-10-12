@@ -33,7 +33,7 @@ export const HELP_VERBS: Record<HelpKind, string> = {
 
 /** Apply a neighbor's help to `target` in place. Returns what happened. */
 export function applyHelp(target: FarmState, objectId: string, now: number): { kind: HelpKind; name: string } {
-  const obj = target.objects[objectId];
+  const obj = Object.hasOwn(target.objects, objectId) ? target.objects[objectId] : undefined;
   if (!obj) throw new GameError('That is gone');
   const kind = helpKind(obj, now);
   if (!kind) throw new GameError("That doesn't need help right now");

@@ -1,5 +1,7 @@
 // Trees and animals both produce goods on a repeating cycle, so they share a shape.
 
+import { table } from './table';
+
 export interface ProducerDef {
   id: string;
   name: string;
@@ -56,5 +58,5 @@ export const ANIMAL_LIST: ProducerDef[] = [
   animal('rabbit', 'Angora Rabbit', 13, 650, 14400, 'angora', 2, 9),
 ];
 
-export const TREES: Record<string, ProducerDef> = Object.fromEntries(TREE_LIST.map((t) => [t.id, t]));
-export const ANIMALS: Record<string, ProducerDef> = Object.fromEntries(ANIMAL_LIST.map((a) => [a.id, a]));
+export const TREES: Record<string, ProducerDef> = table(TREE_LIST);
+export const ANIMALS: Record<string, ProducerDef> = table(ANIMAL_LIST);

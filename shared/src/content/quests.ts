@@ -3,6 +3,8 @@
 // Goals are either `stat` (a lifetime counter must grow by `count` after the
 // quest starts) or `have` (a property of the farm right now).
 
+import { table } from './table';
+
 export type HaveWhat = 'level' | 'charm' | 'size' | `own:${string}` | `kind:${string}`;
 
 export type QuestGoal =
@@ -267,7 +269,7 @@ export const QUEST_LIST: QuestDef[] = [
   },
 ];
 
-export const QUESTS: Record<string, QuestDef> = Object.fromEntries(QUEST_LIST.map((q) => [q.id, q]));
+export const QUESTS: Record<string, QuestDef> = table(QUEST_LIST);
 
 /** At most this many quests are shown at once. */
 export const MAX_ACTIVE_QUESTS = 4;

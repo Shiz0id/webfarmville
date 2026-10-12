@@ -1,6 +1,8 @@
 // Cozy, wholesome decorations in the spirit of Animal Crossing. Each one adds
 // "charm" to the farm, which raises the farm's star rating and daily bonus.
 
+import { table } from './table';
+
 export type DecoCategory =
   | 'flowers'
   | 'plants'
@@ -223,7 +225,7 @@ export const DECORATION_LIST: DecoDef[] = [
   ev('new_year', 'confetti_cannon', 'Confetti Cannon', 90, 3),
 ];
 
-export const DECORATIONS: Record<string, DecoDef> = Object.fromEntries(DECORATION_LIST.map((x) => [x.id, x]));
+export const DECORATIONS: Record<string, DecoDef> = table(DECORATION_LIST);
 
 export const DECO_CATEGORIES: { id: DecoCategory; name: string }[] = [
   { id: 'seasonal', name: 'Seasonal' },

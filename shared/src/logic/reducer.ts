@@ -105,7 +105,7 @@ export function bumpStat(state: FarmState, stat: string, by = 1): void {
 }
 
 function getObject<K extends FarmObject['kind']>(state: FarmState, id: string, kind?: K): Extract<FarmObject, { kind: K }> {
-  const obj = state.objects[id];
+  const obj = Object.hasOwn(state.objects, id) ? state.objects[id] : undefined;
   if (!obj) throw new GameError('That object is gone');
   if (kind && obj.kind !== kind) throw new GameError('Wrong kind of object');
   return obj as Extract<FarmObject, { kind: K }>;
@@ -154,6 +154,7 @@ function placeObject(state: FarmState, def: string, x: number, y: number, flip: 
  * not modified; a new state is returned. Throws GameError when not allowed.
  */
 export function applyAction(prev: FarmState, action: Action, ctx: ActionContext): ActionResult {
+  if (!action || typeof action !== 'object' || typeof action.type !== 'string') throw new GameError('Unknown action');
   const state: FarmState = structuredClone(prev);
   const events: GameEvent[] = [];
   const now = ctx.now;
@@ -212,8 +213,8 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
     }
 
     case 'collect': {
-      const obj = state.objects[action.id];
-      if (!obj || (obj.kind !== 'tree' && obj.kind !== 'animal')) throw new GameError('Nothing to collect');
+      const obj = getObject(state, action.id);
+      if (obj.kind !== 'tree' && obj.kind !== 'animal') throw new GameError('Nothing to collect');
       if (!producerStatus(obj, now).ready) throw new GameError('Not ready yet');
       const def = obj.kind === 'tree' ? TREES[obj.def] : ANIMALS[obj.def];
       const at = centerOf(obj);

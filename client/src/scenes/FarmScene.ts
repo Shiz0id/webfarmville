@@ -578,6 +578,10 @@ export class FarmScene extends Phaser.Scene {
       d.errored = false;
       const tile = this.tileAt(p.worldX, p.worldY);
       d.lastTile = `${tile.x},${tile.y}`;
+      // Touch screens have no hover, so show the tooltip for whatever was tapped.
+      this.pointerScreen = { x: p.x, y: p.y };
+      this.hoverTile = tile;
+      this.refreshHover();
       if (p.rightButtonDown() || p.middleButtonDown()) {
         if (p.rightButtonDown() && (tools.tool === 'place' || tools.moving)) {
           setTool(tools.tool === 'place' ? 'hand' : 'move');

@@ -1,3 +1,5 @@
+import { table } from './table';
+
 export interface CropDef {
   id: string;
   name: string;
@@ -43,7 +45,7 @@ export const CROP_LIST: CropDef[] = [
   crop('cranberry', 'Cranberries', 15, 140, 43200, 3, 12, ['#3e7a3a', '#c2183c', '#7a1027']),
 ];
 
-export const CROPS: Record<string, CropDef> = Object.fromEntries(CROP_LIST.map((c) => [c.id, c]));
+export const CROPS: Record<string, CropDef> = table(CROP_LIST);
 
 /** Plowing a plot costs this many coins. */
 export const PLOW_COST = 15;
