@@ -40,6 +40,7 @@ export class Ambience {
     private scene: Phaser.Scene,
     private center: () => { x: number; y: number; r: number },
     depth: number,
+    private spooky = false,
   ) {
     this.overlay = scene.add
       .rectangle(0, 0, 10, 10, 0xffffff, 0)
@@ -53,6 +54,7 @@ export class Ambience {
 
     this.spawnClouds(depth);
     this.spawnSeasonal(depth + 2);
+    if (spooky) this.spawnFog(depth + 1);
     this.fireflies = scene.add.particles(0, 0, 'fx:firefly', {
       x: { min: -400, max: 400 },
       y: { min: -250, max: 250 },
@@ -82,7 +84,9 @@ export class Ambience {
   private applyPhase(): void {
     this.phase = dayPhase();
     const t = TINT[this.phase];
-    this.overlay.setFillStyle(t.color, t.alpha);
+    if (this.spooky && this.phase === 'day') this.overlay.setFillStyle(0x5b2a86, 0.08);
+    else if (this.spooky && this.phase === 'dusk') this.overlay.setFillStyle(0xd9480f, 0.18);
+    else this.overlay.setFillStyle(t.color, t.alpha);
     this.updateFireflies();
   }
 
@@ -92,6 +96,22 @@ export class Ambience {
     this.fireflies.setPosition(c.x, c.y);
     if (this.phase === 'night' || this.phase === 'dusk') this.fireflies.start();
     else this.fireflies.stop();
+  }
+
+  /** Low drifting mist for Halloween. */
+  private spawnFog(depth: number): void {
+    const c = this.center();
+    const fog = this.scene.add.particles(c.x, c.y, 'fx:smoke', {
+      x: { min: -c.r, max: c.r },
+      y: { min: -c.r * 0.4, max: c.r * 0.5 },
+      lifespan: 12_000,
+      speedX: { min: 4, max: 12 },
+      scale: { start: 1.6, end: 2.8 },
+      alpha: { values: [0, 0.16, 0.16, 0] },
+      tint: 0xd9c7ff,
+      frequency: 500,
+    });
+    fog.setDepth(depth);
   }
 
   private spawnClouds(depth: number): void {

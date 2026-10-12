@@ -154,6 +154,7 @@ export class FarmScene extends Phaser.Scene {
         return { x: isoX(n / 2, n / 2), y: isoY(n / 2, n / 2), r: (n + 8) * HALF_W };
       },
       DEPTH_UI - 200,
+      halloweenOn(this.store.now(), this.store.allEvents),
     );
     this.dirty = true;
     this.time.addEvent({ delay: 450, loop: true, callback: () => this.twinkle() });
