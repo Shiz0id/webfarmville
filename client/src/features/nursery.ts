@@ -18,7 +18,7 @@ import {
   type GameEvent,
   type ProducerObject,
 } from '@farm/shared';
-import { artURL, borrowArt, hasArt } from '../art';
+import { artURL, hasArt } from '../art';
 import { bus } from '../bus';
 import { sfx } from '../sfx';
 import { confetti, openModal, toast } from '../ui/dom';
@@ -26,9 +26,6 @@ import { fmtDuration, h } from '../util';
 import type { FarmScene } from '../scenes/FarmScene';
 import type { Store } from '../store';
 import type { FeatureContext } from './registry';
-
-// Until the Nursery Barn is painted it borrows the Classic Red Barn, in rosy pink.
-borrowArt(`deco:${NURSERY_DECO}`, 'deco:red_barn', '#ff7eb3');
 
 let S: Store;
 let scene: FarmScene | null = null;

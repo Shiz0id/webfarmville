@@ -3719,3 +3719,21 @@ body:has(.pond, .kitchen) .villager-say {
   padding: 6px 10px;
   font-size: 13px;
 }
+
+/* Added to a home screen, the game runs edge to edge: on a phone held sideways,
+   keep the interface and the mini-game scenes clear of the notch. */
+.layout-phone #ui {
+  left: env(safe-area-inset-left, 0px);
+  right: env(safe-area-inset-right, 0px);
+  contain: layout;
+}
+.layout-phone .pond,
+.layout-phone .kitchen {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.drawer-install {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 6px;
+}

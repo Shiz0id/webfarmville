@@ -35,7 +35,14 @@ async function signIn(): Promise<MePayload> {
   return showAuth();
 }
 
+/** Keep the game on the device so it opens fast and can be added to a home screen. */
+function registerServiceWorker(): void {
+  if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+
 async function start(): Promise<void> {
+  registerServiceWorker();
   setupLayout();
   // Paint all the art while we talk to the server.
   await new Promise((r) => setTimeout(r, 0));

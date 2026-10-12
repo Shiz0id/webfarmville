@@ -3,16 +3,13 @@
 // cheerful toast when one turns up, and Prize Booth rows for the County Fair.
 
 import { HELPERS, HELPER_LIST, fairTickets, helperCount, helperTargets, type GameEvent, type HelperDef } from '@farm/shared';
-import { emojiArt, iconURL } from '../art';
+import { iconURL } from '../art';
 import { sfx } from '../sfx';
 import { confetti, toast } from '../ui/dom';
 import { h } from '../util';
 import type { Store } from '../store';
 import type { FeatureContext } from './registry';
 import { addGarageSection } from './vehicles';
-
-// Until they're painted, helpers are drawn as their emoji.
-for (const def of HELPER_LIST) emojiArt(`icon:${def.id}`, def.em);
 
 let S: Store;
 

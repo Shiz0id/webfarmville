@@ -198,6 +198,9 @@ There are also two helper scripts:
   **More**), Quests, Orders and Barn on the side with everything else in the **Farm Menu**, and panels that slide
   up as sheets (swipe one down to close it). While a tool is busy, the hint above the dock has **Flip** and
   **Done** buttons in place of R and Esc. **Tablets** keep the full toolbar with bigger, labelled buttons.
+- The game can be **added to a home screen** and opens full-screen like an app (the Farm Menu has the button, or
+  the how-to on iPhones). A service worker keeps the game files on the device. The app icons are painted from the
+  game's own art by `node scripts/app-icons.mjs`.
 - Add `?hour=22` to the URL to preview night time (or any hour of the day), and `?event=winter` (or any event id)
   to preview an event's look, music and visitors any time of year.
 

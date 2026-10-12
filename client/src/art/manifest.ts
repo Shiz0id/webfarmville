@@ -179,7 +179,9 @@ export function expectedKeys(mod: string): string[] {
       'ui:music_off',
       'ui:mail',
     ],
-    portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
+    // Quest givers' portraits, except the ones painted alongside their own feature.
+    portraits: () =>
+      [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`).filter((k) => !byModule.cooking().includes(k)),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());
   return byModule[mod]?.() ?? [];

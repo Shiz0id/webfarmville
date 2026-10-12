@@ -15,7 +15,7 @@ import {
   type GameEvent,
   type ProducerObject,
 } from '@farm/shared';
-import { borrowArt, iconURL } from '../art';
+import { iconURL } from '../art';
 import { bus } from '../bus';
 import { sfx } from '../sfx';
 import { toast } from '../ui/dom';
@@ -23,11 +23,6 @@ import { h, nameOf } from '../util';
 import type { FarmScene } from '../scenes/FarmScene';
 import type { Store } from '../store';
 import { addBuildingSection, type FeatureContext } from './registry';
-
-// Until they're painted: a meadow-green Windmill and recoloured flour sacks.
-borrowArt(`building:${FEED_MILL}`, 'building:mill', '#6fbf4a');
-borrowArt('icon:animal_feed', 'icon:flour', '#9ccc4a');
-borrowArt('icon:deluxe_feed', 'icon:cornmeal', '#ff8fb1');
 
 let S: Store;
 let scene: FarmScene | null = null;

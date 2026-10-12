@@ -5,6 +5,7 @@ import type { Store } from '../store';
 import { setTool, tools, type Tool } from '../tools';
 import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
+import { installRow } from './install';
 import { forFingers, isTouch, layout, onLayout, type Layout } from './layout';
 import { openKitchen, readyDishes } from './cooking';
 import { fmtNum, h } from '../util';
@@ -269,7 +270,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const drawerBack = h(
     'div',
     { class: 'drawer-back' },
-    h('div', { class: 'drawer' }, h('div', { class: 'drawer-handle' }), h('div', { class: 'drawer-title' }, 'Farm Menu'), drawerGrid),
+    h('div', { class: 'drawer' }, h('div', { class: 'drawer-handle' }), h('div', { class: 'drawer-title' }, 'Farm Menu'), drawerGrid, installRow()),
   );
   const closeDrawer = () => drawerBack.classList.remove('open');
   const menu = roundBtn('menu', '', 'Menu', () => drawerBack.classList.add('open'));
