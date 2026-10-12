@@ -27,7 +27,6 @@ const TYRE = '#5b4232';
 const HUB = '#fff1c4';
 const IRON = '#aab4ba';
 const IRON_L = '#e3eaee';
-const TUBE = '#d3dde2';
 const WOOD = '#c98b53';
 const WHEAT = '#f4c24a';
 const WHEAT_L = '#fff0a6';
@@ -181,10 +180,11 @@ function seederSprite(p: Pen): void {
   p.flower(ft.x, ft.y, 5, PINK, SUN);
 
   // seed tubes hang off the hopper's back edge and drop seeds on the ground
-  for (const v of [0.3, 0.5, 0.7]) {
-    stick(p, [P(0.36, v, 19), P(-0.15, v, 1)], 2.6, TUBE);
-    const g = P(-0.18, v, 0);
-    seedDots(p, [g, { x: g.x + 3, y: g.y + 1.5 }], [PINK, SUN]);
+  for (const v of [0.28, 0.5, 0.72]) {
+    const top = P(0.4, v, 18);
+    const end = P(0.2, v, 6);
+    stick(p, [top, end], 2.8, LILAC);
+    seedDots(p, [{ x: end.x - 1, y: end.y + 3 }, { x: end.x + 3, y: end.y + 5 }], [PINK, SUN]);
   }
 
   wheelOn(p, P, 0.75, 0.8, 12, BUTTER);
@@ -211,26 +211,26 @@ function harvesterSprite(p: Pen): void {
   p.poly(win, GLASS, O, 1);
 
   // a wheat sheaf tied with a pink ribbon on the tank's side
-  const base = P(1.2, 0.8, 11);
-  for (const k of [-0.16, -0.08, 0, 0.08, 0.16]) {
-    const tip = P(1.2 + k, 0.8, 22 - Math.abs(k) * 12);
-    grain(p, base, tip, 1.8, k === 0 ? WHEAT_L : WHEAT);
+  const base = P(1.2, 0.8, 10);
+  for (const k of [-0.2, -0.1, 0, 0.1, 0.2]) {
+    const tip = P(1.2 + k, 0.8, 24 - Math.abs(k) * 14);
+    grain(p, base, tip, 2.2, k === 0 ? WHEAT_L : WHEAT);
   }
-  p.ellipse(base.x, base.y - 1, 3.8, 2.2, PINK, O);
-  const nose = P(1.5, 0.5, 21);
-  face(p, nose.x, nose.y, 5.5);
+  p.ellipse(base.x, base.y - 1, 4, 2.4, PINK, O);
+  const nose = P(1.5, 0.5, 17);
+  face(p, nose.x, nose.y, 5);
 
   // the reel: a spinning ring of paddles on the front header, with motion arcs
   slab(p, P, 1.5, 0.12, 0.32, 0.76, 5, 9, boxColors(PEACH_D));
-  const R = P(1.8, 0.5, 26);
-  stick(p, [P(1.66, 0.22, 14), P(1.78, 0.22, 24)], 1.8, IRON);
-  stick(p, [P(1.66, 0.78, 14), P(1.78, 0.78, 24)], 1.8, IRON);
-  p.ellipse(R.x, R.y, 12.5, 12.5, rgba(WHITE, 0.35), O);
+  const R = P(1.86, 0.5, 31);
+  stick(p, [P(1.66, 0.2, 14), P(1.86, 0.2, 29)], 1.8, IRON);
+  stick(p, [P(1.66, 0.42, 14), P(1.86, 0.42, 29)], 1.8, IRON);
+  p.ellipse(R.x, R.y, 11, 11, '#fff8e8', O);
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2 + 0.3;
-    stick(p, [R, { x: R.x + Math.cos(a) * 10, y: R.y + Math.sin(a) * 10 }], 2, SUN);
+    stick(p, [R, { x: R.x + Math.cos(a) * 9, y: R.y + Math.sin(a) * 9 }], 2, SUN);
   }
-  p.circle(R.x, R.y, 2.8, CREAM);
+  p.circle(R.x, R.y, 2.6, CREAM);
 
   wheelOn(p, P, 0.66, 0.82, 14, PEACH_D);
   wheelOn(p, P, 1.5, 0.86, 9.5, PEACH_D);
@@ -261,7 +261,7 @@ function seederIcon(p: Pen): void {
   const c = P(1, 0.5);
   p.shadow(c.x, c.y + 1, 15, 5, 0.22);
 
-  for (const v of [0.3, 0.6]) stick(p, [P(0.42, v, 12), P(0.02, v, 1)], 2, TUBE);
+  for (const v of [0.3, 0.6]) stick(p, [P(0.42, v, 12), P(0.2, v, 2)], 2, LILAC);
   slab(p, P, 0.2, 0.3, 1.6, 0.4, 1, 3, boxColors(CHASSIS));
   slab(p, P, 0.3, 0.2, 0.98, 0.6, 3, 8, boxColors(BUTTER));
   slab(p, P, 0.34, 0.16, 0.96, 0.7, 11, 9, boxColors(MINT));
