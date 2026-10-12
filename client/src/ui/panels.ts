@@ -193,7 +193,7 @@ export function openShop(tab: ShopTab = 'seeds'): void {
               name: c.name,
               price: c.cost,
               locked: levelLock(c.level),
-              meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · ${c.yield}× ${ITEMS[c.id].sell}🪙`, `+${c.xp} XP`],
+              meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth ${c.yield * ITEMS[c.id].sell}`],
               onClick: () => {
                 setTool('seed', { seed: c.id });
                 m.close();
@@ -361,7 +361,7 @@ export function openSeedPicker(plotId: string | null): void {
         name: c.name,
         price: c.cost,
         locked: levelLock(c.level),
-        meta: [`⏱ ${fmtDuration(c.growSec * 1000)}`, `${c.yield}× ${ITEMS[c.id].sell}🪙 · +${c.xp} XP`],
+        meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth ${c.yield * ITEMS[c.id].sell}`],
         onClick: () => {
           setTool('seed', { seed: c.id });
           if (plotId) S.dispatch({ type: 'plant', id: plotId, crop: c.id });
