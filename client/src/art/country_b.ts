@@ -759,37 +759,37 @@ function magnoliaBud(p: Pen, x: number, y: number, r: number, tilt: number): voi
 }
 
 function magnoliaTree(p: Pen): void {
-  contact(p, 26, 0.3);
+  contact(p, 26, 0.28);
   const { x: cx, y: cy } = p.center;
-  const dark = '#4d3a2c';
-  ribbon(p, { x: cx, y: cy + 1 }, { x: cx - 1, y: cy - 16 }, { x: cx + 1, y: cy - 30 }, 7, 4, barkGrad(p, cx, 3.5, dark));
-  for (const [ctlX, ctlY, endX, endY, w] of [
-    [-6, -38, -17, -50, 3.2],
-    [-3, -42, -10, -60, 2.8],
-    [2, -46, 3, -68, 2.6],
-    [6, -42, 12, -60, 2.8],
-    [8, -36, 17, -48, 3],
-    [-8, -32, -20, -40, 2.4],
-    [9, -30, 20, -36, 2.4],
-  ] as const) {
-    ribbon(p, { x: cx, y: cy - 28 }, { x: cx + ctlX, y: cy + ctlY }, { x: cx + endX, y: cy + endY }, w, 1.2, dark);
-  }
-  // a little soft green underneath; the crown is mostly blossom
-  p.foliage(cx - 10, cy - 44, 10, '#5aa64a', 'mg-l', 7);
-  p.foliage(cx + 11, cy - 46, 10, '#5fb04a', 'mg-r', 7);
-  p.foliage(cx, cy - 58, 9, '#8fcb62', 'mg-t', 7);
-  // blossoms all over the crown, spread so the middle is filled too; some buds
+  const bark = '#7a5236';
+  // chunky warm trunk with little root feet, as on the oak
+  for (const dx of [-7, 7]) p.ellipse(cx + dx, cy + 0.5, 2.6, 1.6, bark);
+  ribbon(p, { x: cx, y: cy + 1 }, { x: cx - 1.5, y: cy - 16 }, { x: cx + 1, y: cy - 30 }, 9, 5.5, barkGrad(p, cx, 5, bark));
+  // a few short limbs peeking out under the crown
+  ribbon(p, { x: cx, y: cy - 24 }, { x: cx - 8, y: cy - 30 }, { x: cx - 14, y: cy - 38 }, 4.4, 2, barkGrad(p, cx, 3, bark));
+  ribbon(p, { x: cx + 1, y: cy - 26 }, { x: cx + 8, y: cy - 31 }, { x: cx + 14, y: cy - 38 }, 4.4, 2, barkGrad(p, cx, 3, bark));
+  // pale-pink cloud crown built like the oak's canopy: a wide, rounded dome of
+  // dark-outlined puffs, with deeper pink on the lower-right lobes
+  const pale = '#f7dbe6';
+  const deep = '#eeb6c9';
+  p.foliage(cx - 14, cy - 40, 12, pale, 'mg-wl', 7);
+  p.foliage(cx + 14, cy - 40, 12, deep, 'mg-wr', 7);
+  p.foliage(cx + 8, cy - 34, 10, deep, 'mg-lr', 7);
+  p.foliage(cx - 6, cy - 42, 13, pale, 'mg-bl', 8);
+  p.foliage(cx, cy - 48, 19, pale, 'mg-main', 9);
+  p.foliage(cx - 5, cy - 57, 11, '#fbeaf1', 'mg-top', 7);
+  // about 26 cup blossoms over the cloud, biased outward so a few overlap the edge
   const r = rng('magnolia-blooms');
   const pts: Pt[] = [];
-  for (let tries = 0; tries < 900 && pts.length < 36; tries++) {
+  for (let tries = 0; tries < 1500 && pts.length < 26; tries++) {
     const a = r() * TAU;
-    const d = Math.sqrt(r());
-    const q = { x: cx + Math.cos(a) * 21 * d, y: cy - 52 + Math.sin(a) * 18 * d };
-    if (pts.every((o) => Math.hypot(o.x - q.x, o.y - q.y) >= 4.0)) pts.push(q);
+    const d = 0.45 + 0.6 * Math.sqrt(r());
+    const q = { x: cx + Math.cos(a) * 23 * d, y: cy - 49 + Math.sin(a) * 17 * d };
+    if (pts.every((o) => Math.hypot(o.x - q.x, o.y - q.y) >= 5.4)) pts.push(q);
   }
   pts.sort((a, b) => a.y - b.y).forEach((q, i) => {
-    if (i % 5 === 4) magnoliaBud(p, q.x, q.y, 3.6, r() * 0.8 - 0.4);
-    else magnoliaBloom(p, q.x, q.y, 4.2 + r() * 2.6, r() * 0.8 - 0.4);
+    if (i % 6 === 5) magnoliaBud(p, q.x, q.y, 3.4, r() * 0.8 - 0.4);
+    else magnoliaBloom(p, q.x, q.y, 4.6 + r() * 1.6, r() * 0.8 - 0.4);
   });
   // fallen petals on the grass
   const pr = rng('magnolia-petals');

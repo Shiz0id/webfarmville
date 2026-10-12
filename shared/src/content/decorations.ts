@@ -3,6 +3,7 @@
 
 import { HORTICULTURE_DECORATIONS, LIFESTYLE_DECORATIONS } from './decorations2';
 import { COUNTRY_DECORATIONS, FESTIVAL_DECORATIONS, SPOOKY_DECORATIONS } from './decorations3';
+import { NATURE_DECORATIONS } from './nature';
 import { table } from './table';
 
 export type DecoCategory =
@@ -34,7 +35,9 @@ export interface DecoDef {
   /** Only purchasable while this seasonal event is running. */
   event?: string;
   /** Later decoration collections (painted in their own art module). */
-  set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals';
+  set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals' | 'nature';
+  /** Earned, never sold: how to get it (e.g. "Discover 10 kinds of fish"). */
+  reward?: string;
   /** Bought with the event's currency (e.g. Halloween candy) instead of coins. */
   tokens?: number;
 }
@@ -242,6 +245,7 @@ export const DECORATION_LIST: DecoDef[] = [
   ...SPOOKY_DECORATIONS,
   ...COUNTRY_DECORATIONS,
   ...FESTIVAL_DECORATIONS,
+  ...NATURE_DECORATIONS,
 ];
 
 export const DECORATIONS: Record<string, DecoDef> = table(DECORATION_LIST);

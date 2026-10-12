@@ -269,7 +269,7 @@ export function openShop(tab: ShopTab = 'seeds'): void {
         }
         body.append(chips);
         const now = S.now();
-        const items = DECORATION_LIST.filter((d) => d.category === decoCat);
+        const items = DECORATION_LIST.filter((d) => d.category === decoCat && !d.reward);
         if (decoCat === 'seasonal') {
           const evIds = [...new Set(items.map((d) => d.event!))];
           // Running events first.
@@ -419,6 +419,8 @@ const CAT_LABEL: Record<ItemCategory, string> = {
   animal: '🥚 Animal goods',
   good: '🧺 Crafted goods',
   dish: '🍲 Home cooking',
+  fish: '🐟 Fish',
+  bug: '🦋 Critters',
   special: '🎟️ Event tokens',
 };
 
@@ -1089,7 +1091,7 @@ export function showLevelUp(level: number): void {
   for (const t of TREE_LIST) if (t.level === level) unlocks.push({ img: artURL(`tree:${t.id}`), name: t.name });
   for (const a of ANIMAL_LIST) if (a.level === level) unlocks.push({ img: artURL(`animal:${a.id}`), name: a.name });
   for (const b of BUILDING_LIST) if (b.level === level && !b.starter) unlocks.push({ img: artURL(`building:${b.id}`), name: b.name });
-  for (const d of DECORATION_LIST) if (d.level === level && !d.event) unlocks.push({ img: artURL(`deco:${d.id}`), name: d.name });
+  for (const d of DECORATION_LIST) if (d.level === level && !d.event && !d.reward) unlocks.push({ img: artURL(`deco:${d.id}`), name: d.name });
   const exp = nextExpansion(S.state.size);
   const m = openModal('Level up!', { narrow: true });
   m.body.append(

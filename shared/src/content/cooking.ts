@@ -44,6 +44,10 @@ export const DISH_LIST: DishDef[] = [
   dish('pizza', 'Farmhouse Pizza', 7, { flour: 2, tomato: 3, cheese: 1 }, ['knead', 'sprinkle', 'heat'], 380, 20),
   dish('honey_cookies', 'Honey Cookies', 7, { flour: 2, butter: 1, egg: 1, honey: 1 }, ['crack', 'mix', 'knead', 'heat'], 340, 18),
   dish('sushi_rolls', 'Veggie Sushi Rolls', 11, { rice: 3, carrot: 1 }, ['chop', 'knead', 'chop'], 320, 18),
+  dish('fish_tacos', 'Fish Tacos', 4, { bluegill: 2, tomato: 1, corn: 1 }, ['chop', 'flip', 'sprinkle'], 230, 12),
+  dish('fish_and_chips', 'Fish & Chips', 6, { carp: 1, potato: 2, flour: 1 }, ['chop', 'mix', 'heat'], 300, 15),
+  dish('grilled_trout', 'Lemon Grilled Trout', 8, { rainbow_trout: 1, butter: 1, lemon: 1 }, ['sprinkle', 'heat', 'flip'], 360, 18),
+  dish('salmon_onigiri', 'Salmon Onigiri', 11, { salmon: 1, rice: 2 }, ['chop', 'knead', 'sprinkle'], 420, 20),
   dish('candy_apples', 'Candy Apples', 2, { apple: 3, candy: 5 }, ['stir', 'sprinkle'], 220, 14, 'halloween'),
 ];
 

@@ -14,7 +14,13 @@ import {
   LIFESTYLE_DECORATIONS,
   QUEST_LIST,
   TREE_LIST,
+  FISH_LIST,
+  BUG_LIST,
+  NATURE_DECORATIONS,
 } from '@farm/shared';
+
+/** Pieces of the fishing mini-game scene, painted as icons (key `fishing:<name>`). */
+export const FISHING_PROPS = ['bobber', 'splash', 'shadow', 'reeds', 'lily_pad', 'dock'];
 
 export const UI_ICONS = ['coin', 'xp', 'charm', 'level'];
 
@@ -85,6 +91,12 @@ export function expectedKeys(mod: string): string[] {
     ],
     anim_animals: () => ANIMAL_LIST.flatMap((a) => [`animal:${a.id}#1`, `animal:${a.id}#2`]),
     anim_decos: () => ANIMATED_DECOS.flatMap(([key, n]) => Array.from({ length: n }, (_, i) => `${key}#${i + 1}`)),
+    nature_fish: () => [
+      ...FISH_LIST.map((f) => `icon:${f.id}`),
+      ...['fish_tacos', 'fish_and_chips', 'grilled_trout', 'salmon_onigiri'].map((d) => `icon:${d}`),
+      ...FISHING_PROPS.map((k) => `fishing:${k}`),
+    ],
+    nature_bugs: () => [...BUG_LIST.map((b) => `icon:${b.id}`), ...NATURE_DECORATIONS.map((d) => `deco:${d.id}`), 'icon:journal', 'icon:net', 'icon:rod'],
     portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());

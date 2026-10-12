@@ -14,6 +14,7 @@ export interface Placeable {
   h: number;
   charm: number;
   event?: string;
+  /** Not sold in the shop (starter buildings, earned keepsakes). */
   starter?: boolean;
   flat?: boolean;
   /** Price in the event's currency instead of coins. */
@@ -40,6 +41,7 @@ export function placeable(def: string): Placeable | undefined {
       event: d.event,
       flat: d.flat,
       tokens: d.tokens,
+      ...(d.reward ? { starter: true } : {}),
     };
   return undefined;
 }

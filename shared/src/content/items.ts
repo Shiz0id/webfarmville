@@ -3,9 +3,10 @@
 // decoration id instead and are looked up in DECORATIONS.
 
 import { DISH_LIST } from './cooking';
+import { CRITTER_LIST } from './nature';
 import { table } from './table';
 
-export type ItemCategory = 'crop' | 'fruit' | 'animal' | 'good' | 'dish' | 'special';
+export type ItemCategory = 'crop' | 'fruit' | 'animal' | 'good' | 'dish' | 'fish' | 'bug' | 'special';
 
 export interface ItemDef {
   id: string;
@@ -124,5 +125,7 @@ export const ITEM_LIST: ItemDef[] = [
 
 // Home-cooked dishes from the kitchen mini-games.
 for (const d of DISH_LIST) ITEM_LIST.push(item(d.id, d.name, 'dish', d.sell));
+// Fish and critters from the Nature Journal.
+for (const c of CRITTER_LIST) ITEM_LIST.push(item(c.id, c.name, c.kind, c.sell));
 
 export const ITEMS: Record<string, ItemDef> = table(ITEM_LIST);
