@@ -2,9 +2,10 @@
 // animal products and crafted goods. Decorations held in storage use their
 // decoration id instead and are looked up in DECORATIONS.
 
+import { DISH_LIST } from './cooking';
 import { table } from './table';
 
-export type ItemCategory = 'crop' | 'fruit' | 'animal' | 'good' | 'special';
+export type ItemCategory = 'crop' | 'fruit' | 'animal' | 'good' | 'dish' | 'special';
 
 export interface ItemDef {
   id: string;
@@ -41,8 +42,37 @@ export const ITEM_LIST: ItemDef[] = [
   item('cranberry', 'Cranberry', 'crop', 85),
   item('candy_corn', 'Candy Corn', 'crop', 25),
   item('ghost_pumpkin', 'Ghost Pumpkin', 'crop', 70),
-  // Halloween currency, spent in the Candy Shop.
+  // Event crops
+  item('peppermint', 'Peppermint', 'crop', 30),
+  item('golden_grape', 'Golden Grapes', 'crop', 60),
+  item('bok_choy', 'Bok Choy', 'crop', 28),
+  item('sweetheart_rose', 'Sweetheart Rose', 'crop', 40),
+  item('four_leaf_clover', 'Four-Leaf Clover', 'crop', 35),
+  item('star_melon', 'Star Melon', 'crop', 70),
+  item('sweet_potato', 'Sweet Potato', 'crop', 32),
+  item('marigold', 'Marigold', 'crop', 30),
+  item('taro', 'Taro', 'crop', 34),
+  item('matcha', 'Matcha Leaves', 'crop', 45),
+  item('heirloom_tomato', 'Heirloom Tomato', 'crop', 30),
+  item('rainbow_radish', 'Rainbow Radish', 'crop', 30),
+  item('pineapple', 'Pineapple', 'crop', 60),
+  item('butternut', 'Butternut Squash', 'crop', 40),
+  // Event currencies, spent in each event's token shop.
   item('candy', 'Candy', 'special', 0),
+  item('snowflake', 'Snowflakes', 'special', 0),
+  item('confetti', 'Confetti', 'special', 0),
+  item('red_envelope', 'Red Envelopes', 'special', 0),
+  item('love_letter', 'Love Letters', 'special', 0),
+  item('lucky_clover', 'Lucky Clovers', 'special', 0),
+  item('wish_star', 'Wishing Stars', 'special', 0),
+  item('pie_slice', 'Pie Slices', 'special', 0),
+  item('diya', 'Diyas', 'special', 0),
+  item('mooncake', 'Mooncakes', 'special', 0),
+  item('sakura_charm', 'Sakura Charms', 'special', 0),
+  item('seed_token', 'Seed Tokens', 'special', 0),
+  item('painted_egg', 'Painted Eggs', 'special', 0),
+  item('seashell', 'Seashells', 'special', 0),
+  item('acorn', 'Acorns', 'special', 0),
   // Fruit
   item('apple', 'Apple', 'fruit', 20),
   item('cherry', 'Cherries', 'fruit', 22),
@@ -91,5 +121,8 @@ export const ITEM_LIST: ItemDef[] = [
   item('truffle_pasta', 'Truffle Pasta', 'good', 420),
   item('lavender_tea', 'Lavender Honey Tea', 'good', 240),
 ];
+
+// Home-cooked dishes from the kitchen mini-games.
+for (const d of DISH_LIST) ITEM_LIST.push(item(d.id, d.name, 'dish', d.sell));
 
 export const ITEMS: Record<string, ItemDef> = table(ITEM_LIST);

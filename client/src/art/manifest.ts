@@ -7,6 +7,8 @@ import {
   FESTIVAL_DECORATIONS,
   SPOOKY_DECORATIONS,
   CROP_LIST,
+  DISH_LIST,
+  EVENT_FEATURES,
   HORTICULTURE_DECORATIONS,
   ITEM_LIST,
   LIFESTYLE_DECORATIONS,
@@ -69,6 +71,20 @@ export function expectedKeys(mod: string): string[] {
       'fx:bat',
       ...['yellow', 'white', 'red', 'blue'].map((c) => `icon:ribbon_${c}`),
     ],
+    events_a: () => eventKeys(['winter', 'new_year', 'lunar_new_year']),
+    events_b: () => eventKeys(['valentines', 'st_patricks', 'tanabata']),
+    events_c: () => eventKeys(['thanksgiving', 'diwali', 'mid_autumn']),
+    events_d: () => eventKeys(['hanami', 'earth_day', 'spring']),
+    events_e: () => eventKeys(['summer', 'harvest']),
+    cooking: () => [
+      ...DISH_LIST.map((d) => `icon:${d.id}`),
+      ...COOK_PROPS.map((k) => `cook:${k}`),
+      'portrait:mama_marigold',
+      'npc:mama',
+      'npc:mama_walk',
+    ],
+    anim_animals: () => ANIMAL_LIST.flatMap((a) => [`animal:${a.id}#1`, `animal:${a.id}#2`]),
+    anim_decos: () => ANIMATED_DECOS.flatMap(([key, n]) => Array.from({ length: n }, (_, i) => `${key}#${i + 1}`)),
     portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());
@@ -79,3 +95,39 @@ export function expectedKeys(mod: string): string[] {
 export function giverKey(name: string): string {
   return name.toLowerCase().replace(/[^a-z]+/g, '_');
 }
+
+/** Particle textures that already exist in fx.ts. */
+const SHARED_FX = new Set(['fx:snow', 'fx:heart', 'fx:petal', 'fx:fluff', 'fx:sparkle', 'fx:leaf_red', 'fx:leaf_orange', 'fx:leaf_yellow', 'fx:bat']);
+
+/** Every texture an event's features need: currency, crops, visitors, costumes, particles. */
+export function eventKeys(events: string[]): string[] {
+  return events.flatMap((ev) => {
+    const f = EVENT_FEATURES[ev];
+    return [
+      `icon:${f.currency}`,
+      ...f.crops.flatMap((c) => [0, 1, 2].map((s) => `crop:${c}:${s}`).concat(`icon:${c}`)),
+      ...f.visitors.flatMap((v) => [`npc:${v}`, `npc:${v}_walk`]),
+      ...f.costumes,
+      ...f.particles.filter((p) => !SHARED_FX.has(p)),
+    ];
+  });
+}
+
+/** Kitchen props for the cooking mini-games (96×96 icons). */
+export const COOK_PROPS = ['board', 'knife', 'pot', 'pan', 'bowl', 'whisk', 'oven', 'plate', 'egg', 'shaker', 'dough', 'flame', 'spoon'];
+
+/** Sprites with extra animation frames (key#1, key#2, ...) and how many. */
+export const ANIMATED_DECOS: [string, number][] = [
+  ['building:mill', 3],
+  ['deco:pinwheel', 2],
+  ['deco:campfire', 2],
+  ['deco:fountain', 2],
+  ['deco:string_lights', 1],
+  ['deco:tiki_torch', 2],
+  ['deco:jack_o_lantern', 1],
+  ['deco:fire_pit', 2],
+  ['deco:sprinkler', 2],
+  ['deco:bubbling_cauldron', 2],
+  ['deco:jack_string_lights', 1],
+  ['deco:windchime', 2],
+];

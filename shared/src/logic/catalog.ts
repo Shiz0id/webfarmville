@@ -16,8 +16,8 @@ export interface Placeable {
   event?: string;
   starter?: boolean;
   flat?: boolean;
-  /** Price in Halloween candy instead of coins. */
-  candy?: number;
+  /** Price in the event's currency instead of coins. */
+  tokens?: number;
 }
 
 export function placeable(def: string): Placeable | undefined {
@@ -39,7 +39,7 @@ export function placeable(def: string): Placeable | undefined {
       charm: d.charm,
       event: d.event,
       flat: d.flat,
-      candy: d.candy,
+      tokens: d.tokens,
     };
   return undefined;
 }

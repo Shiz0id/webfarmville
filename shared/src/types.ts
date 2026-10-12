@@ -79,8 +79,10 @@ export interface FarmState {
   orders: Order[];
   /** Ribbon id -> number of tiers claimed (0-4). */
   ribbons: Record<string, number>;
-  /** Trick-or-treaters greeted today. */
+  /** Seasonal visitors greeted today. */
   treats: { day: string; count: number };
+  /** The last day Mama Marigold dropped by. */
+  mama: { day: string };
 }
 
 export interface Order {
@@ -103,7 +105,9 @@ export type GameEvent =
   | { type: 'questComplete'; quest: string }
   | { type: 'mystery'; item: string }
   | { type: 'unwrap'; item: string }
-  | { type: 'ribbon'; ribbon: string; tier: number };
+  | { type: 'ribbon'; ribbon: string; tier: number }
+  | { type: 'cooked'; dish: string; tier: string; qty: number }
+  | { type: 'meal'; dish: string };
 
 export type Action =
   | { type: 'plow'; x: number; y: number }
@@ -125,8 +129,10 @@ export type Action =
   | { type: 'fulfillOrder'; order: number }
   | { type: 'skipOrder'; order: number }
   | { type: 'openGift' }
-  | { type: 'treat' }
+  | { type: 'treat'; event?: string }
   | { type: 'claimRibbon'; ribbon: string }
+  | { type: 'cook'; dish: string; score: number }
+  | { type: 'mamaVisit' }
   | { type: 'rename'; name: string };
 
 /** An action stamped with the client time it happened. */

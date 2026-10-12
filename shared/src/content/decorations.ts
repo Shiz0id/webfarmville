@@ -35,11 +35,11 @@ export interface DecoDef {
   event?: string;
   /** Later decoration collections (painted in their own art module). */
   set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals';
-  /** Bought with Halloween candy instead of coins. */
-  candy?: number;
+  /** Bought with the event's currency (e.g. Halloween candy) instead of coins. */
+  tokens?: number;
 }
 
-type Opts = Partial<Pick<DecoDef, 'w' | 'h' | 'flat' | 'event'>>;
+type Opts = Partial<Pick<DecoDef, 'w' | 'h' | 'flat' | 'event' | 'tokens'>>;
 
 const d = (
   id: string,
@@ -176,36 +176,36 @@ export const CORE_DECORATIONS: DecoDef[] = [
 
   // Seasonal: Lunar New Year
   ev('lunar_new_year', 'red_lanterns', 'Red Lantern Post', 80, 4),
-  ev('lunar_new_year', 'dragon_statue', 'Friendly Dragon Statue', 260, 8),
+  ev('lunar_new_year', 'dragon_statue', 'Friendly Dragon Statue', 0, 8, { tokens: 40 }),
   ev('lunar_new_year', 'plum_blossom', 'Plum Blossom Tree', 180, 6),
   ev('lunar_new_year', 'firecracker_string', 'Paper Firecracker Garland', 70, 3),
   // Valentine's
-  ev('valentines', 'heart_arch', 'Heart Arch', 200, 6),
+  ev('valentines', 'heart_arch', 'Heart Arch', 0, 6, { tokens: 40 }),
   ev('valentines', 'heart_topiary', 'Heart Topiary', 120, 4),
-  ev('valentines', 'love_bench', 'Sweetheart Bench', 150, 5),
+  ev('valentines', 'love_bench', 'Sweetheart Bench', 0, 5, { tokens: 30 }),
   ev('valentines', 'rose_bouquet', 'Giant Rose Bouquet', 90, 3),
   // St. Patrick's
   ev('st_patricks', 'clover_patch', 'Lucky Clover Patch', 40, 2),
-  ev('st_patricks', 'pot_of_gold', 'Pot of Gold', 150, 5),
-  ev('st_patricks', 'rainbow_arch', 'Rainbow Arch', 220, 7, { w: 2, h: 1 }),
+  ev('st_patricks', 'pot_of_gold', 'Pot of Gold', 0, 5, { tokens: 30 }),
+  ev('st_patricks', 'rainbow_arch', 'Rainbow Arch', 0, 7, { w: 2, h: 1, tokens: 40 }),
   // Spring egg hunt
   ev('spring', 'egg_basket', 'Painted Egg Basket', 60, 3),
-  ev('spring', 'egg_tree', 'Painted Egg Tree', 160, 5),
-  ev('spring', 'chick_family', 'Chick Family', 90, 3),
+  ev('spring', 'egg_tree', 'Painted Egg Tree', 0, 5, { tokens: 35 }),
+  ev('spring', 'chick_family', 'Chick Family', 0, 3, { tokens: 25 }),
   ev('spring', 'tulip_cart', 'Tulip Cart', 140, 5, { w: 2, h: 1 }),
   // Summer festival
   ev('summer', 'beach_umbrella', 'Beach Umbrella', 70, 3),
   ev('summer', 'sandcastle', 'Sandcastle', 90, 3),
-  ev('summer', 'lemonade_stand', 'Lemonade Stand', 160, 5),
+  ev('summer', 'lemonade_stand', 'Lemonade Stand', 0, 5, { tokens: 35 }),
   ev('summer', 'tiki_torch', 'Tiki Torch', 50, 2),
-  ev('summer', 'kiddie_pool', 'Kiddie Pool', 120, 4, { w: 2, h: 2, flat: true }),
+  ev('summer', 'kiddie_pool', 'Kiddie Pool', 0, 4, { w: 2, h: 2, flat: true, tokens: 30 }),
   ev('summer', 'festival_bunting', 'Festival Bunting', 80, 3, { w: 2, h: 1 }),
   // Harvest festival
   ev('harvest', 'cornucopia', 'Cornucopia', 110, 4),
   ev('harvest', 'harvest_wreath', 'Harvest Wreath Stand', 80, 3),
   ev('harvest', 'hay_pumpkins', 'Hay Bale & Pumpkins', 90, 3),
   ev('harvest', 'leaf_pile', 'Autumn Leaf Pile', 30, 2),
-  ev('harvest', 'apple_cider_stand', 'Cider Stand', 170, 5),
+  ev('harvest', 'apple_cider_stand', 'Cider Stand', 0, 5, { tokens: 35 }),
   ev('harvest', 'autumn_maple', 'Red Maple Tree', 150, 5),
   // Halloween
   ev('halloween', 'jack_o_lantern', "Jack-o'-Lantern", 40, 2),
@@ -218,8 +218,8 @@ export const CORE_DECORATIONS: DecoDef[] = [
   // Festival of lights
   ev('diwali', 'diya_lamps', 'Diya Lamps', 50, 3),
   ev('diwali', 'rangoli', 'Rangoli', 80, 4, { flat: true }),
-  ev('diwali', 'sky_lantern', 'Paper Sky Lantern', 90, 3),
-  ev('diwali', 'marigold_garland', 'Marigold Garland Arch', 150, 5),
+  ev('diwali', 'sky_lantern', 'Paper Sky Lantern', 0, 3, { tokens: 25 }),
+  ev('diwali', 'marigold_garland', 'Marigold Garland Arch', 0, 5, { tokens: 40 }),
   // Winter holidays
   ev('winter', 'decorated_pine', 'Decorated Pine', 200, 6),
   ev('winter', 'snowman', 'Snowman', 80, 3),
@@ -227,12 +227,12 @@ export const CORE_DECORATIONS: DecoDef[] = [
   ev('winter', 'candy_cane', 'Candy Cane Post', 40, 2),
   ev('winter', 'sleigh', 'Sleigh', 220, 6, { w: 2, h: 1 }),
   ev('winter', 'menorah', 'Garden Menorah', 120, 4),
-  ev('winter', 'gingerbread_house', 'Gingerbread House', 180, 6),
-  ev('winter', 'snow_globe', 'Giant Snow Globe', 160, 5),
+  ev('winter', 'gingerbread_house', 'Gingerbread House', 0, 6, { tokens: 40 }),
+  ev('winter', 'snow_globe', 'Giant Snow Globe', 0, 5, { tokens: 30 }),
   // New Year
   ev('new_year', 'party_lanterns', 'Party Lantern Post', 70, 3),
-  ev('new_year', 'countdown_clock', 'Countdown Clock', 160, 5),
-  ev('new_year', 'confetti_cannon', 'Confetti Cannon', 90, 3),
+  ev('new_year', 'countdown_clock', 'Countdown Clock', 0, 5, { tokens: 40 }),
+  ev('new_year', 'confetti_cannon', 'Confetti Cannon', 0, 3, { tokens: 25 }),
 ];
 
 export const DECORATION_LIST: DecoDef[] = [

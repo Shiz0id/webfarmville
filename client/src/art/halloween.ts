@@ -258,6 +258,17 @@ function candyCornLeafy(p: Pen): void {
   }
 }
 
+/** Chunky face for a candy-corn kernel: big dot eyes, a smile and two blush dots. s scales it. */
+function kernelFace(p: Pen, x: number, y: number, s: number): void {
+  for (const sx of [-1, 1]) {
+    const ex = x + sx * 1.9 * s;
+    p.ellipse(ex, y - 0.2 * s, 0.8 * s, 1 * s, EYE, null);
+    p.circle(ex - 0.28 * s, y - 0.6 * s, 0.3 * s, WHITE, null);
+    p.ellipse(x + sx * 2.9 * s, y + 0.9 * s, 0.7 * s, 0.45 * s, BLUSH, null);
+  }
+  p.curve({ x: x - 1 * s, y: y + 1 * s }, { x, y: y + 2.2 * s }, { x: x + 1 * s, y: y + 1 * s }, EYE, 0.6);
+}
+
 /** Stage 2: stalks bearing chunky candy-corn kernels, with faces and sparkles. */
 function candyCornBearing(p: Pen): void {
   const pts = spots(p, QUINCUNX);
@@ -273,12 +284,13 @@ function candyCornBearing(p: Pen): void {
     kernel(p, mid.x, mid.y + 0.6, 4.6, 6, -1.05);
     const bx = top.x;
     const by = top.y + 1.2;
-    const w = front ? 8.4 : 6.6;
-    const h = front ? 11.2 : 8.8;
-    kernel(p, bx, by, w - 1.6, h - 1.2, -0.5);
-    kernel(p, bx, by, w - 1.6, h - 1.2, 0.5);
+    const w = front ? 9.6 : 6.6;
+    const h = front ? 12.4 : 8.8;
+    kernel(p, bx, by, w - 1.8, h - 1.4, -0.5);
+    kernel(p, bx, by, w - 1.8, h - 1.4, 0.5);
     kernel(p, bx, by, w, h, 0);
-    if (front || idx === 1) face(p, bx, by - h * 0.58, front ? 1.5 : 1.2);
+    if (front) kernelFace(p, bx, by - h * 0.56, 1);
+    else if (idx === 1) kernelFace(p, bx, by - h * 0.56, 0.75);
     if (idx % 2 === 0) sparkle(p, bx + 6.2, by - h - 2, 1.5);
     if (idx === 3) sparkle(p, s.x - 7, s.y - 16, 1.2);
   });
@@ -379,31 +391,31 @@ function witchHat(p: Pen): void {
 function pumpkinHat(p: Pen): void {
   const cx = p.center.x;
   const base = p.center.y - 11;
-  leaf(p, cx + 1.4, base - 9.4, 4.2, -0.7, 1.8, LEAF);
-  p.ellipse(cx - 2.8, base - 4.6, 4.4, 4.2, sphere(p, cx - 3.6, base - 5.6, 4.4, ORANGE_DK));
-  p.ellipse(cx + 2.8, base - 4.6, 4.4, 4.2, sphere(p, cx + 2, base - 5.6, 4.4, ORANGE_DK));
-  p.ellipse(cx, base - 4.6, 5.4, 4.8, sphere(p, cx - 1, base - 6, 5.4, ORANGE));
-  p.rect(cx - 0.9, base - 9.6, 1.8, 3.2, '#6b8a2a');
-  p.glow(cx, base - 4.4, 6, LIME, 0.3);
+  leaf(p, cx + 1.8, base - 10, 4.6, -0.7, 2, LEAF);
+  p.ellipse(cx - 3.2, base - 4.8, 5, 4.6, sphere(p, cx - 4, base - 6, 5, ORANGE_DK));
+  p.ellipse(cx + 3.2, base - 4.8, 5, 4.6, sphere(p, cx + 2.4, base - 6, 5, ORANGE_DK));
+  p.ellipse(cx, base - 4.8, 6, 5.2, sphere(p, cx - 1, base - 6.4, 6, ORANGE));
+  p.rect(cx - 1, base - 10, 2, 3.4, '#6b8a2a');
+  p.glow(cx, base - 4.6, 6.5, LIME, 0.3);
   p.poly(
     [
-      { x: cx - 3.6, y: base - 6.4 },
-      { x: cx - 1.2, y: base - 6.4 },
-      { x: cx - 2.4, y: base - 4.2 },
+      { x: cx - 4, y: base - 7 },
+      { x: cx - 1.2, y: base - 7 },
+      { x: cx - 2.6, y: base - 4.4 },
     ],
     LIME,
     null,
   );
   p.poly(
     [
-      { x: cx + 1.2, y: base - 6.4 },
-      { x: cx + 3.6, y: base - 6.4 },
-      { x: cx + 2.4, y: base - 4.2 },
+      { x: cx + 1.2, y: base - 7 },
+      { x: cx + 4, y: base - 7 },
+      { x: cx + 2.6, y: base - 4.4 },
     ],
     LIME,
     null,
   );
-  p.curve({ x: cx - 2.8, y: base - 2.4 }, { x: cx, y: base - 0.2 }, { x: cx + 2.8, y: base - 2.4 }, LIME, 1);
+  p.curve({ x: cx - 3.2, y: base - 2.4 }, { x: cx, y: base - 0.1 }, { x: cx + 3.2, y: base - 2.4 }, LIME, 1.1);
 }
 
 /** A little black bat-wing bow with a purple knot. */

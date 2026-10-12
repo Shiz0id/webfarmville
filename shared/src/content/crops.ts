@@ -48,6 +48,21 @@ export const CROP_LIST: CropDef[] = [
   // Halloween specials
   { ...crop('candy_corn', 'Candy Corn', 1, 20, 300, 3, 2, ['#5f9e3a', '#ffb02e', '#fff4d6']), event: 'halloween' },
   { ...crop('ghost_pumpkin', 'Ghost Pumpkins', 3, 45, 1500, 2, 4, ['#4f8f2f', '#f4f1ea', '#8a7fb8']), event: 'halloween' },
+  // Other seasonal specials
+  { ...crop('peppermint', 'Peppermint', 1, 20, 600, 3, 2, ['#3f9b5a', '#ffffff', '#e5383b']), event: 'winter' },
+  { ...crop('golden_grape', 'Golden Grapes', 1, 30, 900, 3, 3, ['#4c8a33', '#ffd23f', '#f7b801']), event: 'new_year' },
+  { ...crop('bok_choy', 'Bok Choy', 1, 20, 600, 3, 2, ['#6cbf5a', '#f1fae5', '#3a7d2c']), event: 'lunar_new_year' },
+  { ...crop('sweetheart_rose', 'Sweetheart Roses', 1, 25, 900, 3, 3, ['#3f8a3a', '#ff4d8d', '#ffb3cf']), event: 'valentines' },
+  { ...crop('four_leaf_clover', 'Four-Leaf Clovers', 1, 20, 600, 3, 2, ['#2fa84f', '#59d47a', '#ffd23f']), event: 'st_patricks' },
+  { ...crop('star_melon', 'Star Melons', 1, 35, 1200, 2, 3, ['#3f8a35', '#ffe066', '#818cf8']), event: 'tanabata' },
+  { ...crop('sweet_potato', 'Sweet Potatoes', 1, 20, 900, 3, 3, ['#5a9e4a', '#c8553d', '#f2a65a']), event: 'thanksgiving' },
+  { ...crop('marigold', 'Marigolds', 1, 20, 600, 3, 2, ['#4f9a3c', '#ff9f1c', '#ffbf69']), event: 'diwali' },
+  { ...crop('taro', 'Taro', 1, 20, 900, 3, 3, ['#4f8f4a', '#a68ab0', '#e7dcef']), event: 'mid_autumn' },
+  { ...crop('matcha', 'Matcha Tea', 1, 25, 900, 3, 3, ['#4a8f3a', '#7cb342', '#c5e1a5']), event: 'hanami' },
+  { ...crop('heirloom_tomato', 'Heirloom Tomatoes', 1, 20, 600, 3, 2, ['#3d8b37', '#f77f00', '#9d0208']), event: 'earth_day' },
+  { ...crop('rainbow_radish', 'Rainbow Radishes', 1, 20, 600, 3, 2, ['#5aa04a', '#c77dff', '#ff8fab']), event: 'spring' },
+  { ...crop('pineapple', 'Pineapples', 1, 35, 1200, 2, 3, ['#4c8a33', '#ffc300', '#7cb518']), event: 'summer' },
+  { ...crop('butternut', 'Butternut Squash', 1, 25, 900, 3, 3, ['#5a8f3a', '#f4a259', '#e8c07d']), event: 'harvest' },
 ];
 
 export const CROPS: Record<string, CropDef> = table(CROP_LIST);

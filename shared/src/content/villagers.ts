@@ -5,6 +5,7 @@ export const NPC_NEIGHBORS: { username: string; giver: string }[] = [
   { username: 'Grandma_Fern', giver: 'Grandma Fern' },
   { username: 'Penny_Pig', giver: 'Penny' },
   { username: 'Henrietta_Hen', giver: 'Henrietta' },
+  { username: 'Mama_Marigold', giver: 'Mama Marigold' },
 ];
 
 export function villagerFor(username: string): string | undefined {

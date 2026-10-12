@@ -25,6 +25,11 @@ export interface QuestDef {
   event?: string;
 }
 
+import { CROPS } from './crops';
+import { DECORATION_LIST } from './decorations';
+import { EVENTS } from './events';
+import { EVENT_FEATURE_LIST, type EventFeature } from './eventFeatures';
+
 const stat = (s: string, count: number, label: string): QuestGoal => ({ type: 'stat', stat: s, count, label });
 const have = (what: HaveWhat, count: number, label: string): QuestGoal => ({ type: 'have', what, count, label });
 
@@ -335,7 +340,82 @@ export const QUEST_LIST: QuestDef[] = [
     goals: [stat('candy', 200, 'Collect 200 candy')],
     reward: { coins: 500, xp: 80, items: { golden_pumpkin: 1 } },
   },
+  // Cooking with Mama Marigold
+  {
+    id: 'mamas_kitchen',
+    title: "Mama's Kitchen",
+    text: "Oh honey, a farm needs a good cook! Open the Kitchen and make me something with love.",
+    giver: 'Mama Marigold',
+    level: 2,
+    requires: ['welcome'],
+    goals: [stat('cook', 1, 'Cook any dish')],
+    reward: { coins: 120, xp: 20 },
+  },
+  {
+    id: 'better_than_mama',
+    title: 'Better Than Mama!',
+    text: "Chop neatly, stir gently, watch that heat! Cook something perfect and make Mama proud.",
+    giver: 'Mama Marigold',
+    level: 3,
+    requires: ['mamas_kitchen'],
+    goals: [stat('cook:perfect', 1, 'Cook a perfect dish')],
+    reward: { coins: 250, xp: 40, items: { mystery_gift: 1 } },
+  },
+  {
+    id: 'home_cooking',
+    title: 'Home Cooking',
+    text: 'The whole valley is talking about your cooking! Make ten dishes and share the love.',
+    giver: 'Mama Marigold',
+    level: 4,
+    requires: ['better_than_mama'],
+    goals: [stat('cook', 10, 'Cook 10 dishes')],
+    reward: { coins: 600, xp: 80 },
+  },
+  ...EVENT_FEATURE_LIST.filter((f) => f.event !== 'halloween').flatMap((f) => eventQuests(f)),
 ];
+
+/** A three-part quest chain for each seasonal event, in the style of the Halloween chain. */
+function eventQuests(f: EventFeature): QuestDef[] {
+  const ev = f.event;
+  const crop = f.crops[0];
+  const cur = f.currency;
+  const exclusive = DECORATION_LIST.find((d) => d.event === ev && d.tokens)?.id;
+  return [
+    {
+      id: `${ev}_grow`,
+      title: `${EVENTS[ev].name}: Seasonal Sprouts`,
+      text: f.intro.text,
+      giver: f.intro.giver,
+      level: 1,
+      requires: [],
+      event: ev,
+      goals: [stat(`plant:${crop}`, 6, `Plant 6 ${CROPS[crop].name}`)],
+      reward: { coins: 100, xp: 20, items: { [cur]: 20 } },
+    },
+    {
+      id: `${ev}_visitors`,
+      title: `${EVENTS[ev].name}: Welcome Visitors`,
+      text: `Keep an eye out for a ${f.visitorName} wandering by. Say hello and they'll share some ${f.currencyName.toLowerCase()}!`,
+      giver: f.intro.giver,
+      level: 1,
+      requires: [`${ev}_grow`],
+      event: ev,
+      goals: [stat(`treat:${ev}`, 3, `Greet 3 visitors`)],
+      reward: { coins: 150, xp: 25, items: { [cur]: 25, mystery_gift: 1 } },
+    },
+    {
+      id: `${ev}_collect`,
+      title: `${EVENTS[ev].name}: Festive Collector`,
+      text: `Collect a big pile of ${f.currencyName.toLowerCase()} and I'll give you something truly special!`,
+      giver: f.intro.giver,
+      level: 1,
+      requires: [`${ev}_visitors`],
+      event: ev,
+      goals: [stat(cur, 150, `Collect 150 ${f.currencyName.toLowerCase()}`)],
+      reward: { coins: 400, xp: 60, items: exclusive ? { [exclusive]: 1 } : { [cur]: 50 } },
+    },
+  ];
+}
 
 export const QUESTS: Record<string, QuestDef> = table(QUEST_LIST);
 

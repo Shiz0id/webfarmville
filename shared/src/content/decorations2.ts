@@ -7,7 +7,7 @@
 
 import type { DecoDef } from './decorations';
 
-type Opts = Partial<Pick<DecoDef, 'w' | 'h' | 'flat'>>;
+type Opts = Partial<Pick<DecoDef, 'w' | 'h' | 'flat' | 'tokens'>>;
 
 const life = (event: string, id: string, name: string, cost: number, charm: number, opts: Opts = {}): DecoDef => ({
   id,
@@ -40,7 +40,7 @@ export const LIFESTYLE_DECORATIONS: DecoDef[] = [
   // Lunar New Year
   life('lunar_new_year', 'dumpling_table', 'Dumpling Feast Table', 150, 5, { w: 2, h: 1 }),
   life('lunar_new_year', 'lion_dance_drum', 'Lion Dance Drum', 110, 4),
-  life('lunar_new_year', 'tangerine_tree', 'Lucky Tangerine Tree', 140, 5),
+  life('lunar_new_year', 'tangerine_tree', 'Lucky Tangerine Tree', 0, 5, { tokens: 30 }),
   // Valentine's
   life('valentines', 'fondue_table', 'Chocolate Fondue Table', 130, 4),
   life('valentines', 'love_mailbox', 'Love Letter Mailbox', 70, 3),
@@ -62,7 +62,7 @@ export const LIFESTYLE_DECORATIONS: DecoDef[] = [
   // Harvest
   life('harvest', 'apple_bobbing', 'Apple Bobbing Tub', 90, 3),
   life('harvest', 'pie_rack', 'Pie Cooling Rack', 120, 4),
-  life('harvest', 'hayride_wagon', 'Hayride Wagon', 200, 6, { w: 2, h: 1 }),
+  life('harvest', 'hayride_wagon', 'Hayride Wagon', 0, 6, { w: 2, h: 1, tokens: 45 }),
   // Halloween
   life('halloween', 'carving_table', 'Pumpkin Carving Table', 120, 4),
   life('halloween', 'costume_rack', 'Costume Rack', 100, 4),

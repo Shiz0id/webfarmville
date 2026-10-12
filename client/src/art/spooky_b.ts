@@ -526,6 +526,7 @@ function hauntedTree(p: Pen): void {
   // trunk and its upper stretch
   thickCurve(p, base, c1, b1, 15, bark);
   thickCurve(p, b1, { x: x - 2, y: y - 58 }, { x: x + 1, y: y - 66 }, 7, bark);
+  thickCurve(p, { x: x + 1, y: y - 66 }, { x: x + 3, y: y - 73 }, { x: x + 7, y: y - 79 }, 2.4, bark);
   // the friendly face, carved into a lighter bark patch
   const f = qpt(base, c1, b1, 0.5);
   p.glow(f.x, f.y, 12, '#c8ff7a', 0.22);
@@ -749,33 +750,33 @@ function ghostSwing(p: Pen): void {
   const rope = '#5b4a3a';
   // tree: trunk, then a branch that reaches over the swing, then the foliage
   thickCurve(p, { x: x - 11, y }, { x: x - 11, y: y - 16 }, { x: x - 9, y: y - 30 }, 6.5, bark);
-  thickCurve(p, { x: x - 10, y: y - 30 }, { x: x - 2, y: y - 35 }, { x: x + 12, y: y - 34 }, 3, bark);
+  thickCurve(p, { x: x - 10, y: y - 30 }, { x: x - 2, y: y - 35 }, { x: x + 18, y: y - 35 }, 3, bark);
   p.foliage(x - 9, y - 44, 17, '#8dc85a', 'swing', 7);
   // ropes and the seat
   p.line(
     [
-      { x: x + 1, y: y - 34 },
-      { x: x - 0.5, y: y - 17 },
+      { x: x - 3, y: y - 35 },
+      { x: x - 4, y: y - 15 },
     ],
     rope,
     1.1,
   );
   p.line(
     [
-      { x: x + 11, y: y - 34 },
-      { x: x + 12.5, y: y - 17 },
+      { x: x + 17, y: y - 35 },
+      { x: x + 18, y: y - 15 },
     ],
     rope,
     1.1,
   );
-  p.roundRect(x - 1.5, y - 17, 15.5, 4, 1.6, hgrad(p, x, x + 14, shade(WOOD, 0.15), shade(WOOD, -0.18)));
+  p.roundRect(x - 5, y - 15, 24, 4, 1.6, hgrad(p, x - 5, x + 19, shade(WOOD, 0.15), shade(WOOD, -0.18)));
   // the happy ghost, riding the swing (its hem hovers just above the seat)
-  const cx = x + 6;
-  const r = 8.5;
-  const cy = y - 27.5;
+  const cx = x + 7;
+  const r = 8;
+  const cy = y - 26;
   p.glow(cx, cy, 16, '#ffffff', 0.3);
-  p.ellipse(cx - 9.5, cy - 4, 3.2, 1.8, '#f4f0ff', O, -0.9);
-  p.ellipse(cx + 9.5, cy - 4, 3.2, 1.8, '#f4f0ff', O, 0.9);
+  p.ellipse(cx - 9, cy - 4, 3.2, 1.8, '#f4f0ff', O, -0.9);
+  p.ellipse(cx + 9, cy - 4, 3.2, 1.8, '#f4f0ff', O, 0.9);
   ghostPath(p, cx, cy, r);
   fs(p, radial(p, cx - 2, cy - 2, r * 1.3, WHITE, '#d9d0f2'));
   happyEyes(p, cx, cy - 0.8, 1.3, 3);
@@ -789,7 +790,11 @@ function ghostSwing(p: Pen): void {
 function moonPhotoBooth(p: Pen): void {
   const o = p.iso(0.2, 0.5);
   const len = 1.6 * 32;
-  p.shadow(p.iso(1, 0.75).x, p.iso(1, 0.75).y + 1, 30, 10, 0.2);
+  // Board coordinates (bx along the board, by up) mapped to screen. Round things are drawn
+  // upright at these points, so only the frame carries the board's slope.
+  const at = (bx: number, by: number) => ({ x: o.x + bx, y: o.y + by + bx * 0.5 });
+  const ground = p.iso(1, 0.75);
+  p.shadow(ground.x, ground.y + 1, 30, 10, 0.2);
   onFace(p, o, 0.5, () => {
     const c = p.ctx;
     // little feet, then the board itself
@@ -817,25 +822,33 @@ function moonPhotoBooth(p: Pen): void {
         0.6,
       );
     }
-    // big glowing harvest moon with craters
-    p.glow(33, -38, 22, '#ffd27a', 0.5);
-    p.circle(33, -38, 11, radial(p, 33, -38, 11, '#fff6c4', '#ffb347'));
-    p.circle(29, -41, 2.2, rgba('#e0883a', 0.6), null);
-    p.circle(36, -33, 1.6, rgba('#e0883a', 0.6), null);
-    p.circle(31, -33.5, 1.1, rgba('#e0883a', 0.6), null);
-    sparkle(p, 42, -49, 1.8, WHITE);
-    sparkle(p, 18, -50, 1.6, '#fff6c0');
-    // bats in the sky
-    bat(p, 24, -46, 2.2);
-    bat(p, 44, -24, 2);
-    // cut-out face hole, ringed with lights
-    p.ellipse(13, -28, 8.6, 10.4, GOLD);
-    p.ellipse(13, -28, 6.2, 8, '#ffe9b8', null);
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * TAU;
-      p.circle(13 + Math.cos(a) * 9.6, -28 + Math.sin(a) * 11.6, 1.1, '#fff7b0', null);
-    }
   });
+  // big glowing harvest moon with craters
+  const moon = at(33, -38);
+  p.glow(moon.x, moon.y, 22, '#ffd27a', 0.5);
+  p.circle(moon.x, moon.y, 11, radial(p, moon.x, moon.y, 11, '#fff6c4', '#ffb347'));
+  const craters = [
+    { dx: -4, dy: -3, r: 2.2 },
+    { dx: 3, dy: 5, r: 1.6 },
+    { dx: -2, dy: 4.5, r: 1.1 },
+  ];
+  for (const k of craters) p.circle(moon.x + k.dx, moon.y + k.dy, k.r, rgba('#e0883a', 0.6), null);
+  const star1 = at(44, -50);
+  const star2 = at(18, -50);
+  sparkle(p, star1.x, star1.y, 1.8, WHITE);
+  sparkle(p, star2.x, star2.y, 1.6, '#fff6c0');
+  const b1 = at(24, -46);
+  const b2 = at(44, -24);
+  bat(p, b1.x, b1.y, 2.9);
+  bat(p, b2.x, b2.y, 2.6);
+  // cut-out face hole, ringed with lights
+  const hole = at(13, -28);
+  p.ellipse(hole.x, hole.y, 8.6, 10.4, GOLD);
+  p.ellipse(hole.x, hole.y, 6.2, 8, '#ffe9b8', null);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * TAU;
+    p.circle(hole.x + Math.cos(a) * 9.6, hole.y + Math.sin(a) * 11.6, 1.1, '#fff7b0', null);
+  }
   // props on a little table in front of the booth
   p.box(1.0, 0.85, 0.42, 0.3, 6, WOOD);
   const top = p.iso(1.21, 1.0, 6);
@@ -1182,10 +1195,8 @@ function ghostKitty(p: Pen): void {
   const hy = y - 42;
   const hemY = y - 7;
   // curly tail with a little curl at the tip
-  p.curve({ x: x + 7, y: y - 13 }, { x: x + 20, y: y - 14 }, { x: x + 18, y: y - 28 }, GHOST_EDGE, 3.6);
-  p.curve({ x: x + 7, y: y - 13 }, { x: x + 20, y: y - 14 }, { x: x + 18, y: y - 28 }, '#f6f3ff', 1.8);
-  p.curve({ x: x + 18, y: y - 28 }, { x: x + 16, y: y - 38 }, { x: x + 10, y: y - 36 }, GHOST_EDGE, 3);
-  p.curve({ x: x + 18, y: y - 28 }, { x: x + 16, y: y - 38 }, { x: x + 10, y: y - 36 }, '#f6f3ff', 1.2);
+  p.curve({ x: x + 8, y: y - 20 }, { x: x + 21, y: y - 24 }, { x: x + 14, y: y - 38 }, GHOST_EDGE, 3.6);
+  p.curve({ x: x + 8, y: y - 20 }, { x: x + 21, y: y - 24 }, { x: x + 14, y: y - 38 }, '#f6f3ff', 1.8);
   // ears
   p.poly(
     [

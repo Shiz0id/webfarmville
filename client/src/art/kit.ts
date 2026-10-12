@@ -42,8 +42,9 @@ export interface SpriteSpec {
 
 export interface IconSpec {
   key: string;
-  /** Paints into an ICON×ICON logical canvas (flat, not isometric). */
+  /** Paints into an ICON×ICON logical canvas (flat, not isometric), or size×size if given. */
   paint: (p: Pen) => void;
+  size?: number;
 }
 
 export interface Pt {
@@ -473,11 +474,12 @@ export function renderSprite(spec: SpriteSpec): HTMLCanvasElement {
 }
 
 export function renderIcon(spec: IconSpec): HTMLCanvasElement {
+  const size = spec.size ?? ICON;
   const canvas = document.createElement('canvas');
-  canvas.width = ICON * RES;
-  canvas.height = ICON * RES;
+  canvas.width = size * RES;
+  canvas.height = size * RES;
   const ctx = canvas.getContext('2d')!;
   ctx.scale(RES, RES);
-  spec.paint(new Pen(ctx, ICON, ICON));
+  spec.paint(new Pen(ctx, size, size));
   return canvas;
 }

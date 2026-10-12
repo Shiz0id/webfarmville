@@ -13,6 +13,8 @@ export * from './content/gifts';
 export * from './content/orders';
 export * from './content/ribbons';
 export * from './content/villagers';
+export * from './content/eventFeatures';
+export * from './content/cooking';
 export * from './logic/catalog';
 export * from './logic/status';
 export * from './logic/quests';

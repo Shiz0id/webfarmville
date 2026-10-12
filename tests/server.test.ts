@@ -83,7 +83,7 @@ describe('farm server', () => {
   it('starts everyone as neighbors with Mayor Maple, with a welcome gift', async () => {
     const social = (await call('/api/social', undefined, alice)).body;
     expect(social.friends.map((f: any) => f.username)).toContain(NPC_USERNAME);
-    expect(social.friends.filter((f: any) => f.isNpc)).toHaveLength(5);
+    expect(social.friends.filter((f: any) => f.isNpc)).toHaveLength(6);
     expect(social.gifts).toHaveLength(1);
     const claim = await call('/api/gifts/claim', { id: social.gifts[0].id }, alice);
     expect(claim.body.state.inventory.tulips_pink).toBe(1);

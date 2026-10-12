@@ -8,6 +8,7 @@ import { BUILDING_LIST } from './buildings';
 import { CROP_LIST } from './crops';
 import { CORE_DECORATIONS } from './decorations';
 import { HORTICULTURE_DECORATIONS } from './decorations2';
+import { DISH_LIST } from './cooking';
 import { ITEMS } from './items';
 import type { FarmState, Order } from '../types';
 
@@ -50,6 +51,9 @@ function orderableItems(level: number): string[] {
   for (const b of BUILDING_LIST)
     if (!b.starter && b.level + 1 <= level)
       for (const r of b.recipes) if (Object.keys(r.inputs).every((i) => items.has(i))) items.add(r.output);
+  // Home-cooked dishes are popular requests once you can make them.
+  for (const d of DISH_LIST)
+    if (!d.event && d.level + 1 <= level && Object.keys(d.inputs).every((i) => items.has(i))) items.add(d.id);
   return [...items];
 }
 
@@ -95,6 +99,7 @@ export function ensureOrders(state: FarmState): void {
   while (state.orders.length < ORDER_SLOTS) state.orders.push(generateOrder(state));
   if (!state.ribbons || typeof state.ribbons !== 'object') state.ribbons = {};
   if (!state.treats || typeof state.treats !== 'object') state.treats = { day: '', count: 0 };
+  if (!state.mama || typeof state.mama !== 'object') state.mama = { day: '' };
 }
 
 /** A random decoration from a mystery gift, weighted toward nicer things. */

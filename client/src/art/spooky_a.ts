@@ -394,8 +394,8 @@ function hauntedHouse(p: Pen): void {
   const ctr = p.center;
   p.shadow(ctr.x, ctr.y + 3, 50, 19, 0.22);
   // turret off the back-right corner, taller than the roof: that is the lopsided bit
-  p.box(1.66, 0.1, 0.3, 0.3, 74, LILAC);
-  p.hipRoof(1.66, 0.1, 0.3, 0.3, 74, 24, PLUM);
+  p.box(1.58, 0.12, 0.3, 0.3, 74, LILAC);
+  p.hipRoof(1.58, 0.12, 0.3, 0.3, 74, 24, PLUM);
   // crooked chimney, drawn before the walls so the roof hides its foot
   const foot = p.iso(0.55, 0.42, 0);
   c.save();
@@ -566,8 +566,8 @@ function batHouse(p: Pen): void {
   p.ellipse(hole.x, hole.y, 4.2, 5, '#8a5a36');
   p.ellipse(hole.x, hole.y, 3.2, 4, INK);
   // two cute bats flitting about the house
-  bat(p, x - 17, y - 40, 3.5);
-  bat(p, x + 17, y - 30, 3.1);
+  bat(p, x - 17, y - 42, 4.2);
+  bat(p, x + 17, y - 31, 3.7);
 }
 
 /** A fence segment along the u centre line, with a cobweb and a fuzzy spider. */
@@ -629,7 +629,7 @@ function sillyTombstone(p: Pen): void {
   p.shadow(x, y + 1, 15, 6, 0.22);
   // ghost popping up from behind the stone
   const gx = x + 5;
-  const gy = y - 36;
+  const gy = y - 39;
   p.glow(gx, gy, 12, '#ffffff', 0.35);
   ghostBody(p, gx, gy, 6);
   ghostFace(p, gx, gy, 6);
@@ -1320,7 +1320,7 @@ const PAINT: Record<string, { height: number; paint: (p: Pen) => void }> = {
   bubbling_cauldron: { height: 44, paint: bubblingCauldron },
   hay_maze: { height: 50, paint: hayMaze },
   corn_bundle: { height: 66, paint: cornBundle },
-  pumpkin_wagon: { height: 60, paint: pumpkinWagon },
+  pumpkin_wagon: { height: 66, paint: pumpkinWagon },
 };
 
 export const sprites: SpriteSpec[] = SPOOKY_DECORATIONS.slice(0, 18).map((d) => {

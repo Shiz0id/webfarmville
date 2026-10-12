@@ -8,7 +8,7 @@
 
 import type { DecoCategory, DecoDef } from './decorations';
 
-type Opts = Partial<Pick<DecoDef, 'w' | 'h' | 'flat' | 'candy' | 'level'>>;
+type Opts = Partial<Pick<DecoDef, 'w' | 'h' | 'flat' | 'tokens' | 'level'>>;
 
 function make(set: DecoDef['set'], category: DecoCategory, event: string | undefined) {
   return (id: string, name: string, cost: number, charm: number, opts: Opts = {}): DecoDef => ({
@@ -29,7 +29,7 @@ function make(set: DecoDef['set'], category: DecoCategory, event: string | undef
 const spooky = make('spooky', 'seasonal', 'halloween');
 
 export const SPOOKY_DECORATIONS: DecoDef[] = [
-  spooky('haunted_house', 'Cute Haunted House', 0, 14, { w: 2, h: 2, candy: 60 }),
+  spooky('haunted_house', 'Cute Haunted House', 0, 14, { w: 2, h: 2, tokens: 60 }),
   spooky('witch_cottage', "Witch's Cottage", 600, 14, { w: 2, h: 2 }),
   spooky('pumpkin_arch', 'Pumpkin Arch', 220, 7),
   spooky('ghost_lantern', 'Ghost Lantern Post', 90, 3),
@@ -60,11 +60,11 @@ export const SPOOKY_DECORATIONS: DecoDef[] = [
   spooky('cat_fence_post', 'Black Cat Fence Post', 60, 2),
   spooky('pumpkin_patch_sign', 'Pumpkin Patch Sign', 45, 2),
   // Candy Shop exclusives: bought with candy, not coins.
-  spooky('candy_corn_statue', 'Giant Candy Corn', 0, 6, { candy: 25 }),
-  spooky('caramel_apple_stand', 'Caramel Apple Stand', 0, 7, { candy: 40 }),
-  spooky('ghost_kitty', 'Ghost Kitty', 0, 6, { candy: 35 }),
-  spooky('golden_pumpkin', 'Golden Pumpkin', 0, 12, { candy: 80 }),
-  spooky('lollipop_tree', 'Lollipop Tree', 0, 9, { candy: 50 }),
+  spooky('candy_corn_statue', 'Giant Candy Corn', 0, 6, { tokens: 25 }),
+  spooky('caramel_apple_stand', 'Caramel Apple Stand', 0, 7, { tokens: 40 }),
+  spooky('ghost_kitty', 'Ghost Kitty', 0, 6, { tokens: 35 }),
+  spooky('golden_pumpkin', 'Golden Pumpkin', 0, 12, { tokens: 80 }),
+  spooky('lollipop_tree', 'Lollipop Tree', 0, 9, { tokens: 50 }),
 ];
 
 const country = make('country', 'country', undefined);
@@ -119,23 +119,23 @@ const party = fest(undefined, 'party');
 
 export const FESTIVAL_DECORATIONS: DecoDef[] = [
   hanami('hanami_picnic', 'Hanami Picnic', 140, 5, { w: 2, h: 2, flat: true }),
-  hanami('sakura_arch', 'Sakura Arch', 220, 7),
+  hanami('sakura_arch', 'Sakura Arch', 0, 7, { tokens: 35 }),
   hanami('paper_lantern_tree', 'Paper Lantern Tree', 180, 6),
-  hanami('dango_stand', 'Dango Sweets Stand', 150, 5),
-  earth('recycling_bins', 'Happy Recycling Bins', 70, 3),
+  hanami('dango_stand', 'Dango Sweets Stand', 0, 5, { tokens: 30 }),
+  earth('recycling_bins', 'Happy Recycling Bins', 0, 3, { tokens: 20 }),
   earth('solar_lamp', 'Solar Garden Lamp', 60, 2),
   earth('sapling_pot', 'Little Sapling', 40, 2),
-  earth('globe_planter', 'Earth Globe Planter', 160, 5),
-  tanabata('wish_bamboo', 'Wishing Bamboo', 160, 6),
+  earth('globe_planter', 'Earth Globe Planter', 0, 5, { tokens: 35 }),
+  tanabata('wish_bamboo', 'Wishing Bamboo', 0, 6, { tokens: 35 }),
   tanabata('star_streamers', 'Star Streamers', 110, 4),
-  tanabata('paper_cranes', 'Paper Crane Mobile', 90, 3),
-  moon('rabbit_lantern', 'Rabbit Lantern', 90, 4),
+  tanabata('paper_cranes', 'Paper Crane Mobile', 0, 3, { tokens: 25 }),
+  moon('rabbit_lantern', 'Rabbit Lantern', 0, 4, { tokens: 25 }),
   moon('mooncake_table', 'Mooncake Tea Table', 150, 5),
-  moon('moon_gate', 'Moon Gate', 280, 8, { w: 2, h: 1 }),
+  moon('moon_gate', 'Moon Gate', 0, 8, { w: 2, h: 1, tokens: 45 }),
   moon('osmanthus_tree', 'Osmanthus Tree', 170, 5),
   thanks('turkey_statue', 'Friendly Turkey Statue', 110, 4),
-  thanks('feast_table', 'Thanksgiving Feast Table', 240, 7, { w: 2, h: 1 }),
-  thanks('gratitude_tree', 'Gratitude Tree', 180, 6),
+  thanks('feast_table', 'Thanksgiving Feast Table', 0, 7, { w: 2, h: 1, tokens: 40 }),
+  thanks('gratitude_tree', 'Gratitude Tree', 0, 6, { tokens: 30 }),
   thanks('pie_contest', 'Pie Contest Table', 140, 5),
   winter('igloo', 'Igloo', 200, 6),
   winter('skating_pond', 'Ice Skating Pond', 260, 8, { w: 2, h: 2, flat: true }),

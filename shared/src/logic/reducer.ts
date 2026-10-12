@@ -14,7 +14,9 @@ import {
 } from '../content/progression';
 import { MYSTERY_CHANCE, MYSTERY_GIFT, ensureOrders, generateOrder, nextRandom, rollMysteryGift } from '../content/orders';
 import { QUESTS } from '../content/quests';
+import { DISHES, DISH_LIST, cookTier } from '../content/cooking';
 import { RIBBONS, RIBBON_REWARDS } from '../content/ribbons';
+import { EVENT_FEATURES, EVENT_FEATURE_LIST, VISITORS_PER_DAY } from '../content/eventFeatures';
 import {
   GameError,
   type Action,
@@ -93,7 +95,8 @@ export function addItem(state: FarmState, item: string, qty: number, events?: Ga
   if (qty <= 0) return;
   state.inventory[item] = (state.inventory[item] ?? 0) + qty;
   if (DECORATIONS[item]) state.stats[`got:${item}`] = 1;
-  if (item === 'candy') bumpStat(state, 'candy', qty);
+  // Lifetime totals of event currencies (e.g. stats.candy) power quests and ribbons.
+  if (ITEMS[item]?.category === 'special') bumpStat(state, item, qty);
   events?.push({ type: 'gain', what: item, amount: qty, ...at });
 }
 
@@ -115,18 +118,20 @@ function getObject<K extends FarmObject['kind']>(state: FarmState, id: string, k
   return obj as Extract<FarmObject, { kind: K }>;
 }
 
-export const TREATS_PER_DAY = 6;
-/** Chance each harvest or collection during Halloween drops a piece of candy. */
-const CANDY_CHANCE = 0.4;
+/** Chance each harvest or collection during an event drops a token of its currency. */
+const TOKEN_CHANCE = 0.4;
 
 function eventOn(ctx: ActionContext, event: string): boolean {
   return !!ctx.allEvents || isEventActive(EVENTS[event], ctx.now);
 }
 
-function halloweenCandy(state: FarmState, ctx: ActionContext, events: GameEvent[], at: { x: number; y: number }, bonus: number): void {
-  if (!eventOn(ctx, 'halloween')) return;
-  const n = bonus + (nextRandom(state) < CANDY_CHANCE ? 1 : 0);
-  if (n > 0) addItem(state, 'candy', n, events, at);
+/** Every running event may drop some of its currency; its own crops always give two. */
+function eventDrops(state: FarmState, ctx: ActionContext, events: GameEvent[], at: { x: number; y: number }, cropEvent?: string): void {
+  for (const feature of EVENT_FEATURE_LIST) {
+    if (!eventOn(ctx, feature.event)) continue;
+    const n = (cropEvent === feature.event ? 2 : 0) + (nextRandom(state) < TOKEN_CHANCE ? 1 : 0);
+    if (n > 0) addItem(state, feature.currency, n, events, at);
+  }
 }
 
 function maybeMysteryGift(state: FarmState, events: GameEvent[], at: { x: number; y: number }): void {
@@ -223,7 +228,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       addItem(state, def.id, def.yield + (plot.fertilized ? 1 : 0), events, at);
       addXp(state, def.xp, events, at);
       maybeMysteryGift(state, events, at);
-      halloweenCandy(state, ctx, events, at, def.event === 'halloween' ? 2 : 0);
+      eventDrops(state, ctx, events, at, def.event);
       bumpStat(state, 'harvest');
       bumpStat(state, `harvest:${def.id}`);
       delete plot.crop;
@@ -250,7 +255,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       addItem(state, def.product, def.yield, events, at);
       addXp(state, def.xp, events, at);
       maybeMysteryGift(state, events, at);
-      halloweenCandy(state, ctx, events, at, 0);
+      eventDrops(state, ctx, events, at);
       bumpStat(state, 'collect');
       bumpStat(state, `collect:${def.id}`);
       obj.cycleStart = now;
@@ -264,9 +269,12 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       if (state.level < p.level) throw new GameError(`Unlocks at level ${p.level}`);
       if (p.event && !ctx.allEvents && !isEventActive(EVENTS[p.event], now))
         throw new GameError(`Only available during ${EVENTS[p.event]?.name ?? 'its event'}`);
-      if (p.candy) {
-        if ((state.inventory.candy ?? 0) < p.candy) throw new GameError(`Needs ${p.candy} candy`);
-        takeItem(state, 'candy', p.candy);
+      if (p.tokens) {
+        const feature = EVENT_FEATURES[p.event ?? ''];
+        if (!feature) throw new GameError('That is not for sale');
+        if ((state.inventory[feature.currency] ?? 0) < p.tokens)
+          throw new GameError(`Needs ${p.tokens} ${feature.currencyName.toLowerCase()}`);
+        takeItem(state, feature.currency, p.tokens);
       } else {
         spend(state, p.cost, events, { x: action.x + p.w / 2, y: action.y + p.h / 2 });
       }
@@ -444,13 +452,15 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
     }
 
     case 'treat': {
-      if (!eventOn(ctx, 'halloween')) throw new GameError('Trick-or-treaters only come at Halloween');
+      const feature = EVENT_FEATURES[action.event ?? 'halloween'];
+      if (!feature || !eventOn(ctx, feature.event)) throw new GameError('No visitors are expected right now');
       const today = utcDay(now);
       if (state.treats.day !== today) state.treats = { day: today, count: 0 };
-      if (state.treats.count >= TREATS_PER_DAY) throw new GameError('All the trick-or-treaters have gone home for today');
+      if (state.treats.count >= VISITORS_PER_DAY) throw new GameError('All the visitors have gone home for today');
       state.treats.count++;
-      const candy = 3 + Math.floor(nextRandom(state) * 4);
-      addItem(state, 'candy', candy, events);
+      const tokens = 3 + Math.floor(nextRandom(state) * 4);
+      addItem(state, feature.currency, tokens, events);
+      bumpStat(state, `treat:${feature.event}`);
       earn(state, 15, events);
       addXp(state, 3, events);
       if (nextRandom(state) < 0.15) {
@@ -471,6 +481,40 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       earn(state, RIBBON_REWARDS[tier].coins, events);
       addXp(state, RIBBON_REWARDS[tier].xp, events);
       events.push({ type: 'ribbon', ribbon: r.id, tier: tier + 1 });
+      break;
+    }
+
+    case 'cook': {
+      const dish = DISHES[action.dish];
+      if (!dish) throw new GameError('Unknown recipe');
+      if (state.level < dish.level) throw new GameError(`${dish.name} unlocks at level ${dish.level}`);
+      if (dish.event && !eventOn(ctx, dish.event)) throw new GameError(`${dish.name} is a ${EVENTS[dish.event]?.name} treat`);
+      for (const [item, qty] of Object.entries(dish.inputs)) {
+        if ((state.inventory[item] ?? 0) < qty) throw new GameError(`Need ${qty} ${ITEMS[item]?.name ?? item}`);
+      }
+      for (const [item, qty] of Object.entries(dish.inputs)) takeItem(state, item, qty);
+      const score = Math.max(0, Math.min(100, Math.round(Number(action.score) || 0)));
+      const grade = cookTier(score);
+      addItem(state, dish.id, grade.qty, events);
+      addXp(state, Math.round(dish.xp * grade.xpMult), events);
+      bumpStat(state, 'cook');
+      bumpStat(state, `cook:${dish.id}`);
+      if (grade.tier === 'perfect') bumpStat(state, 'cook:perfect');
+      events.push({ type: 'cooked', dish: dish.id, tier: grade.tier, qty: grade.qty });
+      break;
+    }
+
+    case 'mamaVisit': {
+      const today = utcDay(now);
+      if (state.mama.day === today) throw new GameError('Mama Marigold already visited today');
+      state.mama.day = today;
+      const menu = DISH_LIST.filter((d) => !d.event && d.level <= Math.max(3, state.level + 2));
+      const meal = menu[Math.floor(nextRandom(state) * menu.length)];
+      addItem(state, meal.id, 1, events);
+      earn(state, 30, events);
+      addXp(state, 5, events);
+      bumpStat(state, 'mama');
+      events.push({ type: 'meal', dish: meal.id });
       break;
     }
 

@@ -252,6 +252,39 @@ const FARMS: NpcFarm[] = [
       return f.finish(1);
     },
   },
+  {
+    username: 'Mama_Marigold',
+    version: 1,
+    build: (now) => {
+      // Mama's pride and joy: a bursting kitchen garden she can't stop talking about.
+      const f = new Layout("Mama Marigold's Kitchen Garden", 20, now, 66);
+      f.building('farmhouse', 1, 1);
+      f.building('cafe', 5, 1);
+      f.building('bakery', 8, 1);
+      f.deco('glass_greenhouse', 12, 1);
+      f.deco('herb_spiral', 15, 1);
+      f.deco('garden_show_stage', 15, 4);
+      f.deco('prize_pumpkin', 12, 4);
+      f.deco('giant_turnip', 13, 4);
+      f.deco('harvest_scale', 14, 5);
+      f.deco('potting_bench', 1, 5);
+      f.deco('veggie_friends', 4, 5);
+      f.deco('smiling_sunflower_pot', 5, 5);
+      f.deco('watering_station', 6, 5);
+      f.deco('seed_packet_stand', 7, 5);
+      f.deco('garden_party_table', 8, 5);
+      f.deco('flower_cart', 10, 5);
+      f.line(['path_brick'], 0, 7, 1, 0, 20);
+      f.line(['raised_veg_bed'], 0, 8, 2, 0, 5);
+      f.field(['tomato', 'carrot', 'strawberry', 'pumpkin', 'corn', 'blueberry'], 1, 10, 9, 4);
+      f.field(['potato', 'lavender', 'sunflower', 'watermelon'], 11, 10, 8, 4);
+      f.line(['bean_teepee', 'tomato_cage', 'strawberry_pot'], 1, 15, 2, 0, 9);
+      f.trees(['apple_tree', 'peach_tree', 'lemon_tree', 'cherry_tree'], 1, 18, 3, 0);
+      f.animals(['chicken', 'chicken', 'cow', 'beehive'], 13, 16, 4);
+      f.scatter(['tulips_red', 'roses_pink', 'marigold_garland', 'butterfly_bush', 'bee_hotel', 'ladybug_house', 'terracotta_stack'], 14);
+      return f.finish(1);
+    },
+  },
 ];
 
 /**
