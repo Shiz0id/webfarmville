@@ -12,6 +12,7 @@ import {
   ITEMS,
   ITEM_LIST,
   QUESTS,
+  villagerFor,
   RIBBON_COLORS,
   RIBBON_LIST,
   TREE_LIST,
@@ -757,6 +758,8 @@ export function openQuests(): void {
 const AVATAR_COLORS = ['#ff8fb1', '#7cc95a', '#8fd3f4', '#f5c542', '#c49bff', '#ff9b5e'];
 
 function avatar(name: string, npc: boolean): HTMLElement {
+  const villager = npc ? villagerFor(name) : undefined;
+  if (villager) return portrait(villager, 44);
   const c = AVATAR_COLORS[[...name].reduce((a, ch) => a + ch.charCodeAt(0), 0) % AVATAR_COLORS.length];
   return h('div', { class: 'avatar', style: { background: npc ? '#b98552' : c } }, npc ? '🦉' : name[0].toUpperCase());
 }

@@ -33,7 +33,7 @@ import {
 } from './auth';
 import { tx, type DB } from './db';
 import { HttpError } from './errors';
-import { NPC_USERNAME, ensureNpc, refreshNpcFarm } from './npc';
+import { NPC_USERNAME, ensureNpcs, refreshNpcFarm } from './npc';
 import {
   areFriends,
   giftSentToday,
@@ -79,12 +79,14 @@ export function createApp(db: DB, opts: AppOptions = {}) {
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '256kb' }));
   const auth = requireAuth(db);
-  const npcId = ensureNpc(db, clock());
+  const npcs = ensureNpcs(db, clock());
+  const npcId = npcs.mayorId;
 
   function befriendNpc(userId: number, now: number) {
-    db.prepare(
-      "INSERT OR IGNORE INTO friendships (requester, addressee, status, created_at) VALUES (?, ?, 'accepted', ?)",
-    ).run(npcId, userId, now);
+    for (const id of npcs.ids)
+      db.prepare(
+        "INSERT OR IGNORE INTO friendships (requester, addressee, status, created_at) VALUES (?, ?, 'accepted', ?)",
+      ).run(id, userId, now);
   }
 
   function mePayload(user: UserRow) {
@@ -282,7 +284,7 @@ export function createApp(db: DB, opts: AppOptions = {}) {
   app.post('/api/friends/remove', auth, (req, res) => {
     const me = req.user!;
     const other = requireUser(db, str(req.body?.username, 'username').trim());
-    if (other.id === npcId) throw new HttpError(400, 'Mayor Maple will always be your neighbor');
+    if (other.is_npc) throw new HttpError(400, 'The villagers will always be your neighbors');
     db.prepare(
       'DELETE FROM friendships WHERE (requester = ? AND addressee = ?) OR (requester = ? AND addressee = ?)',
     ).run(me.id, other.id, other.id, me.id);
