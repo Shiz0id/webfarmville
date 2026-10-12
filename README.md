@@ -63,6 +63,9 @@ All of the art is drawn in code at startup, so there are no image assets to down
 - **Lonely animals** (from the original FarmVille): from level 3, a lost little animal with a name wanders onto
   your farm once a day. Adopt it (it settles in nearby with its name and a first collection ready) or walk it to
   the villager who has been hoping for one, for coins, XP, a mystery gift and friendship.
+- **Well water** (from FarmVille 2): pick up the Water tool and tap or drag over growing crops to give them a 25%
+  head start, once per crop. The can holds 10 splashes and slowly trickles back by itself, or tap a Wishing Well or
+  Water Pump to fill it to the brim (each well refills every two hours). On rainy days the sky does the watering.
 - **Mystery gifts**: surprise presents that drop while you farm and unwrap into decorations.
 - **About 320 decorations** in six collections:
   - *core*: flowers, plants, fences, paths, furniture, lights, water and whimsy
@@ -147,7 +150,7 @@ There are also two helper scripts:
   it live at http://localhost:5173/art-preview.html?mod=all.
 - `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Companion
   scripts check other features (`scripts/blooms-check.mjs` and `scripts/collections-check.mjs` run with `npx tsx`;
-  `scripts/mastery-check.mjs` and `scripts/lonely-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
+  `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs` and `scripts/water-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
   `FARM_ALL_EVENTS=1` on weekdays): `scripts/halloween-check.mjs` covers seasonal visitors and the token shop
   (try `?debug&event=winter`), and `scripts/cooking-check.mjs` covers the kitchen mini-games. Point it at a
   running game with `?debug` in the URL, for example `http://localhost:3001/?debug` after `npm run build &&
@@ -156,7 +159,7 @@ There are also two helper scripts:
 ## Controls
 
 - **Click** things to harvest, collect or open them. **Drag** across crops to harvest a whole field.
-- Use the **toolbar** to switch between Hand, Plow, Seeds, Market, Move, Store and Sell.
+- Use the **toolbar** to switch between Hand, Plow, Seeds, Water, Market, Move, Store and Sell.
 - **Drag** empty ground (or right-drag) to pan the camera. **Scroll** or pinch to zoom. **WASD** or the arrow
   keys also pan.
 - **R** flips a decoration while placing or moving it. **Esc** or right-click cancels.

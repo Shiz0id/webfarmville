@@ -10,6 +10,7 @@ import * as town from './town';
 import * as mastery from './mastery';
 import * as collections from './collections';
 import * as lonely from './lonely';
+import * as water from './water';
 import * as weather from './weather';
 
 export function initFeatures(ctx: FeatureContext): void {
@@ -24,4 +25,5 @@ export function initFeatures(ctx: FeatureContext): void {
   mastery.init(ctx);
   collections.init(ctx);
   lonely.init(ctx);
+  water.init(ctx);
 }

@@ -570,6 +570,17 @@ export const QUEST_LIST: QuestDef[] = [
     goals: [stat('collectionTrade', 1, 'Complete a collection')],
     reward: { coins: 400, xp: 60 },
   },
+  // Well water
+  {
+    id: 'water_works',
+    title: 'Water Works',
+    text: "A thirsty seedling is a slow seedling, dear. Pick up the watering can and give your growing crops a drink. When it runs dry, a Wishing Well or Water Pump fills it right up!",
+    giver: 'Grandma Fern',
+    level: 3,
+    requires: ['welcome'],
+    goals: [stat('waterCrop', 8, 'Water 8 growing crops')],
+    reward: { coins: 200, xp: 30 },
+  },
   // Lonely animals
   {
     id: 'lonely_hearts',

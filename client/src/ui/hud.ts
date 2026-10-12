@@ -1,4 +1,4 @@
-import { CROPS, EVENTS, EVENT_FEATURE_LIST, charmStars, farmCharm, needsAttention, xpForLevel } from '@farm/shared';
+import { CAN_SIZE, CROPS, EVENTS, EVENT_FEATURE_LIST, charmStars, farmCharm, needsAttention, waterLevel, xpForLevel } from '@farm/shared';
 import { iconURL } from '../art';
 import { bus } from '../bus';
 import type { Store } from '../store';
@@ -35,6 +35,7 @@ const TOOLS: { id: Tool | 'shop' | 'cook'; label: string; em: string; hint?: str
   { id: 'hand', label: 'Hand', em: '✋' },
   { id: 'plow', label: 'Plow', em: '⛏️', hint: 'Click or drag over grass to plow plots (15 coins each)' },
   { id: 'seed', label: 'Seeds', em: '🌱' },
+  { id: 'water', label: 'Water', em: '💧', hint: 'Click or drag over growing crops to water them. Tap a Wishing Well or Water Pump to fill your can.' },
   { id: 'shop', label: 'Market', em: '🛒' },
   { id: 'cook', label: 'Cook', em: '🍳' },
   { id: 'move', label: 'Move', em: '🔀', hint: 'Click something to pick it up, then click where it should go' },
@@ -175,6 +176,8 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
         toolbar.append(fb);
       }
   }
+  const waterCount = h('span', { class: 'tool-count' });
+  toolButtons.get('water')?.append(waterCount);
   const hint = h('div', { class: 'mode-hint', style: { display: 'none' } });
 
   // --- zoom ---
@@ -261,6 +264,9 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     const seed = CROPS[tools.seed];
     seedImg.src = iconURL(seed?.id ?? 'strawberry');
     for (const [id, btn] of toolButtons) btn.classList.toggle('active', id === tools.tool);
+    const lvl = waterLevel(st, store.now());
+    waterCount.textContent = `${lvl}`;
+    waterCount.classList.toggle('empty', lvl === 0);
 
     const visiting = store.visit;
     toolbar.style.display = visiting ? 'none' : 'flex';
@@ -275,6 +281,10 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
       let text = '';
       if (tools.tool === 'seed') text = `🌱 Planting ${seed?.name ?? ''} · drag to plant many · Esc to stop`;
       else if (tools.tool === 'plow') text = '⛏️ Plowing · drag to plow many · Esc to stop';
+      else if (tools.tool === 'water') {
+        const lvl = waterLevel(st, store.now());
+        text = lvl ? `💧 Watering · ${lvl}/${CAN_SIZE} in your can · drag over growing crops · Esc to stop` : '💧 Your can is empty · tap a Wishing Well or Water Pump, or wait for it to trickle back';
+      }
       else if (tools.tool === 'place') text = '📍 Placing · R to flip · right-click or Esc to stop';
       else if (tools.tool === 'move') text = tools.moving ? '🔀 Click a free spot to drop it · R to flip' : '🔀 Click something to move';
       else if (tools.tool === 'store') text = '📦 Click a decoration to store it';

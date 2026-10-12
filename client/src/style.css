@@ -2553,3 +2553,8 @@ span.cl-keepsake { font-size: 26px; text-align: center; }
 @media (max-width: 480px) {
   .lo-choices { grid-template-columns: 1fr; }
 }
+
+/* Well water: how much is left in the can, on the Water tool */
+.tool .tool-count { position: absolute; top: 1px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 99px; background: #8fd0ff; border: 2px solid var(--dark); color: var(--dark); font-size: 10px; font-weight: 900; line-height: 14px; text-align: center; }
+.tool .tool-count.empty { background: #e9dccb; color: var(--muted); }
+.toolbar .tool { position: relative; }

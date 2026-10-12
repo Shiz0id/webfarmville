@@ -41,6 +41,7 @@ export const RIBBON_LIST: RibbonDef[] = [
   { id: 'crop_master', name: 'Crop Master', noun: 'mastery stars earned', stat: 'masteryStar', tiers: [1, 8, 20, 48] },
   { id: 'treasure_hunter', name: 'Treasure Hunter', noun: 'collections completed', stat: 'collectionTrade', tiers: [1, 5, 15, 40] },
   { id: 'big_heart', name: 'Big Heart', noun: 'lonely animals helped', stat: 'lonely', tiers: [1, 5, 20, 60] },
+  { id: 'water_sprite', name: 'Water Sprite', noun: 'crops watered by hand', stat: 'waterCrop', tiers: [10, 100, 500, 2000] },
   { id: 'trick_or_treat', name: 'Spooky Host', noun: 'trick-or-treaters greeted', stat: 'treat', tiers: [3, 15, 50, 150] },
 ];
 

@@ -1,6 +1,11 @@
 import Phaser from 'phaser';
 import {
+  isBloom,
+  isWatered,
+  isWell,
   masteryStars,
+  thirsty,
+  wellReadyAt,
   ANIMALS,
   BUILDINGS,
   CROPS,
@@ -458,7 +463,7 @@ export class FarmScene extends Phaser.Scene {
       case 'plot': {
         const st = cropStatus(obj, now);
         const spec: RenderSpec = { tex: obj.fertilized ? 'ground:plot_fert' : 'ground:plot', flat: true };
-        if (obj.watered && obj.crop && WEATHER[weatherAt(now)].wet) spec.tint = 0xa9b4c8;
+        if (obj.watered && obj.crop && (WEATHER[weatherAt(now)].wet || st.stage === 'sprout' || st.stage === 'growing')) spec.tint = 0xa9b4c8;
         if (st.stage === 'sprout') spec.overlay = `crop:${obj.crop}:0`;
         else if (st.stage === 'growing') spec.overlay = `crop:${obj.crop}:1`;
         else if (st.stage === 'ready') {
@@ -848,6 +853,8 @@ export class FarmScene extends Phaser.Scene {
         else lines.push(`🌱 ${Math.floor(st.progress * 100)}% · ready in ${fmtDuration(st.readyAt - now)}`);
         if (st.stage === 'ready') lines.push(`Withers in ${fmtDuration(st.witherAt - now)}`);
         if (obj.fertilized) lines.push('✨ Fertilized by a neighbor (+1 harvest)');
+        if (obj.watered && st.stage !== 'ready' && st.stage !== 'withered') lines.push('💧 Watered');
+        else if (!visiting && thirsty(obj, now)) lines.push('Thirsty: give it some water for a head start');
         const stars = masteryStars(this.store.viewed, def.id);
         if (stars) lines.push(`${'★'.repeat(stars)}${'☆'.repeat(3 - stars)} Mastery`);
         if (visiting && helpKind(obj, now) === 'fertilize') lines.push('Click to fertilize!');
@@ -880,7 +887,12 @@ export class FarmScene extends Phaser.Scene {
       }
       case 'deco': {
         const def = DECORATIONS[obj.def];
-        return { title: def?.name ?? 'Decoration', lines: def?.charm ? [`💗 +${def.charm} charm`] : [] };
+        const lines = def?.charm ? [`💗 +${def.charm} charm`] : [];
+        if (!visiting && isWell(obj)) {
+          const ready = wellReadyAt(this.store.state, obj.id);
+          lines.push(ready > now ? `💧 Filling up · ${fmtDuration(ready - now)}` : '💧 Tap to fill your watering can');
+        }
+        return { title: def?.name ?? 'Decoration', lines };
       }
     }
   }
@@ -929,7 +941,7 @@ export class FarmScene extends Phaser.Scene {
         return;
       }
       const visiting = this.store.isVisiting;
-      if (!visiting && (tools.tool === 'plow' || tools.tool === 'seed')) {
+      if (!visiting && (tools.tool === 'plow' || tools.tool === 'seed' || tools.tool === 'water')) {
         d.mode = 'paint';
         this.paint(tile);
       } else if (!visiting && tools.tool === 'hand' && this.quickAction(tile, true)) {
@@ -1078,6 +1090,15 @@ export class FarmScene extends Phaser.Scene {
         return;
       }
       const action = { type: 'plant' as const, id: plotId, crop: tools.seed };
+      this.paintError(this.store.check(action));
+      this.store.dispatch(action, { quiet: true });
+    } else if (tools.tool === 'water') {
+      if (!obj) return;
+      let action: Parameters<Store['dispatch']>[0] | null = null;
+      if (obj.kind === 'plot' && thirsty(obj, this.store.now())) action = { type: 'waterCrop', id: obj.id };
+      else if (isBloom(obj) && !isWatered(this.store.state, obj.id, this.store.now())) action = { type: 'waterFlower', id: obj.id };
+      else if (isWell(obj)) action = { type: 'drawWater', id: obj.id };
+      if (!action) return;
       this.paintError(this.store.check(action));
       this.store.dispatch(action, { quiet: true });
     }
