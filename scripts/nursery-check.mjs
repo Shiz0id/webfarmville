@@ -141,8 +141,8 @@ editState((st) => {
   for (const o of Object.values(st.objects)) if (o.kind === 'animal' && o.def === 'sheep' && o.grownAt) o.grownAt = Date.now() - 1000;
 });
 await reload();
-await page.evaluate(() => window.__farm.store.dispatch({ type: 'cuddleBaby', id: Object.values(window.__farm.store.state.objects).find((o) => o.x === 13 && o.y === 8).id }));
-await page.waitForTimeout(800);
+// The client notices by itself within a few seconds.
+await page.locator('.toast', { hasText: 'grown up' }).waitFor({ timeout: 8000 }).catch(() => console.log('no grown-up toast'));
 await page.screenshot({ path: `${out}/n8-grew-up.png` });
 console.log('raised', await page.evaluate(() => window.__farm.store.state.stats.raised ?? 0));
 

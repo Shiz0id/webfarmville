@@ -29,6 +29,8 @@ declare module '../types' {
   interface ExtraActions {
     buyBaby: { type: 'buyBaby'; def: string; x: number; y: number; flip?: boolean };
     cuddleBaby: { type: 'cuddleBaby'; id: string };
+    /** Celebrate babies whose time has come (the after-hook does the work). */
+    growUp: { type: 'growUp' };
   }
   interface ExtraEvents {
     cuddled: { type: 'cuddled'; id: string; grown: boolean };
@@ -98,6 +100,10 @@ registerFeature({
       kit.addXp(state, 1, events, kit.centerOf(obj));
       kit.bumpStat(state, 'cuddle');
       events.push({ type: 'cuddled', id: obj.id, grown });
+    },
+    growUp: (state, _a, ctx) => {
+      if (!Object.values(state.objects).some((o) => o.kind === 'animal' && o.grownAt !== undefined && o.grownAt <= ctx.now))
+        throw new GameError('Nobody is ready to grow up yet');
     },
   },
   // Babies whose time has come grow up (and count) on the next action.

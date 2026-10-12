@@ -54,6 +54,15 @@ export function init(ctx: FeatureContext): void {
   bus.on('decoClick', (_id: string, def: string) => {
     if (def === NURSERY_DECO) openNursery();
   });
+  // Celebrate as soon as a baby grows up, not just on the next thing you do.
+  const checkGrown = () => {
+    if (S.visit) return;
+    const now = S.now();
+    if (Object.values(S.state.objects).some((o) => o.kind === 'animal' && o.grownAt !== undefined && o.grownAt <= now))
+      S.dispatch({ type: 'growUp' }, { quiet: true });
+  };
+  window.setTimeout(checkGrown, 2000);
+  window.setInterval(checkGrown, 5000);
   S.onEvents((events) => {
     for (const e of events) {
       if (e.type === 'cuddled') cuddled(e);

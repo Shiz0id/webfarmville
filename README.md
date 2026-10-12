@@ -61,8 +61,14 @@ All of the art is drawn in code at startup, so there are no image assets to down
   Afternoon Tea). Turn a full set in for coins, XP and a mystery gift, plus a keepsake decoration the first time.
   The villagers will swap three spares for a piece you're missing.
 - **Lonely animals** (from the original FarmVille): from level 3, a lost little animal with a name wanders onto
-  your farm once a day. Adopt it (it settles in nearby with its name and a first collection ready) or walk it to
-  the villager who has been hoping for one, for coins, XP, a mystery gift and friendship.
+  your farm once a day. Adopt it (it settles in nearby with its name, as a baby) or walk it to the villager who has
+  been hoping for one, for coins, XP, a mystery gift and friendship. It only rests on open grass, so it never
+  stands in the way of a harvest.
+- **Baby animals and the Nursery Barn** (from FarmVille 2): the Market's Animals tab has a Babies shelf where a
+  chick, calf, lamb, piglet, duckling, kid or bunny kit costs half price. Babies are drawn small and make nothing
+  until they grow up (three production cycles, from 30 minutes up to 12 hours). Tap one for a cuddle once an hour to
+  skip a tenth of the wait; neighbors can feed them too. A Nursery Barn makes every cuddle and treat within three
+  tiles count double, and tapping it lists every little one with a "cuddle everyone" button.
 - **Well water** (from FarmVille 2): pick up the Water tool and tap or drag over growing crops to give them a 25%
   head start, once per crop. The can holds 10 splashes and slowly trickles back by itself, or tap a Wishing Well or
   Water Pump to fill it to the brim (each well refills every two hours). On rainy days the sky does the watering.
@@ -146,11 +152,12 @@ There are also two helper scripts:
 - `node scripts/art-sheet.mjs <module|all> out.png` renders a contact sheet of the generated art. Modules are
   `crops`, `trees`, `animals`, `buildings`, `goods`, `ground`, `decorations`, `seasonal`, `lifestyle`,
   `horticulture`, `spooky_a`/`spooky_b`, `country_a`/`country_b`, `festivals_a`/`festivals_b`, `halloween`,
-  `events_a` through `events_e`, `cooking`, `portraits`, `pets` and `fx`. You can also view
+  `events_a` through `events_e`, `cooking`, `portraits`, `pets`, `fx` and the newer feature modules (`mastery`,
+  `collections`, `nursery`, ...). You can also view
   it live at http://localhost:5173/art-preview.html?mod=all.
 - `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Companion
   scripts check other features (`scripts/blooms-check.mjs` and `scripts/collections-check.mjs` run with `npx tsx`;
-  `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs` and `scripts/water-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
+  `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs`, `scripts/water-check.mjs` and `scripts/nursery-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
   `FARM_ALL_EVENTS=1` on weekdays): `scripts/halloween-check.mjs` covers seasonal visitors and the token shop
   (try `?debug&event=winter`), and `scripts/cooking-check.mjs` covers the kitchen mini-games. Point it at a
   running game with `?debug` in the URL, for example `http://localhost:3001/?debug` after `npm run build &&

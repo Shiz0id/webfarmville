@@ -91,7 +91,7 @@ interface RenderSpec {
 }
 
 /** How big baby animals are drawn, compared with grown-ups. */
-const BABY_SCALE = 0.62;
+const BABY_SCALE = 0.7;
 
 /** Decorations that bob gently in the air. */
 const FLOATERS = /ghost|balloon|sky_lantern|kite|lantern_tree|bubble|pinata|paper_cranes|float/;
@@ -495,6 +495,8 @@ export class FarmScene extends Phaser.Scene {
         if (baby) {
           spec.scale = BABY_SCALE;
           spec.progress = Math.max(0, Math.min(1, 1 - (obj.grownAt! - now) / babyGrowMs(def)));
+          // While the cuddle bubble shows, the bubble says it all.
+          if (!visiting && cuddleReadyAt(obj) <= now) delete spec.progress;
         }
         if (visiting) {
           if (helpKind(obj, now)) spec.bubble = { emoji: obj.kind === 'tree' ? '💧' : '🌾' };
@@ -624,7 +626,8 @@ export class FarmScene extends Phaser.Scene {
       // Gentle breathing.
       this.tweens.add({
         targets: main,
-        scaleY: main.scaleY * 0.965,
+        // Explicit from/to so the pop-in squash below can't become the resting pose.
+        scaleY: { from: main.scaleY, to: main.scaleY * 0.965 },
         duration: 700 + ((obj.x * 37 + obj.y * 11) % 500),
         yoyo: true,
         repeat: -1,
@@ -670,7 +673,7 @@ export class FarmScene extends Phaser.Scene {
       this.tweens.add({ targets: entry.glow, alpha: 0.5, duration: 1400 + Math.random() * 600, yoyo: true, repeat: -1 });
     }
 
-    const top = main.y - main.displayHeight + (artMeta(spec.tex).height > 40 ? 12 : 4);
+    const top = main.y - main.displayHeight + (artMeta(spec.tex).height > 40 ? 12 * (spec.scale ?? 1) : 4) - (spec.scale ? 4 : 0);
     const cx = isoX(obj.x + w / 2, obj.y + h / 2);
     if (spec.bubble) entry.bubble = this.makeBubble(cx, top, spec.bubble);
     if (spec.progress !== undefined) {

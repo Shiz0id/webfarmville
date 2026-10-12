@@ -62,8 +62,9 @@ describe('baby animals', () => {
     expect(obj.grownAt).toBe(T0 + babyGrowMs(ANIMALS.cow));
     expect(producerStatus(obj, T0).ready).toBe(false);
     expect(() => applyAction(s, { type: 'collect', id: obj.id }, { now: obj.grownAt! })).toThrow('Not ready');
+    expect(() => applyAction(s, { type: 'growUp' }, { now: obj.grownAt! - 1 })).toThrow('Nobody');
     // The next action after it has grown up graduates it.
-    const r = applyAction(s, { type: 'lonelyArrive' }, { now: obj.grownAt! + 1 });
+    const r = applyAction(s, { type: 'growUp' }, { now: obj.grownAt! + 1 });
     expect(r.events).toContainEqual(expect.objectContaining({ type: 'grewUp', id: obj.id, def: 'cow' }));
     const grown = r.state.objects[obj.id] as ProducerObject;
     expect(grown.grownAt).toBeUndefined();
