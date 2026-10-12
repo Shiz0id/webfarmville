@@ -1,13 +1,13 @@
 import Phaser from 'phaser';
-import { QUESTS, RIBBONS, RIBBON_COLORS } from '@farm/shared';
+import { EVENTS, QUESTS, RIBBONS, RIBBON_COLORS } from '@farm/shared';
 import './style.css';
 import { ApiError, api, getToken, setToken, type MePayload } from './api';
 import { buildArt } from './art';
 import { bus } from './bus';
 import { FarmScene } from './scenes/FarmScene';
 import { Store } from './store';
-import { halloweenOn } from './scenes/halloween';
-import { setSpookyMusic, sfx, unlockAudioOnGesture } from './sfx';
+import { featuredEvent } from './events';
+import { setMusicStyle, sfx, unlockAudioOnGesture } from './sfx';
 import { setTool } from './tools';
 import { showAuth } from './ui/auth';
 import { closeAllModals, setupTooltip, toast } from './ui/dom';
@@ -39,9 +39,12 @@ async function start(): Promise<void> {
   document.getElementById('boot')?.remove();
 
   const store = new Store(me);
-  const spooky = halloweenOn(store.now(), store.allEvents);
-  setSpookyMusic(spooky);
-  document.body.classList.toggle('halloween', spooky);
+  const feature = featuredEvent(store.now(), store.allEvents);
+  setMusicStyle(feature?.music ?? 'default');
+  if (feature) {
+    document.body.classList.add('festive', `event-${feature.event}`);
+    document.body.style.setProperty('--event', EVENTS[feature.event].color);
+  }
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game',
@@ -146,16 +149,20 @@ async function start(): Promise<void> {
 
   void store.refreshSocial();
   if (import.meta.env.DEV || location.search.includes('debug')) Object.assign(window, { __farm: { store, scene } });
-  if (spooky && !store.state.quests.completed.includes('spooky_sprouts') && store.state.stats.harvest !== undefined) {
-    setTimeout(
-      () =>
-        villagerSay(
-          'Mayor Maple',
-          "Hoo-HOO! Happy Halloween! Candy Corn is sprouting, trick-or-treaters are coming by, and the Candy Shop is open. Check your spooky quests!",
-          { label: 'Spooky quests 🎃', onClick: openQuests },
-        ),
-      1100,
-    );
+  const introSeen = feature ? `farm.intro.${feature.event}.${new Date(store.now()).getUTCFullYear()}` : '';
+  let seen = true;
+  try {
+    seen = !!introSeen && localStorage.getItem(introSeen) === '1';
+  } catch {
+    /* ignore */
+  }
+  if (feature && !seen && store.state.stats.harvest !== undefined) {
+    try {
+      localStorage.setItem(introSeen, '1');
+    } catch {
+      /* ignore */
+    }
+    setTimeout(() => villagerSay(feature.intro.giver, feature.intro.text, { label: 'Event quests ✨', onClick: openQuests }), 1100);
   } else if (store.state.stats.harvest === undefined) {
     setTimeout(
       () =>

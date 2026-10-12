@@ -1,3 +1,4 @@
+import type { MusicStyle } from '@farm/shared';
 // Tiny synthesized sound effects and a gentle music-box tune. No audio files:
 // everything is made with WebAudio oscillators at runtime.
 
@@ -147,35 +148,75 @@ export const sfx = {
 };
 
 // ---------------------------------------------------------------------------
-// Music box: an endless, gently varying arpeggio over I–vi–IV–V.
+// Music box: an endless, gently varying arpeggio. Each seasonal event has its
+// own style (a spooky waltz for Halloween, sleigh bells for winter, ...).
 
-const CHORDS = [
-  [60, 64, 67, 72],
-  [57, 60, 64, 69],
-  [53, 57, 60, 65],
-  [55, 59, 62, 67],
-];
-const PATTERNS = [
-  [0, 1, 2, 3, 2, 1, 2, 1],
-  [0, 2, 1, 3, 2, 3, 1, 2],
-  [0, 1, 2, 1, 3, 2, 1, 2],
-];
-// Halloween: a playful minor-key waltz of a music box (Am – F – Dm – E).
-const SPOOKY_CHORDS = [
-  [57, 60, 64, 69],
-  [53, 57, 60, 65],
-  [50, 53, 57, 62],
-  [52, 56, 59, 64],
-];
-const SPOOKY_PATTERNS = [
-  [0, 2, 3, 2, 1, 2],
-  [0, 3, 2, 1, 2, 3],
-];
-let spooky = false;
+interface Style {
+  chords: number[][];
+  patterns: number[][];
+  beat: number;
+  /** A soft high "tinkle" on the off-beats (sleigh bells, chimes). */
+  bells?: boolean;
+  /** A ghostly "ooo" now and then. */
+  ooo?: boolean;
+}
 
-/** Switch the music box to its Halloween tune. */
-export function setSpookyMusic(on: boolean): void {
-  spooky = on;
+const STYLES: Record<MusicStyle, Style> = {
+  default: {
+    chords: [[60, 64, 67, 72], [57, 60, 64, 69], [53, 57, 60, 65], [55, 59, 62, 67]],
+    patterns: [[0, 1, 2, 3, 2, 1, 2, 1], [0, 2, 1, 3, 2, 3, 1, 2], [0, 1, 2, 1, 3, 2, 1, 2]],
+    beat: 0.34,
+  },
+  spooky: {
+    chords: [[57, 60, 64, 69], [53, 57, 60, 65], [50, 53, 57, 62], [52, 56, 59, 64]],
+    patterns: [[0, 2, 3, 2, 1, 2], [0, 3, 2, 1, 2, 3]],
+    beat: 0.3,
+    ooo: true,
+  },
+  jingle: {
+    chords: [[60, 64, 67, 72], [65, 69, 72, 77], [67, 71, 74, 79], [60, 64, 67, 72]],
+    patterns: [[0, 1, 2, 1, 3, 2, 1, 2], [2, 2, 2, 1, 2, 2, 2, 3]],
+    beat: 0.3,
+    bells: true,
+  },
+  pentatonic: {
+    chords: [[60, 62, 64, 67, 69], [57, 60, 62, 64, 67], [55, 57, 60, 62, 64], [57, 60, 64, 67, 69]],
+    patterns: [[0, 2, 4, 3, 2, 1, 2, 4], [4, 3, 2, 0, 1, 2, 3, 2]],
+    beat: 0.38,
+  },
+  sweet: {
+    chords: [[65, 69, 72, 77], [62, 65, 69, 74], [58, 62, 65, 70], [60, 64, 67, 72]],
+    patterns: [[0, 2, 3, 2, 1, 2], [0, 1, 2, 3, 2, 1]],
+    beat: 0.33,
+  },
+  jig: {
+    chords: [[67, 71, 74, 79], [60, 64, 67, 72], [62, 66, 69, 74], [67, 71, 74, 79]],
+    patterns: [[0, 1, 2, 3, 2, 1], [2, 1, 0, 1, 2, 3]],
+    beat: 0.22,
+  },
+  folk: {
+    chords: [[62, 66, 69, 74], [57, 61, 64, 69], [59, 62, 66, 71], [55, 59, 62, 67]],
+    patterns: [[0, 1, 2, 3, 2, 1, 2, 1], [0, 2, 3, 2, 1, 2, 3, 2]],
+    beat: 0.36,
+  },
+  sunny: {
+    chords: [[60, 64, 67, 72], [65, 69, 72, 77], [60, 64, 67, 72], [67, 71, 74, 79]],
+    patterns: [[0, 2, 1, 3, 0, 2, 1, 3], [0, 1, 2, 3, 3, 2, 1, 0]],
+    beat: 0.28,
+  },
+  party: {
+    chords: [[60, 64, 67, 72], [67, 71, 74, 79], [57, 60, 64, 69], [65, 69, 72, 77]],
+    patterns: [[0, 1, 2, 3, 2, 3, 2, 1], [3, 2, 3, 1, 2, 0, 1, 2]],
+    beat: 0.26,
+    bells: true,
+  },
+};
+
+let style: Style = STYLES.default;
+
+/** Switch the music box to a seasonal style. */
+export function setMusicStyle(name: MusicStyle): void {
+  style = STYLES[name] ?? STYLES.default;
 }
 
 let musicTimer = 0;
@@ -185,21 +226,19 @@ let nextTime = 0;
 function scheduleMusic(): void {
   const a = ctx();
   if (!a) return;
-  const beat = spooky ? 0.3 : 0.34;
-  const barLen = spooky ? 6 : 8;
+  const beat = style.beat;
+  const barLen = style.patterns[0].length;
   while (nextTime < a.currentTime + 0.4) {
     const bar = Math.floor(step / barLen);
-    const chords = spooky ? SPOOKY_CHORDS : CHORDS;
-    const patterns = spooky ? SPOOKY_PATTERNS : PATTERNS;
-    const chord = chords[bar % chords.length];
-    const pattern = patterns[Math.floor(bar / 4) % patterns.length];
-    const note = chord[pattern[step % barLen]] + 12;
+    const chord = style.chords[bar % style.chords.length];
+    const pattern = style.patterns[Math.floor(bar / 4) % style.patterns.length];
+    const note = chord[pattern[step % barLen] % chord.length] + 12;
     const delay = Math.max(0, nextTime - a.currentTime);
     tone(NOTE(note), 0.9, { type: 'sine', vol: 0.11, delay, bus: 'music', attack: 0.004 });
     tone(NOTE(note + 12), 0.4, { type: 'sine', vol: 0.025, delay, bus: 'music', attack: 0.004 });
     if (step % barLen === 0) tone(NOTE(chord[0] - 12), 2.4, { type: 'triangle', vol: 0.05, delay, bus: 'music' });
-    // A spooky little "ooo" on some bars.
-    if (spooky && step % 24 === 3) tone(NOTE(chord[2] + 24), 1.6, { type: 'sine', vol: 0.018, delay, bus: 'music', slide: 0.94, attack: 0.3 });
+    if (style.bells && step % 2 === 1) tone(NOTE(96 + (step % 4 === 1 ? 0 : 3)), 0.12, { type: 'sine', vol: 0.012, delay, bus: 'music' });
+    if (style.ooo && step % 24 === 3) tone(NOTE(chord[2] + 24), 1.6, { type: 'sine', vol: 0.018, delay, bus: 'music', slide: 0.94, attack: 0.3 });
     // Occasional rests keep it from feeling mechanical.
     nextTime += step % (barLen * 2) === barLen * 2 - 1 ? beat * 2 : beat;
     step++;

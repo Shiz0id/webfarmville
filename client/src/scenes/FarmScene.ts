@@ -23,7 +23,8 @@ import { RES, artMeta, registerTextures, texture } from '../art';
 import { rng } from '../art/kit';
 import { Ambience } from './ambience';
 import { Pet } from './pets';
-import { TrickOrTreater, costumeFor, halloweenOn, spawnBats } from './halloween';
+import { Visitor, costumeFor, spawnEventParticles } from './eventLife';
+import { featuredEvent } from '../events';
 import { sfx } from '../sfx';
 import { bus } from '../bus';
 import type { Store } from '../store';
@@ -98,7 +99,7 @@ export class FarmScene extends Phaser.Scene {
   private settled = false;
   private emitters = new Map<string, Phaser.GameObjects.Particles.ParticleEmitter>();
   private pets: Pet[] = [];
-  private treater: TrickOrTreater | null = null;
+  private treater: Visitor | null = null;
 
   private drag: {
     mode: 'none' | 'pending' | 'pan' | 'paint' | 'harvest' | 'pinch';
@@ -154,7 +155,7 @@ export class FarmScene extends Phaser.Scene {
         return { x: isoX(n / 2, n / 2), y: isoY(n / 2, n / 2), r: (n + 8) * HALF_W };
       },
       DEPTH_UI - 200,
-      halloweenOn(this.store.now(), this.store.allEvents),
+      featuredEvent(this.store.now(), this.store.allEvents),
     );
     this.dirty = true;
     this.time.addEvent({ delay: 450, loop: true, callback: () => this.twinkle() });
@@ -169,24 +170,27 @@ export class FarmScene extends Phaser.Scene {
     };
     this.pets = [new Pet(this, 'dog', petOpts), new Pet(this, 'cat', petOpts)];
 
-    if (this.halloween) {
-      spawnBats(this, DEPTH_UI - 190);
+    const feature = this.feature;
+    if (feature) {
+      spawnEventParticles(this, feature, DEPTH_UI - 190);
       this.time.addEvent({ delay: 8000, loop: true, callback: () => this.maybeTrickOrTreat() });
     }
   }
 
-  private get halloween(): boolean {
-    return halloweenOn(this.store.now(), this.store.allEvents);
+  /** The seasonal event currently setting the mood, if any. */
+  private get feature() {
+    return featuredEvent(this.store.now(), this.store.allEvents);
   }
 
   /** Send a trick-or-treater over if there are treats left today. */
   private maybeTrickOrTreat(): void {
-    if (this.treater || this.store.isVisiting || !this.halloween) return;
+    const feature = this.feature;
+    if (this.treater || this.store.isVisiting || !feature) return;
     const t = this.store.state.treats;
     const today = new Date(this.store.now()).toISOString().slice(0, 10);
     if (t && t.day === today && t.count >= 6) return;
     if (Math.random() < 0.55) return;
-    this.treater = new TrickOrTreater(
+    this.treater = new Visitor(
       this,
       {
         isoX,
@@ -194,6 +198,7 @@ export class FarmScene extends Phaser.Scene {
         depthFor: (x, y) => this.depthFor(x, y, 1, 1),
         state: () => this.store.state,
       },
+      feature,
       () => (this.treater = null),
     );
   }
@@ -530,8 +535,9 @@ export class FarmScene extends Phaser.Scene {
       entry.overlay = ov;
     }
 
-    if (obj.kind === 'animal' && !moving && this.halloween && !this.store.isVisiting) {
-      const c = costumeFor(obj.id, obj.def);
+    const feature = this.feature;
+    if (obj.kind === 'animal' && !moving && feature && !this.store.isVisiting) {
+      const c = costumeFor(obj.id, obj.def, feature);
       entry.costume = this.add
         .image(main.x + main.displayWidth / 2 + c.dx, main.y - 16 + c.dy, texture(this, c.key))
         .setScale(1 / RES)
@@ -1000,11 +1006,11 @@ export class FarmScene extends Phaser.Scene {
 
     if (this.treater?.at(tile.x, tile.y) && tools.tool === 'hand') {
       const kid = this.treater;
-      if (store.dispatch({ type: 'treat' })) {
+      if (store.dispatch({ type: 'treat', event: kid.feature.event })) {
         kid.happy();
         sfx.quest();
         this.emitter('fx:heart', 'burst').explode(5, kid.img.x, kid.img.y - 30);
-        bus.emit('toast', 'Happy Halloween! The trick-or-treater shared their candy haul 🍬', 'good');
+        bus.emit('toast', kid.feature.visitorThanks, 'good');
       } else kid.leave();
       return;
     }

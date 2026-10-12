@@ -1,5 +1,7 @@
 import { api, setToken, type MePayload } from '../api';
+import { DECORATION_LIST } from '@farm/shared';
 import { artURL, hasArt } from '../art';
+import { featuredEvent } from '../events';
 import { h } from '../util';
 
 /** Cute farm friends wandering across the title screen. */
@@ -24,13 +26,18 @@ function titleScenery(): HTMLElement[] {
     ['tree:apple_tree:ready', '86%', '60%', '110px'],
     ['deco:scarecrow', '16%', '40%', '90px'],
   ];
-  if (new Date().getMonth() === 9 || new URLSearchParams(location.search).get('event') === 'halloween') {
-    decos.push(
-      ['deco:pumpkin_pile', '22%', '74%', '90px'],
-      ['deco:friendly_ghost', '66%', '24%', '70px'],
-      ['deco:haunted_house', '2%', '36%', '150px'],
-      ['deco:spooky_tree', '88%', '30%', '110px'],
-    );
+  // Dress the title screen for whatever festival is on.
+  const feature = featuredEvent(Date.now());
+  if (feature) {
+    const spots: [string, string, string][] = [
+      ['22%', '74%', '90px'],
+      ['66%', '24%', '80px'],
+      ['2%', '36%', '140px'],
+      ['88%', '30%', '110px'],
+      ['40%', '4%', '80px'],
+    ];
+    const festive = DECORATION_LIST.filter((d) => d.event === feature.event).slice(0, spots.length);
+    festive.forEach((d, i) => decos.push([`deco:${d.id}`, ...spots[i]]));
   }
   decos.forEach(([key, left, top, size], i) => {
     if (!hasArt(key)) return;

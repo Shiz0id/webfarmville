@@ -1,6 +1,7 @@
 // Atmosphere: time-of-day lighting, drifting cloud shadows, seasonal particles
 // and fireflies at night. Purely cosmetic.
 import Phaser from 'phaser';
+import type { EventFeature } from '@farm/shared';
 
 export type DayPhase = 'dawn' | 'day' | 'dusk' | 'night';
 
@@ -40,7 +41,7 @@ export class Ambience {
     private scene: Phaser.Scene,
     private center: () => { x: number; y: number; r: number },
     depth: number,
-    private spooky = false,
+    private feature: EventFeature | null = null,
   ) {
     this.overlay = scene.add
       .rectangle(0, 0, 10, 10, 0xffffff, 0)
@@ -54,7 +55,7 @@ export class Ambience {
 
     this.spawnClouds(depth);
     this.spawnSeasonal(depth + 2);
-    if (spooky) this.spawnFog(depth + 1);
+    if (feature?.event === 'halloween') this.spawnFog(depth + 1);
     this.fireflies = scene.add.particles(0, 0, 'fx:firefly', {
       x: { min: -400, max: 400 },
       y: { min: -250, max: 250 },
@@ -84,8 +85,9 @@ export class Ambience {
   private applyPhase(): void {
     this.phase = dayPhase();
     const t = TINT[this.phase];
-    if (this.spooky && this.phase === 'day') this.overlay.setFillStyle(0x5b2a86, 0.08);
-    else if (this.spooky && this.phase === 'dusk') this.overlay.setFillStyle(0xd9480f, 0.18);
+    const spooky = this.feature?.event === 'halloween';
+    if (this.feature && this.phase === 'day') this.overlay.setFillStyle(...this.feature.tint);
+    else if (spooky && this.phase === 'dusk') this.overlay.setFillStyle(0xd9480f, 0.18);
     else this.overlay.setFillStyle(t.color, t.alpha);
     this.updateFireflies();
   }

@@ -1,17 +1,11 @@
-// Halloween magic: trick-or-treaters, animal costumes and bats.
+// Seasonal life on the farm: costumed visitors, animal costumes and
+// event particles. Every event gets these; Halloween was the first.
 import Phaser from 'phaser';
-import { EVENTS, footprint, isEventActive, type FarmState } from '@farm/shared';
+import { footprint, type EventFeature, type FarmState } from '@farm/shared';
 import { RES, texture } from '../art';
-
-export function halloweenOn(now: number, allEvents: boolean): boolean {
-  const forced = new URLSearchParams(location.search).get('event');
-  return forced === 'halloween' || allEvents || isEventActive(EVENTS.halloween, now);
-}
 
 // ---------------------------------------------------------------------------
 // Animal costumes
-
-const COSTUMES = ['costume:witch_hat', 'costume:pumpkin_hat', 'costume:bat_bow'];
 
 /** Where each animal's head is, relative to its tile centre (sprites face bottom-left). */
 const HEADS: Record<string, [number, number]> = {
@@ -25,14 +19,15 @@ const HEADS: Record<string, [number, number]> = {
   beehive: [0, -44],
 };
 
-export function costumeFor(id: string, def: string): { key: string; dx: number; dy: number } {
+export function costumeFor(id: string, def: string, feature: EventFeature): { key: string; dx: number; dy: number } {
   const hash = [...id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
   const [dx, dy] = HEADS[def] ?? [-8, -28];
-  return { key: def === 'beehive' ? 'costume:witch_hat' : COSTUMES[hash % COSTUMES.length], dx, dy };
+  const list = feature.costumes;
+  return { key: def === 'beehive' ? list[0] : list[hash % list.length], dx, dy };
 }
 
 // ---------------------------------------------------------------------------
-// Trick-or-treaters
+// Costumed visitors (trick-or-treaters, carolers, lion dancers, ...)
 
 interface WalkerOpts {
   isoX: (x: number, y: number) => number;
@@ -41,9 +36,7 @@ interface WalkerOpts {
   state: () => FarmState;
 }
 
-const KIDS = ['ghost', 'pumpkin', 'witch'];
-
-export class TrickOrTreater {
+export class Visitor {
   img: Phaser.GameObjects.Image;
   bubble: Phaser.GameObjects.Container;
   x: number;
@@ -56,21 +49,23 @@ export class TrickOrTreater {
   constructor(
     private scene: Phaser.Scene,
     private o: WalkerOpts,
+    readonly feature: EventFeature,
     private onGone: () => void,
   ) {
     const st = o.state();
-    this.kind = KIDS[Math.floor(Math.random() * KIDS.length)];
+    const kinds = feature.visitors;
+    this.kind = kinds[Math.floor(Math.random() * kinds.length)];
     // Arrive from the lane along the bottom-right edge of the farm.
     this.x = st.size + 1.5;
     this.y = Math.floor(st.size / 2) + 0.5;
-    this.img = scene.add.image(0, 0, texture(scene, `npc:kid_${this.kind}`)).setOrigin(0.5, 1).setScale(1 / RES);
+    this.img = scene.add.image(0, 0, texture(scene, `npc:${this.kind}`)).setOrigin(0.5, 1).setScale(1 / RES);
     this.bubble = scene.add.container(0, 0).setDepth(999_000).setVisible(false);
     const g = scene.add.graphics();
     g.fillStyle(0xfffaf0, 1).lineStyle(2, 0x4a3426, 1);
     g.fillRoundedRect(-20, -14, 40, 24, 10).strokeRoundedRect(-20, -14, 40, 24, 10);
     g.fillTriangle(-4, 9, 4, 9, 0, 15);
     this.bubble.add(g);
-    this.bubble.add(scene.add.image(-7, -2, texture(scene, 'icon:candy')).setDisplaySize(18, 18));
+    this.bubble.add(scene.add.image(-7, -2, texture(scene, `icon:${feature.currency}`)).setDisplaySize(18, 18));
     this.bubble.add(scene.add.text(3, -2, '?', { fontFamily: 'Nunito, sans-serif', fontSize: '16px', fontStyle: '900', color: '#4a3426' }).setOrigin(0, 0.5));
     this.place();
     const target = this.pickDoorstep();
@@ -118,7 +113,7 @@ export class TrickOrTreater {
       loop: true,
       callback: () => {
         step = !step;
-        this.img.setTexture(texture(this.scene, `npc:kid_${this.kind}${step ? '_walk' : ''}`));
+        this.img.setTexture(texture(this.scene, `npc:${this.kind}${step ? '_walk' : ''}`));
       },
     });
     this.scene.tweens.add({
@@ -129,7 +124,7 @@ export class TrickOrTreater {
       onUpdate: () => this.place(),
       onComplete: () => {
         this.frameTimer?.remove();
-        this.img.setTexture(texture(this.scene, `npc:kid_${this.kind}`));
+        this.img.setTexture(texture(this.scene, `npc:${this.kind}`));
         done();
       },
     });
@@ -172,18 +167,21 @@ export class TrickOrTreater {
   }
 }
 
-/** Little bats fluttering across the sky. */
-export function spawnBats(scene: Phaser.Scene, depth: number): void {
-  const { height } = scene.scale;
-  const e = scene.add.particles(0, 0, texture(scene, 'fx:bat'), {
-    x: -60,
-    y: { min: 0, max: height * 0.6 },
-    lifespan: 9000,
-    speedX: { min: 90, max: 170 },
-    speedY: { min: -25, max: 15 },
-    scale: { min: 0.35, max: 0.6 },
-    frequency: 2600,
-    quantity: 1,
-  });
-  e.setScrollFactor(0).setDepth(depth);
+/** Event particles: bats swoop across, lanterns rise, everything else drifts down. */
+export function spawnEventParticles(scene: Phaser.Scene, feature: EventFeature, depth: number): void {
+  const { width, height } = scene.scale;
+  for (const tex of feature.particles) {
+    const key = texture(scene, tex);
+    let config: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig;
+    if (tex === 'fx:bat') {
+      config = { x: -60, y: { min: 0, max: height * 0.6 }, lifespan: 9000, speedX: { min: 90, max: 170 }, speedY: { min: -25, max: 15 }, scale: { min: 0.35, max: 0.6 }, frequency: 2600 };
+    } else if (/lantern/.test(tex)) {
+      config = { x: { min: 0, max: width }, y: height + 40, lifespan: 16000, speedY: { min: -40, max: -22 }, speedX: { min: -6, max: 6 }, scale: { min: 0.35, max: 0.6 }, alpha: { values: [0, 1, 1, 0] }, frequency: 2200 };
+    } else if (tex === 'fx:snow' || tex === 'fx:petal' || /leaf/.test(tex)) {
+      continue; // the seasonal weather already covers these
+    } else {
+      config = { x: { min: -width, max: width * 2 }, y: -40, lifespan: 14000, speedY: { min: 25, max: 55 }, speedX: { min: -15, max: 25 }, rotate: { start: 0, end: 360 }, scale: { min: 0.22, max: 0.38 }, alpha: { start: 0.95, end: 0.6 }, frequency: 1100 };
+    }
+    scene.add.particles(0, 0, key, config).setScrollFactor(0).setDepth(depth);
+  }
 }

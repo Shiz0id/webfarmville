@@ -1483,12 +1483,21 @@ img.ico {
   background: #fff8dc;
 }
 
-body.halloween .modal-head {
+/* Festive theming follows the featured event's colour. */
+body.festive .modal-head {
+  background: linear-gradient(90deg, var(--paper-2), color-mix(in srgb, var(--event) 35%, white));
+}
+
+body.festive .toolbar {
+  border-color: color-mix(in srgb, var(--event) 55%, var(--dark));
+}
+
+body.event-halloween .modal-head {
   background: linear-gradient(90deg, #ffd7a3, #e9d5ff);
 }
 
-body.halloween .toolbar,
-body.halloween .pill,
-body.halloween .round-btn {
+body.event-halloween .toolbar,
+body.event-halloween .pill,
+body.event-halloween .round-btn {
   box-shadow: 0 4px 0 rgba(76, 42, 116, 0.35), 0 10px 24px rgba(40, 10, 60, 0.2);
 }

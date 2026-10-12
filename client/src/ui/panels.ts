@@ -12,6 +12,7 @@ import {
   ITEMS,
   ITEM_LIST,
   QUESTS,
+  EVENT_FEATURES,
   villagerFor,
   RIBBON_COLORS,
   RIBBON_LIST,
@@ -36,6 +37,7 @@ import { setTool } from '../tools';
 import { fmtDuration, fmtNum, h, nameOf, timeAgo } from '../util';
 import { confetti, openModal, toast } from './dom';
 import { portrait } from './villager';
+import { eventLive as liveEvent } from '../events';
 import { bus } from '../bus';
 
 let S: Store;
@@ -86,7 +88,8 @@ interface CardOpts {
   img: string;
   name: string;
   price?: number;
-  candy?: number;
+  tokens?: number;
+  tokenIcon?: string;
   meta?: (string | Node)[];
   locked?: string | false;
   charm?: number;
@@ -103,8 +106,8 @@ function card(o: CardOpts): HTMLElement {
     o.owned ? h('span', { class: 'owned' }, `×${o.owned}`) : null,
     h('div', { class: 'art' }, h('img', { src: o.img, alt: o.name, loading: 'lazy' })),
     h('div', { class: 'name' }, o.name),
-    o.candy
-      ? h('div', { class: 'price candy' }, h('img', { class: 'ico', src: iconURL('candy') }), fmtNum(o.candy))
+    o.tokens
+      ? h('div', { class: 'price candy' }, h('img', { class: 'ico', src: iconURL(o.tokenIcon ?? 'candy') }), fmtNum(o.tokens))
       : o.price !== undefined
         ? h('div', { class: 'price' }, coin(), o.price === 0 ? 'Free' : fmtNum(o.price))
         : null,
@@ -118,7 +121,7 @@ function card(o: CardOpts): HTMLElement {
 }
 
 function eventLive(ev: string): boolean {
-  return S.allEvents || isEventActive(EVENTS[ev], S.now()) || new URLSearchParams(location.search).get('event') === ev;
+  return liveEvent(ev, S.now(), S.allEvents);
 }
 
 function levelLock(level: number): string | false {
@@ -282,15 +285,21 @@ export function openShop(tab: ShopTab = 'seeds'): void {
                 h('span', null, on ? 'Available now!' : eventReturn(ev)),
               ),
             );
-            const evItems = items.filter((x) => x.event === evId).sort((a, b) => Number(!!b.candy) - Number(!!a.candy));
-            if (on && evItems.some((x) => x.candy)) {
+            const evItems = items.filter((x) => x.event === evId).sort((a, b) => Number(!!b.tokens) - Number(!!a.tokens));
+            const feature = EVENT_FEATURES[evId];
+            if (on && feature && evItems.some((x) => x.tokens)) {
               body.append(
                 h(
                   'div',
                   { class: 'candy-banner' },
-                  h('img', { src: iconURL('candy') }),
-                  h('div', null, h('b', null, 'Candy Shop'), h('div', null, 'Exclusive treats, paid in candy. Harvest, collect and greet trick-or-treaters to earn more!')),
-                  h('div', { class: 'candy-count' }, fmtNum(S.state.inventory.candy ?? 0)),
+                  h('img', { src: iconURL(feature.currency) }),
+                  h(
+                    'div',
+                    null,
+                    h('b', null, `${ev.name} Token Shop`),
+                    h('div', null, `Exclusives paid in ${feature.currencyName.toLowerCase()}. Harvest, collect and greet ${feature.visitorName}s to earn more!`),
+                  ),
+                  h('div', { class: 'candy-count' }, fmtNum(S.state.inventory[feature.currency] ?? 0)),
                 ),
               );
             }
@@ -301,7 +310,8 @@ export function openShop(tab: ShopTab = 'seeds'): void {
                   img: artURL(`deco:${d.id}`),
                   name: d.name,
                   price: d.cost,
-                  candy: d.candy,
+                  tokens: d.tokens,
+                  tokenIcon: EVENT_FEATURES[d.event ?? '']?.currency,
                   charm: d.charm,
                   owned: owned(d.id),
                   locked: on ? false : eventReturn(ev),
@@ -404,7 +414,8 @@ const CAT_LABEL: Record<ItemCategory, string> = {
   fruit: '🍎 Fruit',
   animal: '🥚 Animal goods',
   good: '🧺 Crafted goods',
-  special: '🍬 Special',
+  dish: '🍲 Home cooking',
+  special: '🎟️ Event tokens',
 };
 
 export function openBarn(): void {
@@ -413,7 +424,7 @@ export function openBarn(): void {
     (body) => {
       const inv = S.state.inventory;
       let any = false;
-      for (const cat of ['crop', 'fruit', 'animal', 'good'] as ItemCategory[]) {
+      for (const cat of ['crop', 'fruit', 'animal', 'good', 'dish', 'special'] as ItemCategory[]) {
         const items = ITEM_LIST.filter((i) => i.category === cat && (inv[i.id] ?? 0) > 0);
         if (!items.length) continue;
         any = true;
@@ -429,10 +440,12 @@ export function openBarn(): void {
                 'div',
                 { class: 'grow' },
                 h('div', { class: 'title' }, `${it.name} ×${qty}`),
-                h('div', { class: 'sub' }, `Sells for ${it.sell} each`),
+                h('div', { class: 'sub' }, cat === 'special' ? 'Spend these in the seasonal token shop' : `Sells for ${it.sell} each`),
               ),
-              h('button', { class: 'btn small', onclick: () => S.dispatch({ type: 'sellItem', item: it.id, qty: 1 }) }, 'Sell 1'),
-              qty > 1
+              cat === 'special'
+                ? null
+                : h('button', { class: 'btn small', onclick: () => S.dispatch({ type: 'sellItem', item: it.id, qty: 1 }) }, 'Sell 1'),
+              qty > 1 && cat !== 'special'
                 ? h(
                     'button',
                     { class: 'btn small gold', onclick: () => S.dispatch({ type: 'sellItem', item: it.id, qty }) },

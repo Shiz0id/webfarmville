@@ -1,9 +1,9 @@
-import { CROPS, charmStars, farmCharm, needsAttention, xpForLevel } from '@farm/shared';
+import { CROPS, EVENTS, EVENT_FEATURE_LIST, charmStars, farmCharm, needsAttention, xpForLevel } from '@farm/shared';
 import { iconURL } from '../art';
 import { bus } from '../bus';
 import type { Store } from '../store';
 import { setTool, tools, type Tool } from '../tools';
-import { halloweenOn } from '../scenes/halloween';
+import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
 import { fmtNum, h } from '../util';
 import {
@@ -57,20 +57,30 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     h('div', null, farmName, h('div', { class: 'xpbar' }, xpFill), xpText),
   );
   const coinPill = h('div', { class: 'pill', title: 'Coins' }, h('img', { class: 'ico', src: iconURL('coin') }), coins);
-  const candy = h('span');
-  const candyPill = h(
-    'div',
-    { class: 'pill candy-pill', title: 'Halloween candy: spend it in the Candy Shop (Market › Decor › Seasonal)', onclick: () => openShop('decor') },
-    h('img', { class: 'ico', src: iconURL('candy') }),
-    candy,
-  );
+  // One pill per running event currency (e.g. candy at Halloween).
+  const currencyPills = new Map<string, { pill: HTMLElement; count: HTMLElement }>();
+  for (const f of EVENT_FEATURE_LIST) {
+    const count = h('span');
+    const pill = h(
+      'div',
+      {
+        class: 'pill candy-pill',
+        title: `${f.currencyName}: spend them in the ${EVENTS[f.event].name} shop (Market › Decor › Seasonal)`,
+        onclick: () => openShop('decor'),
+      },
+      h('img', { class: 'ico', src: iconURL(f.currency) }),
+      count,
+    );
+    pill.style.display = 'none';
+    currencyPills.set(f.currency, { pill, count });
+  }
   const hud = h(
     'div',
     { class: 'hud' },
     levelPill,
     coinPill,
     h('div', { class: 'pill', title: 'Farm charm' }, h('img', { class: 'ico', src: iconURL('charm') }), charm, stars),
-    candyPill,
+    ...[...currencyPills.values()].map((c) => c.pill),
   );
 
   // --- top-right buttons ---
@@ -181,9 +191,12 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     xpFill.style.width = `${Math.min(100, ((st.xp - lo) / Math.max(1, hi - lo)) * 100)}%`;
     xpText.textContent = `${fmtNum(st.xp - lo)} / ${fmtNum(hi - lo)} XP`;
     coins.textContent = fmtNum(st.coins);
-    const candyCount = st.inventory.candy ?? 0;
-    candy.textContent = fmtNum(candyCount);
-    candyPill.style.display = candyCount > 0 || halloweenOn(store.now(), store.allEvents) ? 'flex' : 'none';
+    const live = new Set(activeFeatures(store.now()).map((f) => f.currency));
+    for (const [cur, c] of currencyPills) {
+      const n = st.inventory[cur] ?? 0;
+      c.count.textContent = fmtNum(n);
+      c.pill.style.display = live.has(cur) ? 'flex' : 'none';
+    }
     const c = farmCharm(st);
     charm.textContent = fmtNum(c);
     const s = charmStars(c);
