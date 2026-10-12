@@ -8,6 +8,7 @@ import { sfx } from '../sfx';
 import type { Store } from '../store';
 import { eventLive } from '../events';
 import { fmtNum, h, nameOf } from '../util';
+import { forFingers } from './layout';
 import { confetti, openModal, toast } from './dom';
 import { portrait } from './villager';
 
@@ -447,7 +448,7 @@ async function cook(dish: DishDef): Promise<void> {
   for (const [i, step] of dish.steps.entries()) {
     const info = STEP_INFO[step];
     st.title.textContent = `Step ${i + 1}/${dish.steps.length}: ${info.title}`;
-    st.hint.textContent = info.hint;
+    st.hint.textContent = forFingers(info.hint);
     st.arena.replaceChildren();
     say(st, info.cheer);
     const go = h('div', { class: 'k-ready' }, 'Ready… Go!');

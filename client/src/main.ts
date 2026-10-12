@@ -14,6 +14,7 @@ import { setTool } from './tools';
 import { showAuth } from './ui/auth';
 import { closeAllModals, setupTooltip, toast } from './ui/dom';
 import { mountHud } from './ui/hud';
+import { setupLayout } from './ui/layout';
 import { dailyAvailable, initPanels, showUnwrap, openBuilding, openFarmhouse, openQuests, openSeedPicker, showLevelUp } from './ui/panels';
 import { villagerSay } from './ui/villager';
 import { initFeatures } from './features';
@@ -35,6 +36,7 @@ async function signIn(): Promise<MePayload> {
 }
 
 async function start(): Promise<void> {
+  setupLayout();
   // Paint all the art while we talk to the server.
   await new Promise((r) => setTimeout(r, 0));
   buildArt();

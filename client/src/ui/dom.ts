@@ -86,6 +86,7 @@ export function openModal(
     body,
   );
   back.append(modal);
+  swipeToClose(modal, modal.querySelector('.modal-head') as HTMLElement, close);
   back.addEventListener('pointerdown', (e) => {
     if (e.target === back) close();
   });
@@ -93,6 +94,37 @@ export function openModal(
   stack.push({ back, onClose: opts.onClose });
   bus.emit('hover', null);
   return { el: modal, body, close, setTitle: (t) => (titleEl.textContent = t) };
+}
+
+/** On phones a panel is a bottom sheet: drag its header down to put it away. */
+function swipeToClose(sheet: HTMLElement, grip: HTMLElement, close: () => void): void {
+  grip.addEventListener('pointerdown', (e) => {
+    if (!document.body.classList.contains('layout-phone') || (e.target as HTMLElement).closest('button')) return;
+    const y0 = e.clientY;
+    let dy = 0;
+    grip.setPointerCapture(e.pointerId);
+    sheet.style.transition = 'none';
+    const move = (ev: PointerEvent) => {
+      dy = Math.max(0, ev.clientY - y0);
+      sheet.style.transform = `translateY(${dy}px)`;
+    };
+    const up = () => {
+      grip.removeEventListener('pointermove', move);
+      grip.removeEventListener('pointerup', up);
+      grip.removeEventListener('pointercancel', up);
+      if (dy > 90) {
+        sheet.style.transition = 'transform 0.18s ease-in';
+        sheet.style.transform = 'translateY(100%)';
+        setTimeout(close, 170);
+      } else {
+        sheet.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        sheet.style.transform = '';
+      }
+    };
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', up);
+    grip.addEventListener('pointercancel', up);
+  });
 }
 
 export function closeAllModals(): void {

@@ -902,7 +902,9 @@ img.ico {
   transform-origin: left center;
 }
 
-.modal-head .close {
+.modal-head .close,
+.pond-top .close,
+.k-top .close {
   margin-left: auto;
   flex: none;
   width: 38px;
@@ -917,11 +919,15 @@ img.ico {
   transition: transform 0.2s var(--spring);
 }
 
-.modal-head .close:hover {
+.modal-head .close:hover,
+.pond-top .close:hover,
+.k-top .close:hover {
   transform: rotate(90deg) scale(1.06);
 }
 
-.modal-head .close:active {
+.modal-head .close:active,
+.pond-top .close:active,
+.k-top .close:active {
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--red-d);
 }
@@ -3089,4 +3095,526 @@ span.cl-keepsake { font-size: 26px; text-align: center; }
 @media (max-width: 480px) {
   .ws-box { flex-wrap: wrap; }
   .ws-box .btn { width: 100%; }
+}
+
+/* ======================================================================== */
+/* Phone and tablet layouts (body classes come from ui/layout.ts)           */
+/* ======================================================================== */
+
+/* Fingers leave hover stuck on after a tap, so touch screens skip hover lifts. */
+.touch .round-btn:hover {
+  transform: none;
+}
+.touch .card:hover:not(.locked) {
+  transform: none;
+  border-color: var(--line);
+  box-shadow: 0 3px 0 var(--line-soft), var(--soft);
+}
+.touch .card:hover:not(.locked) .art img {
+  animation: none;
+}
+.touch .tool:not(.active):not(.shop):hover {
+  background: transparent;
+}
+.touch .tool:hover .em {
+  transform: none;
+}
+.touch .btn:hover:not(:disabled) {
+  transform: none;
+  filter: none;
+  box-shadow: 0 4px 0 var(--bl), inset 0 2px 0 rgba(255, 255, 255, 0.55);
+}
+
+/* Three little dots for "more" buttons without a painted icon. */
+.dots {
+  display: flex;
+  gap: 3px;
+}
+.dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 1.5px 0 var(--mint-d);
+}
+.dots i:nth-child(2) {
+  background: var(--pink);
+  box-shadow: 0 1.5px 0 var(--pink-d);
+}
+.dots i:nth-child(3) {
+  background: var(--gold);
+  box-shadow: 0 1.5px 0 #d9a63a;
+}
+
+/* Touch mode hints carry Flip and Done buttons in place of R and Esc. */
+.mode-hint {
+  align-items: center;
+  gap: 8px;
+}
+.mode-hint.has-btns {
+  padding: 4px 5px 4px 14px;
+}
+.hint-btn {
+  pointer-events: auto;
+  flex: none;
+  border: 2px solid rgba(255, 251, 234, 0.45);
+  background: rgba(255, 251, 234, 0.14);
+  color: var(--cream);
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 4px 11px;
+}
+.hint-btn.done {
+  background: var(--mint);
+  border-color: var(--mint-l);
+  box-shadow: 0 2px 0 var(--mint-d);
+}
+
+/* The tool tray and farm menu only exist on phones. */
+.tool-tray {
+  position: fixed;
+  /* Above villager chatter (35), below panels (40). */
+  right: 8px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  display: none;
+  grid-template-columns: repeat(3, 66px);
+  gap: 6px;
+  padding: 8px;
+  background: var(--dots), var(--cream);
+  border: 2px solid var(--dark);
+  border-radius: 22px;
+  box-shadow: 0 4px 0 rgba(94, 65, 41, 0.3), 0 12px 26px rgba(61, 52, 40, 0.22);
+  z-index: 36;
+  transform-origin: 85% 100%;
+}
+.tool-tray.open {
+  display: grid;
+  animation: pop 0.3s var(--spring);
+}
+.tool-tray::after {
+  content: '';
+  position: absolute;
+  right: 26px;
+  bottom: -10px;
+  width: 16px;
+  height: 10px;
+  background: var(--dark);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.tool-tray .tool {
+  min-width: 0;
+  width: 66px;
+  height: 60px;
+}
+.more-tools.open {
+  background: var(--paper-2);
+}
+
+.drawer-back {
+  position: fixed;
+  inset: 0;
+  z-index: 38;
+  background: rgba(50, 35, 10, 0.35);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s var(--ease), visibility 0.2s;
+}
+.drawer-back.open {
+  opacity: 1;
+  visibility: visible;
+}
+.drawer {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  background: var(--dots), var(--cream);
+  border: 3px solid var(--dark);
+  border-bottom: 0;
+  border-radius: 28px 28px 0 0;
+  padding: 8px 14px calc(18px + env(safe-area-inset-bottom));
+  transform: translateY(100%);
+  transition: transform 0.35s var(--spring);
+}
+.drawer-back.open .drawer {
+  transform: none;
+}
+.drawer-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(94, 65, 41, 0.22);
+  margin: 0 auto 8px;
+}
+.drawer-title {
+  width: max-content;
+  margin: 0 auto 14px;
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(10, 110, 100, 0.45);
+  padding: 3px 24px 4px;
+  background: linear-gradient(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 50%), var(--mint);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%, 10px 50%);
+}
+.drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 26px 8px;
+  justify-items: center;
+  padding-bottom: 18px;
+}
+.drawer-grid .round-btn,
+.drawer-grid .round-btn.small-round {
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+}
+.drawer-grid .round-btn > img.ui-ico {
+  width: 42px;
+  height: 42px;
+}
+.drawer-grid .round-btn small {
+  opacity: 1;
+  transform: translateX(-50%) translateY(100%);
+  background: none;
+  color: var(--ink);
+  font-size: 11.5px;
+  padding: 0;
+}
+
+/* Panel headers and tab rows never squash when the content is long. */
+.modal-head,
+.modal-tabs {
+  flex: none;
+}
+
+/* ---------- Phone ---------- */
+
+.layout-phone .hud {
+  top: calc(8px + env(safe-area-inset-top));
+  left: 8px;
+  gap: 5px;
+  max-width: calc(100% - 76px);
+}
+.layout-phone .pill {
+  min-height: 34px;
+  font-size: 14px;
+  padding: 2px 10px 2px 3px;
+  gap: 4px;
+}
+.layout-phone .pill img.ico {
+  width: 22px;
+  height: 22px;
+}
+.layout-phone .farm-name,
+.layout-phone .stars,
+.layout-phone .xp-text {
+  display: none;
+}
+.layout-phone .level-badge {
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+  margin: 2px;
+  box-shadow: 0 0 0 2px #ffe9a8, 0 0 0 3.5px rgba(201, 138, 28, 0.55);
+}
+.layout-phone .xpbar {
+  width: 54px;
+  height: 11px;
+}
+.layout-phone .wx-pill {
+  padding-right: 4px;
+}
+.layout-phone .wx-pill .wx-label {
+  display: none;
+}
+.layout-phone .corner {
+  top: calc(8px + env(safe-area-inset-top));
+  right: 8px;
+  grid-template-rows: repeat(auto-fill, 52px);
+  gap: 8px;
+}
+.layout-phone .corner .round-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+}
+.layout-phone .corner .round-btn > img.ui-ico {
+  width: 36px;
+  height: 36px;
+}
+.layout-phone .corner .round-btn small {
+  display: none;
+}
+.layout-phone .zoom {
+  display: none;
+}
+
+.layout-phone .toolbar {
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  padding: 5px;
+  gap: 2px;
+  border-radius: 22px;
+  overflow: visible;
+}
+.layout-phone .tool {
+  min-width: 56px;
+  height: 56px;
+  font-size: 11px;
+  padding: 2px 3px;
+}
+.layout-phone .tool .em,
+.layout-phone .tool .em img {
+  width: 30px;
+  height: 30px;
+}
+.layout-phone .tool.shop {
+  min-width: 62px;
+}
+
+.layout-phone .mode-hint {
+  bottom: calc(82px + env(safe-area-inset-bottom));
+  max-width: calc(100% - 16px);
+  white-space: normal;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.25;
+}
+/* Toasts drop in from the top on phones, clear of the dock and the sheets. */
+.layout-phone .toasts {
+  bottom: auto;
+  top: calc(96px + env(safe-area-inset-top));
+  flex-direction: column;
+  width: max-content;
+  max-width: calc(100% - 80px);
+}
+.layout-phone.orient-landscape .toasts {
+  top: 54px;
+}
+.layout-phone .toast {
+  font-size: 13px;
+}
+.layout-phone .villager-say {
+  left: 6px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+}
+
+/* Panels slide up as bottom sheets with a grab handle (swipe down to close). */
+.layout-phone .modal-back {
+  align-items: flex-end;
+  padding: 0;
+}
+.layout-phone .modal {
+  width: 100%;
+  max-height: 92dvh;
+  border-radius: 28px 28px 0 0;
+  border-bottom: 0;
+  animation: sheet-up 0.4s var(--spring);
+}
+.layout-phone .modal.narrow {
+  width: 100%;
+}
+.layout-phone .modal::after {
+  bottom: -12px;
+  border-radius: 23px 23px 0 0;
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+.layout-phone .modal-head {
+  padding: 18px 12px 10px 12px;
+  touch-action: none;
+}
+.layout-phone .modal-head::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 44px;
+  height: 5px;
+  margin-left: -22px;
+  border-radius: 99px;
+  background: rgba(94, 65, 41, 0.25);
+}
+.layout-phone .modal-head h2 {
+  font-size: 18px;
+}
+.layout-phone .modal-head .close {
+  width: 34px;
+  height: 34px;
+  font-size: 15px;
+}
+.layout-phone .modal-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 12px 6px;
+}
+.layout-phone .modal-tabs::-webkit-scrollbar {
+  display: none;
+}
+.layout-phone .modal-tabs .btn.tab {
+  flex: none;
+}
+.layout-phone .modal-body {
+  padding: 10px 12px calc(16px + env(safe-area-inset-bottom));
+}
+.layout-phone .grid {
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+}
+.layout-phone .card .art {
+  height: 66px;
+}
+.layout-phone .card .art img {
+  max-height: 66px;
+}
+
+/* Phones on their side: everything gets shorter. */
+.layout-phone.orient-landscape .modal {
+  width: min(700px, 100%);
+  max-height: calc(100dvh - 6px);
+}
+.layout-phone.orient-landscape .modal-head {
+  padding: 14px 12px 6px;
+}
+.layout-phone.orient-landscape .corner {
+  grid-template-rows: repeat(auto-fill, 46px);
+  gap: 6px;
+}
+.layout-phone.orient-landscape .corner .round-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+}
+.layout-phone.orient-landscape .corner .round-btn > img.ui-ico {
+  width: 32px;
+  height: 32px;
+}
+.layout-phone.orient-landscape .hud {
+  max-width: calc(100% - 140px);
+}
+.layout-phone.orient-landscape .toolbar {
+  bottom: 6px;
+}
+.layout-phone.orient-landscape .tool {
+  height: 50px;
+}
+.layout-phone.orient-landscape .tool-tray {
+  bottom: 72px;
+}
+.layout-phone.orient-landscape .mode-hint {
+  bottom: 74px;
+}
+.layout-phone.orient-landscape .villager-say {
+  bottom: 74px;
+}
+.layout-phone.orient-landscape .drawer {
+  max-width: 640px;
+}
+.layout-phone.orient-landscape .drawer-grid {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+/* ---------- Tablet ---------- */
+
+.layout-tablet .hud {
+  max-width: calc(100% - 180px);
+}
+.layout-tablet .corner {
+  grid-template-rows: repeat(auto-fill, 60px);
+  gap: 22px 12px;
+  max-height: calc(100vh - 140px);
+}
+.layout-tablet .corner .round-btn,
+.layout-tablet .corner .round-btn.small-round {
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+}
+.layout-tablet .corner .round-btn > img.ui-ico {
+  width: 42px;
+  height: 42px;
+}
+/* Labels always show under the corner buttons. */
+.layout-tablet .corner .round-btn small {
+  opacity: 1;
+  transform: translateX(-50%) translateY(100%);
+  font-size: 10.5px;
+  padding: 1px 7px;
+}
+.layout-tablet .tool {
+  min-width: 68px;
+  height: 64px;
+  font-size: 12px;
+}
+.layout-tablet .tool .em,
+.layout-tablet .tool .em img {
+  width: 34px;
+  height: 34px;
+}
+.layout-tablet .zoom {
+  display: none;
+}
+.layout-tablet .modal {
+  width: min(840px, 100%);
+  max-height: 88vh;
+}
+.layout-tablet .modal.narrow {
+  width: min(480px, 100%);
+}
+.layout-tablet .grid {
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  gap: 12px;
+}
+.layout-tablet .btn {
+  padding: 9px 15px;
+}
+.layout-tablet .btn.small {
+  padding: 6px 11px;
+  font-size: 13px;
+}
+
+/* Mini-game helpers shrink on phones and step aside on short landscape screens. */
+.layout-phone .k-mama .portrait {
+  width: 52px !important;
+  height: 52px !important;
+}
+.layout-phone .k-bubble {
+  font-size: 13px;
+  padding: 8px 12px;
+}
+.layout-phone.orient-landscape .k-mama {
+  display: none;
+}
+/* On a phone Grandma's pond tip sits under the top bar instead of over the Cast button. */
+.layout-phone .pond .pond-top {
+  order: 0;
+}
+.layout-phone .pond .k-mama {
+  order: 1;
+  position: static;
+  max-width: calc(100% - 24px);
+}
+.layout-phone .pond .pond-water {
+  order: 2;
+}
+.layout-phone .pond .pond-meter {
+  order: 3;
+}
+.layout-phone .pond .pond-bottom {
+  order: 4;
+}
+
+/* Farm chatter waits politely while a mini-game fills the screen. */
+body:has(.pond, .kitchen) .villager-say {
+  opacity: 0;
+  pointer-events: none !important;
 }

@@ -165,6 +165,10 @@ console.log('wheat plots left after hand drag', (await plots()).filter((x) => x.
 await page.setViewportSize({ width: 390, height: 780 });
 await page.waitForTimeout(600);
 await page.screenshot({ path: `${out}/v8-phone.png` });
+// On a phone the Garage waits in the dock's More tray.
+await page.locator('.more-tools').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${out}/v8b-phone-tray.png` });
 await garage();
 await page.screenshot({ path: `${out}/v9-phone-garage.png` });
 

@@ -5,6 +5,7 @@ import type { Store } from '../store';
 import { setTool, tools, type Tool } from '../tools';
 import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
+import { forFingers, isTouch, layout, onLayout, type Layout } from './layout';
 import { openKitchen, readyDishes } from './cooking';
 import { fmtNum, h } from '../util';
 import { HUD_BUTTONS, HUD_PILLS, MODE_HINTS, catalogTabBadges } from '../features/registry';
@@ -31,10 +32,12 @@ interface HudDeps {
   zoom: (factor: number) => void;
 }
 
-/** A painted UI icon (ui:<key>) when there is one, else the emoji. */
+/** A painted UI icon (ui:<key>) when there is one, else the emoji (or three dots for ''). */
 function uiIcon(key: string, em: string): Node {
-  return hasArt(`ui:${key}`) ? h('img', { class: 'ui-ico', src: artURL(`ui:${key}`), alt: '' }) : document.createTextNode(em);
+  if (hasArt(`ui:${key}`)) return h('img', { class: 'ui-ico', src: artURL(`ui:${key}`), alt: '' });
+  return em ? document.createTextNode(em) : h('span', { class: 'dots' }, h('i'), h('i'), h('i'));
 }
+
 
 const TOOLS: { id: Tool | 'shop' | 'cook'; label: string; em: string; hint?: string }[] = [
   { id: 'hand', label: 'Hand', em: '✋' },
@@ -167,7 +170,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
           if (t.id === 'cook') return openKitchen();
           if (t.id === 'seed') return openSeedPicker(null);
           setTool(t.id);
-          if (t.hint) bus.emit('toast', t.hint, 'info');
+          if (t.hint) bus.emit('toast', forFingers(t.hint), 'info');
         },
       },
       em,
@@ -185,7 +188,10 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   }
   const waterCount = h('span', { class: 'tool-count' });
   toolButtons.get('water')?.append(waterCount);
-  const hint = h('div', { class: 'mode-hint', style: { display: 'none' } });
+  const hintText = h('span');
+  const flipBtn = h('button', { class: 'hint-btn', onclick: () => ((tools.flip = !tools.flip), bus.emit('tool')) }, '↔ Flip');
+  const doneBtn = h('button', { class: 'hint-btn done', onclick: () => setTool('hand') }, '✓ Done');
+  const hint = h('div', { class: 'mode-hint', style: { display: 'none' } }, hintText, flipBtn, doneBtn);
 
   // --- zoom ---
   const zoomBox = h(
@@ -210,7 +216,50 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     if (store.visit) openGiftPicker(store.visit.owner.username);
   });
 
-  ui.append(hud, corner, toolbar, hint, zoomBox, banner);
+  // --- phone layout ---
+  // A six-slot dock: the everyday tools stay out and the rest wait in a tray
+  // behind "More". The busiest corner buttons stay on screen and the rest
+  // live in a Farm Menu sheet.
+  const toolOrder = [...toolbar.children] as HTMLElement[];
+  const DOCK = new Set(['hand', 'plow', 'seed', 'water', 'shop']);
+  const trayTools = [...toolButtons].filter(([id]) => !DOCK.has(id)).map(([, b]) => b);
+  const moreBadge = h('span', { class: 'badge', style: { display: 'none' } });
+  const moreTools = h('button', { class: 'tool more-tools', 'aria-label': 'More tools' }, h('span', { class: 'em' }, uiIcon('more_tools', '')), 'More', moreBadge);
+  const tray = h('div', { class: 'tool-tray' });
+  const closeTray = () => {
+    tray.classList.remove('open');
+    moreTools.classList.remove('open');
+  };
+  moreTools.addEventListener('click', () => {
+    const open = !tray.classList.contains('open');
+    tray.classList.toggle('open', open);
+    moreTools.classList.toggle('open', open);
+  });
+  tray.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('button')) closeTray();
+  });
+
+  const cornerOrder = [...corner.children] as HTMLElement[];
+  const ON_SCREEN = new Set<HTMLElement>([quests.btn, orders.btn, barn.btn]);
+  const drawerGrid = h('div', { class: 'drawer-grid' });
+  const drawerBack = h(
+    'div',
+    { class: 'drawer-back' },
+    h('div', { class: 'drawer' }, h('div', { class: 'drawer-handle' }), h('div', { class: 'drawer-title' }, 'Farm Menu'), drawerGrid),
+  );
+  const closeDrawer = () => drawerBack.classList.remove('open');
+  const menu = roundBtn('menu', '', 'Menu', () => drawerBack.classList.add('open'));
+  menu.btn.classList.add('menu-btn');
+  drawerBack.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t === drawerBack || t.closest('button')) closeDrawer();
+  });
+  document.addEventListener('pointerdown', (e) => {
+    const t = e.target as Node;
+    if (tray.classList.contains('open') && !tray.contains(t) && !moreTools.contains(t)) closeTray();
+  });
+
+  ui.append(hud, corner, toolbar, tray, hint, zoomBox, banner, drawerBack);
   // A tap shouldn't leave a keyboard focus ring behind once Esc is pressed.
   for (const el of [corner, toolbar, zoomBox])
     el.addEventListener('pointerup', (e) => (e.target as HTMLElement).closest('button')?.blur());
@@ -307,14 +356,64 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
         if (n) text = `✨ ${n} thing${n === 1 ? '' : 's'} ready to collect`;
       }
       if (text) {
-        hint.textContent = text;
-        hint.style.display = 'block';
+        const touch = isTouch();
+        hintText.textContent = forFingers(text);
+        // Fingers have no Esc or R key: give them buttons instead.
+        const working = tools.tool !== 'hand';
+        flipBtn.style.display = touch && (tools.tool === 'place' || (tools.tool === 'move' && tools.moving)) ? '' : 'none';
+        doneBtn.style.display = touch && working ? '' : 'none';
+        hint.classList.toggle('has-btns', touch && working);
+        hint.style.display = 'flex';
       }
     }
   };
 
+  // The phone's dock and menu collect the badges of what they hide.
+  const sumBadges = (els: Iterable<Element>) => {
+    let n = 0;
+    let pulse = false;
+    for (const el of els) {
+      if ((el as HTMLElement).style.display === 'none') continue;
+      const b = el.querySelector('.badge') as HTMLElement | null;
+      if (b && b.style.display !== 'none') n += b.textContent === '9+' ? 10 : Number(b.textContent) || 0;
+      pulse ||= el.classList.contains('pulse');
+    }
+    return { n, pulse };
+  };
+  const renderPhone = () => {
+    if (layout() !== 'phone') return;
+    const m = sumBadges(drawerGrid.children);
+    setBadge(menu.badge, m.n);
+    menu.btn.classList.toggle('pulse', m.pulse);
+    const t = sumBadges(tray.children);
+    setBadge(moreBadge, t.n);
+    moreTools.classList.toggle('active', trayTools.some((b) => b.classList.contains('active')));
+  };
+
+  const applyLayout = (l: Layout) => {
+    closeTray();
+    closeDrawer();
+    const phone = l === 'phone';
+    for (const b of toolOrder) toolbar.append(b);
+    for (const b of cornerOrder) corner.append(b);
+    moreTools.remove();
+    menu.btn.remove();
+    if (phone) {
+      for (const b of trayTools) tray.append(b);
+      toolbar.append(moreTools);
+      for (const b of cornerOrder) if (!ON_SCREEN.has(b)) drawerGrid.append(b);
+      corner.append(menu.btn);
+    }
+    render();
+  };
+
   store.onChange(render);
+  store.onChange(renderPhone);
   bus.on('tool', render);
+  bus.on('tool', renderPhone);
+  setInterval(renderPhone, 1000);
+  onLayout(applyLayout);
+  applyLayout(layout());
   setInterval(render, 1000);
   render();
 }

@@ -9,7 +9,7 @@ import { DatabaseSync } from 'node:sqlite';
 const out = process.argv[2] ?? '.';
 const [w, h] = (process.argv[3] ?? '1280x800').split('x').map(Number);
 const url = process.argv[4] ?? 'http://localhost:3001/?debug&hour=12';
-const touch = w < 900;
+const touch = Math.min(w, h) < 900;
 const browser = await chromium.launch();
 const errors = [];
 const db = new DatabaseSync('data/farm.db');
@@ -35,7 +35,7 @@ const st = JSON.parse(row.state);
 st.level = 12;
 st.xp = xpFor(12) + 40;
 st.coins = 12500;
-st.inventory = { ...st.inventory, strawberry: 14, wheat: 9, egg: 6, milk: 3, mystery_gift: 1 };
+st.inventory = { ...st.inventory, strawberry: 14, wheat: 9, egg: 6, milk: 3, tomato: 9, carrot: 5, flour: 4, butter: 2, mystery_gift: 1 };
 db.prepare('UPDATE farms SET state = ?, rev = rev + 1 WHERE user_id = ?').run(JSON.stringify(st), row.user_id);
 await page.reload();
 await page.waitForSelector('.toolbar');
@@ -52,8 +52,23 @@ async function panel(file, open) {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
 }
-const round = (label) => () => page.locator(`.round-btn[aria-label="${label}"]`).first().click({ force: true });
-const tool = (label) => () => page.locator('.tool', { hasText: label }).first().click({ force: true });
+// On phones some tools wait in the More tray and some buttons in the Farm Menu.
+const round = (label) => async () => {
+  const b = page.locator(`.round-btn[aria-label="${label}"]`).first();
+  if (!(await b.isVisible())) {
+    await page.locator('.menu-btn').click({ force: true });
+    await page.waitForTimeout(400);
+  }
+  await b.click({ force: true });
+};
+const tool = (label) => async () => {
+  const b = page.locator('.tool', { hasText: label }).first();
+  if (!(await b.isVisible())) {
+    await page.locator('.more-tools').click({ force: true });
+    await page.waitForTimeout(300);
+  }
+  await b.click({ force: true });
+};
 
 await panel('02-market', tool('Market'));
 await panel('03-quests', round('Quests'));
@@ -63,6 +78,47 @@ await panel('06-farmhouse', round('Farm'));
 await panel('07-collections', round('Collections'));
 await panel('08-seeds', tool('Seeds'));
 await panel('09-cook', tool('Cook'));
+
+// A cooking mini-game and the fishing pond (full-screen scenes of their own).
+await tool('Cook')();
+await page.waitForSelector('.modal');
+await page.waitForTimeout(400);
+const cookBtn = page.locator('.recipe-card button:not([disabled])').first();
+if (await cookBtn.count()) {
+  await cookBtn.click({ force: true });
+  await page.waitForTimeout(1200);
+  await shot('09d-minigame');
+  for (let i = 0; i < 4 && (await page.locator('.modal, .kitchen-game, .k-arena').count()); i++) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(250);
+  }
+} else await page.keyboard.press('Escape');
+await page.reload();
+await page.waitForSelector('.toolbar');
+await page.waitForTimeout(900);
+await page.keyboard.press('Escape');
+await tool('Fish')();
+await page.waitForSelector('.pond').catch(() => {});
+await page.waitForTimeout(900);
+await shot('09e-pond');
+await page.locator('.pond-top .close').click({ force: true }).catch(() => {});
+await page.reload();
+await page.waitForSelector('.toolbar');
+await page.waitForTimeout(900);
+await page.keyboard.press('Escape');
+
+// The phone's tool tray and Farm Menu.
+if (await page.locator('.more-tools').isVisible()) {
+  await page.locator('.more-tools').click();
+  await page.waitForTimeout(400);
+  await shot('09b-tray');
+  await page.locator('.more-tools').click();
+  await page.locator('.menu-btn').click({ force: true });
+  await page.waitForTimeout(500);
+  await shot('09c-menu');
+  await page.mouse.click(w / 2, 40);
+  await page.waitForTimeout(400);
+}
 
 // A toast and a mode hint.
 await tool('Plow')();

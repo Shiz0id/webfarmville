@@ -23,6 +23,7 @@ import { localHour } from '../scenes/ambience';
 import { sfx } from '../sfx';
 import { tools } from '../tools';
 import { confetti, openModal, toast } from '../ui/dom';
+import { forFingers } from '../ui/layout';
 import { portrait } from '../ui/villager';
 import { h } from '../util';
 import type { Store } from '../store';
@@ -138,7 +139,7 @@ function openPond(): void {
   const bobber = h('img', { class: 'pond-bobber', src: art('fishing:bobber', iconURL('xp')) });
   const shadow = h('img', { class: 'pond-shadow', src: art('fishing:shadow', iconURL('bluegill')) });
   const info = h('div', { class: 'pond-info' });
-  const bubble = h('div', { class: 'k-bubble' }, POND_TIPS[Math.floor(Math.random() * POND_TIPS.length)]);
+  const bubble = h('div', { class: 'k-bubble' }, forFingers(POND_TIPS[Math.floor(Math.random() * POND_TIPS.length)]));
   const meter = h('div', { class: 'pond-meter', style: { display: 'none' } });
   const castBtn = h('button', { class: 'btn green big', onclick: () => void cast() }, '🎣 Cast!') as HTMLButtonElement;
   const close = () => {
@@ -270,7 +271,7 @@ async function cast(): Promise<void> {
   const hooked = await waitClick(p, 900 + Math.max(0, 4 - def.rarity) * 120);
   bang.remove();
   if (p.closed) return;
-  if (!hooked) return finish(p, 0, 'Oh! It stole the bait. Click as soon as the bobber plunges!');
+  if (!hooked) return finish(p, 0, forFingers('Oh! It stole the bait. Click as soon as the bobber plunges!'));
   grannySays('Hooked! Hold to reel, keep it in the green!');
   const score = await reel(p, def);
   if (p.closed) return;

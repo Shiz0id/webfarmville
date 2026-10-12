@@ -194,6 +194,10 @@ There are also two helper scripts:
 - **Drag** empty ground (or right-drag) to pan the camera. **Scroll** or pinch to zoom. **WASD** or the arrow
   keys also pan.
 - **R** flips a decoration while placing or moving it. **Esc** or right-click cancels.
+- **Phones** get their own layout: a dock with Hand, Plow, Seeds, Water and Market (the other tools wait behind
+  **More**), Quests, Orders and Barn on the side with everything else in the **Farm Menu**, and panels that slide
+  up as sheets (swipe one down to close it). While a tool is busy, the hint above the dock has **Flip** and
+  **Done** buttons in place of R and Esc. **Tablets** keep the full toolbar with bigger, labelled buttons.
 - Add `?hour=22` to the URL to preview night time (or any hour of the day), and `?event=winter` (or any event id)
   to preview an event's look, music and visitors any time of year.
 
