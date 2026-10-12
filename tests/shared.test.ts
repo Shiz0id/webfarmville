@@ -352,3 +352,58 @@ describe('ribbons', () => {
     expect(() => act(s, { type: 'claimRibbon', ribbon: 'green_thumb' })).toThrow('Not earned');
   });
 });
+
+describe('cooking and Mama Marigold', () => {
+  it('cooks dishes from ingredients, doubling perfect ones', async () => {
+    const { DISHES, cookTier } = await import('@farm/shared');
+    let s = createFarm('Chef', T0);
+    s.level = 5;
+    expect(() => act(s, { type: 'cook', dish: 'tomato_soup', score: 100 })).toThrow('Need');
+    s.inventory.tomato = 6;
+    s.inventory.egg = 2;
+    s = act(s, { type: 'cook', dish: 'tomato_soup', score: 95 }).state;
+    expect(s.inventory.tomato_soup).toBe(2);
+    s = act(s, { type: 'cook', dish: 'tomato_soup', score: 10 }).state;
+    expect(s.inventory.tomato_soup).toBe(3);
+    expect(s.stats['cook:perfect']).toBe(1);
+    // Scores are clamped, so a cheating client can't do better than perfect.
+    expect(cookTier(9999).qty).toBe(2);
+    expect(DISHES.tomato_soup.sell).toBeGreaterThan(0);
+    const coins = s.coins;
+    s = act(s, { type: 'sellItem', item: 'tomato_soup', qty: 3 }).state;
+    expect(s.coins).toBe(coins + 3 * DISHES.tomato_soup.sell);
+  });
+
+  it('lets Mama bring one meal a day', () => {
+    let s = createFarm('Mama', T0);
+    const r = act(s, { type: 'mamaVisit' });
+    s = r.state;
+    const meal = r.events.find((e) => e.type === 'meal') as { dish: string };
+    expect(s.inventory[meal.dish]).toBe(1);
+    expect(() => act(s, { type: 'mamaVisit' })).toThrow('already');
+    expect(() => applyAction(s, { type: 'mamaVisit' }, { now: T0 + 86_400_000 })).not.toThrow();
+  });
+});
+
+describe('event features for every holiday', () => {
+  const DEC = Date.UTC(2026, 11, 10, 12);
+
+  it('drops each running event currency and serves its visitors', () => {
+    let s = createFarm('Winter', DEC);
+    expect(s.quests.active).toContain('winter_grow');
+    const plot = plots(s).find((p) => !p.crop)!;
+    s = applyAction(s, { type: 'plant', id: plot.id, crop: 'peppermint' }, { now: DEC }).state;
+    s = applyAction(s, { type: 'harvest', id: plot.id }, { now: DEC + 600_000 }).state;
+    expect(s.inventory.snowflake).toBeGreaterThanOrEqual(2);
+    s = applyAction(s, { type: 'treat', event: 'winter' }, { now: DEC }).state;
+    expect(s.stats['treat:winter']).toBe(1);
+    expect(() => applyAction(s, { type: 'treat', event: 'halloween' }, { now: DEC })).toThrow();
+  });
+
+  it('sells token-shop exclusives for the right currency', () => {
+    const s = createFarm('Shop', DEC);
+    s.inventory.snowflake = 50;
+    const next = applyAction(s, { type: 'buy', def: 'snow_globe', x: 12, y: 12 }, { now: DEC }).state;
+    expect(next.inventory.snowflake).toBe(20);
+  });
+});
