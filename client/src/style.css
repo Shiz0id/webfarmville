@@ -2186,3 +2186,43 @@ body.pond-open .zoom,
 body.pond-open .visit-banner {
   display: none !important;
 }
+
+/* Kitty Corner */
+.kitty-food, .kitty-gifts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--paper-2);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.kitty-gifts { background: #fff1d6; border-color: var(--gold); animation: pop 0.3s; }
+.kitty-food .ico.big { width: 54px; height: 54px; object-fit: contain; }
+.kitty-foods { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.kitty-foods .btn { display: flex; align-items: center; gap: 4px; }
+.kitty-now { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.kitty-chip { display: flex; align-items: center; gap: 6px; background: var(--cream); border: 2px solid var(--line); border-radius: 99px; padding: 4px 12px 4px 4px; }
+.kitty-chip img { width: 36px; height: 36px; }
+.kitty-album { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.kitty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+  padding: 10px 8px;
+  background: var(--cream);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+}
+.kitty-card img { width: 64px; height: 64px; }
+.kitty-card .name { font-weight: 900; }
+.kitty-card .hearts { color: #ff7aa2; font-size: 12px; letter-spacing: 1px; }
+.kitty-card .sub { font-size: 11px; }
+.kitty-card.rare { border-color: var(--gold); background: #fffbe8; }
+.kitty-card.home { border-color: #ff9fbf; background: #fff3f7; }
+.kitty-card.unknown { opacity: 0.8; }
+.kitty-card .silhouette { filter: brightness(0) opacity(0.22); }

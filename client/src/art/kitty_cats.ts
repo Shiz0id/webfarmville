@@ -40,8 +40,10 @@ export interface Coat {
   stripes?: string;
   /** Marble: wavy bands instead of tabby stripes. */
   swirl?: boolean;
-  /** Calico blobs: [head, body]. */
-  patches?: [string, string];
+  /** Organic blobs: [head over one ear and eye, back, side]. */
+  patches?: string[];
+  /** Big round blob with a sunk head, tiny legs and a short tail. */
+  chonk?: boolean;
   /** Siamese points: ears, face mask, feet and tail. */
   points?: string;
   /** One very subtle shade on the lower right of the body. */
@@ -70,7 +72,7 @@ export const COATS: Record<string, Coat> = {
   pepper: { fur: '#3e3638', belly: '#fbf8f2', feet: '#fbf8f2', eye: '#f6eedc' },
   ginger: { fur: '#eda25a', stripes: '#c0692c', shade: '#dd8c45' },
   smokey: { fur: '#a9a6ae', shade: '#928f98' },
-  patches: { fur: '#fbf7ee', patches: ['#eda25a', '#3e3638'] },
+  patches: { fur: '#fbf7ee', patches: ['#eda25a', '#3e3638', '#eda25a'] },
   socks: { fur: '#3e3638', feet: '#fbf8f2', eye: '#f6eedc' },
   marble: { fur: '#a29c97', stripes: '#5f5853', swirl: true, shade: '#8f8983' },
   biscuit: { fur: '#d9ae7c', belly: '#fff6ea' },
@@ -79,10 +81,10 @@ export const COATS: Record<string, Coat> = {
   shadow: { fur: '#2e2829', eyes: 'gold', eye: GOLD },
   peaches: { fur: '#f5c79c', fluff: true, shade: '#e8b282' },
   bean: { fur: '#b5b1b9', belly: '#fbf8f2', feet: '#fbf8f2', size: 0.7 },
-  big_chonk: { fur: '#f6f4f0', patches: ['#aaa7af', '#aaa7af'], bulk: 1.3, size: 1.6, shade: '#e4e0d9' },
+  big_chonk: { fur: '#f6f4f0', patches: ['#b3b0b8', '#b3b0b8'], bulk: 1.3, size: 1.6, chonk: true, shade: '#e4e0d9' },
   princess_pearl: { fur: '#fbf9f5', fluff: true, hat: 'tiara', shade: '#ebe6dc' },
   captain_mittens: { fur: '#eda25a', stripes: '#bd692d', hat: 'pirate' },
-  lucky: { fur: '#fbf8f2', patches: ['#eda25a', '#3e3638'], bell: true, beckon: true },
+  lucky: { fur: '#fbf8f2', patches: ['#eda25a', '#3e3638', '#eda25a'], bell: true, beckon: true },
   boo: { fur: '#33292b', eye: '#f6eedc', bandana: true },
 };
 
@@ -239,27 +241,16 @@ function headBands(h: Head, swirl: boolean): Path2D[] {
 // ---------------------------------------------------------------------------
 // Poses. Each returns the geometry for one frame of one cat.
 
-function geoSit(c: Coat, portrait = false): Geo {
+function geoSit(c: Coat): Geo {
   const b = c.bulk ?? 1;
   const head: Head = { x: 0, y: -13.2, r: headR(c) };
-  const torso: Ell = portrait ? { x: 0, y: -1.8, rx: 9.4 * b, ry: 6.6 } : { x: 0, y: -5.4, rx: 6.3 * b, ry: 5.5 * Math.sqrt(b) };
+  const torso: Ell = { x: 0, y: -5.4, rx: 6.3 * b, ry: 5.5 * Math.sqrt(b) };
   const tx = torso.rx;
-  const body: Part[] = [ell(torso.x, torso.y, torso.rx, torso.ry), ...headParts(head)];
-  let tail: Part | undefined;
-  let feet: Ell[] = [];
-  if (!portrait) {
-    tail = curvy({ x: tx * 0.82, y: -2.4 }, { x: tx + 4.2, y: -2.6 }, { x: tx + 4.8, y: -8.4 }, { x: tx + 1.4, y: -9.8 }, c.fluff ? 3.4 : 2.4);
-    body.push(tail);
-    feet = [
-      { x: -2.7, y: -0.8, rx: 2.4, ry: 1.5 },
-      { x: 2.7, y: -0.8, rx: 2.4, ry: 1.5 },
-    ];
-    if (c.beckon) {
-      body.push(limb({ x: -tx * 0.7, y: -6.6 }, { x: -8.4, y: -12.4 }, 2.5), ell(-8.6, -13.0, 1.9));
-    }
-  }
+  const tail = curvy({ x: tx * 0.82, y: -2.4 }, { x: tx + 4.2, y: -2.6 }, { x: tx + 4.8, y: -8.4 }, { x: tx + 1.4, y: -9.8 }, c.fluff ? 3.4 : 2.4);
+  const body: Part[] = [ell(torso.x, torso.y, torso.rx, torso.ry), tail, ...headParts(head)];
+  if (c.beckon) body.push(limb({ x: -tx * 0.7, y: -6.6 }, { x: -8.4, y: -12.4 }, 2.5), ell(-8.6, -13.0, 1.9));
   return {
-    shadow: portrait ? null : [7.6, 2.4],
+    shadow: [7.6, 2.4],
     body,
     head,
     torso,
@@ -267,7 +258,10 @@ function geoSit(c: Coat, portrait = false): Geo {
       { x: 0, y: torso.y + 1.2, rx: torso.rx * 0.6, ry: torso.ry * 0.78 },
       { x: head.x, y: head.y + 0.56 * head.r, rx: 0.52 * head.r, ry: 0.32 * head.r },
     ],
-    feet,
+    feet: [
+      { x: -2.7, y: -0.8, rx: 2.4, ry: 1.5 },
+      { x: 2.7, y: -0.8, rx: 2.4, ry: 1.5 },
+    ],
     bands: bands(torso, [-0.62, 0.62], !!c.swirl),
     tail,
   };
@@ -318,53 +312,46 @@ function geoSleep(c: Coat, breathe: boolean): Geo {
   };
 }
 
-/** On its back, paws in the air. */
-function geoPlay(c: Coat): Geo {
+/** On its back, paws in the air. Alt: batting a pink yarn ball with one paw. */
+function geoPlay(c: Coat, alt: boolean): Geo {
   const b = c.bulk ?? 1;
   const head: Head = { x: 7.2, y: -6.2, r: headR(c, 5.4) };
   const torso: Ell = { x: 0, y: -3.6, rx: 8 * b, ry: 3.8 };
-  const tail = curvy({ x: -7.4, y: -1.6 }, { x: -11.8, y: -1.8 }, { x: -12.4, y: -6.4 }, { x: -9.8, y: -7.4 }, c.fluff ? 3.2 : 2.6);
+  const tail = alt
+    ? curvy({ x: 5.6, y: -0.4 }, { x: 8.4, y: 1.6 }, { x: 11.4, y: 1.0 }, { x: 12.4, y: -2.2 }, c.fluff ? 3.2 : 2.4)
+    : curvy({ x: -7.4, y: -1.6 }, { x: -11.8, y: -1.8 }, { x: -12.4, y: -6.4 }, { x: -9.8, y: -7.4 }, c.fluff ? 3.2 : 2.6);
+  // short stubby legs, each ending in a round bean paw
+  const legs: Part[] = alt
+    ? [limb({ x: -4.8, y: -4 }, { x: -8.4, y: -5.8 }, 2.4)]
+    : [limb({ x: -5.2, y: -4.2 }, { x: -6.4, y: -7.4 }, 2.3), limb({ x: -1.6, y: -4.6 }, { x: -1.2, y: -7.8 }, 2.3)];
+  const paws: Ell[] = alt
+    ? [
+        { x: -9, y: -6.2, rx: 1.7, ry: 1.4 },
+        { x: -1.8, y: -0.6, rx: 1.8, ry: 1.1 },
+        { x: 3.8, y: -0.5, rx: 1.8, ry: 1.1 },
+      ]
+    : [
+        { x: -6.4, y: -8.4, rx: 1.7, ry: 1.5 },
+        { x: -1.2, y: -8.8, rx: 1.7, ry: 1.5 },
+        { x: 3.8, y: -0.5, rx: 1.8, ry: 1.1 },
+        { x: -4.6, y: -0.3, rx: 1.8, ry: 1.1 },
+      ];
+  const yarn = (p: Pen): void => {
+    p.circle(-12.2, -4.2, 2.1, '#f4a6b8', OUT);
+    p.curve({ x: -13.8, y: -5.6 }, { x: -12, y: -3.2 }, { x: -10.6, y: -4.8 }, '#d9708a', 0.5);
+    p.curve({ x: -13.4, y: -2.4 }, { x: -12.4, y: -4.8 }, { x: -11.2, y: -2.2 }, '#d9708a', 0.5);
+  };
   return {
     shadow: [10, 3],
     back: { parts: [tail], fill: c.fur },
-    body: [ell(torso.x, torso.y, torso.rx, torso.ry), limb({ x: -5, y: -4.4 }, { x: -5.6, y: -10.4 }, 2.6), limb({ x: -1.2, y: -4.6 }, { x: -1.2, y: -11.4 }, 2.6), ...headParts(head)],
+    body: [ell(torso.x, torso.y, torso.rx, torso.ry), ...legs, ...headParts(head)],
     head,
     torso,
     belly: [{ x: 0.2, y: -1.6, rx: 6 * b, ry: 1.9 }],
-    feet: [
-      { x: -5.6, y: -11.2, rx: 1.8, ry: 1.9 },
-      { x: -1.2, y: -12.2, rx: 1.8, ry: 1.9 },
-      { x: 4.2, y: -0.6, rx: 2.2, ry: 1.2 },
-    ],
+    feet: paws,
     bands: bands(torso, [-0.4, 0.4], !!c.swirl),
-    closed: false,
     look: -0.4,
-  };
-}
-
-/** Sitting and batting at a feather, one paw swatting out to the right. */
-function geoBat(c: Coat): Geo {
-  const b = c.bulk ?? 1;
-  const head: Head = { x: -1, y: -13.4, r: headR(c, 6) };
-  const torso: Ell = { x: -0.6, y: -5.6, rx: 6.2 * b, ry: 5.2 };
-  const tail = curvy({ x: -5.6, y: -2.4 }, { x: -11.2, y: -2.4 }, { x: -11.4, y: -8.2 }, { x: -8.2, y: -9.6 }, c.fluff ? 3.2 : 2.4);
-  return {
-    shadow: [7.4, 2.4],
-    back: { parts: [tail], fill: c.fur },
-    body: [ell(torso.x, torso.y, torso.rx, torso.ry), limb({ x: 4, y: -8.4 }, { x: 9.6, y: -12.6 }, 2.6), ...headParts(head)],
-    head,
-    torso,
-    belly: [
-      { x: -0.6, y: -4.6, rx: 3.6, ry: 3.8 },
-      { x: head.x, y: head.y + 0.56 * head.r, rx: 0.52 * head.r, ry: 0.32 * head.r },
-    ],
-    feet: [
-      { x: -3, y: -0.8, rx: 2.3, ry: 1.4 },
-      { x: 1.6, y: -0.8, rx: 2.3, ry: 1.4 },
-      { x: 10.4, y: -13, rx: 2, ry: 2 },
-    ],
-    bands: bands(torso, [-0.6, 0.6], !!c.swirl),
-    tail,
+    decor: alt ? yarn : undefined,
   };
 }
 
@@ -434,20 +421,59 @@ function geoStand(c: Coat): Geo {
   };
 }
 
+/** big_chonk: a round mochi blob with the head sunk into it, tiny legs and a short tail. */
+function geoChonk(c: Coat, loaf: boolean): Geo {
+  const torso: Ell = loaf ? { x: 0, y: -4.6, rx: 12.6, ry: 6.2 } : { x: 0, y: -6.6, rx: 10.8, ry: 7.6 };
+  const head: Head = { x: 0, y: loaf ? -10.8 : -11.6, r: 5.4 };
+  const tail = curvy({ x: torso.rx * 0.9, y: -2 }, { x: torso.rx + 3, y: -2.4 }, { x: torso.rx + 3.4, y: -6.4 }, { x: torso.rx + 1.2, y: -7 }, 2.6);
+  return {
+    shadow: loaf ? [13.5, 3.8] : [12.5, 3.6],
+    body: [ell(torso.x, torso.y, torso.rx, torso.ry), tail, ...headParts(head)],
+    head,
+    torso,
+    belly: [
+      { x: 0, y: torso.y + 1.6, rx: torso.rx * 0.5, ry: torso.ry * 0.75 },
+      { x: head.x, y: head.y + 0.56 * head.r, rx: 0.52 * head.r, ry: 0.32 * head.r },
+    ],
+    feet: loaf ? [] : [{ x: -4.8, y: 0.4, rx: 2, ry: 1.1 }, { x: 4.8, y: 0.4, rx: 2, ry: 1.1 }],
+    bands: [],
+    tail,
+  };
+}
+
+/** Icon head and shoulders: a big round face with ears near the top, a hint of shoulders below. */
+function geoPortrait(c: Coat): Geo {
+  const b = c.bulk ?? 1;
+  const head: Head = { x: 0, y: 0, r: 6.1 };
+  const torso: Ell = { x: 0, y: 9.4, rx: 6.4 * b, ry: 5.4 };
+  return {
+    shadow: null,
+    body: [ell(torso.x, torso.y, torso.rx, torso.ry), ...headParts(head)],
+    head,
+    torso,
+    belly: [
+      { x: 0, y: 7, rx: 3.6, ry: 3.6 },
+      { x: head.x, y: head.y + 0.56 * head.r, rx: 0.52 * head.r, ry: 0.32 * head.r },
+    ],
+    feet: [],
+    bands: bands(torso, [-0.55, 0.55], !!c.swirl),
+  };
+}
+
 function geometry(c: Coat, pose: CatPose): Geo {
   switch (pose) {
     case 'sit':
-      return geoSit(c);
+      return c.chonk ? geoChonk(c, false) : geoSit(c);
     case 'loaf':
-      return geoLoaf(c);
+      return c.chonk ? geoChonk(c, true) : geoLoaf(c);
     case 'sleep':
       return geoSleep(c, false);
     case 'sleep1':
       return geoSleep(c, true);
     case 'play':
-      return geoPlay(c);
+      return geoPlay(c, false);
     case 'play1':
-      return geoBat(c);
+      return geoPlay(c, true);
     case 'walk':
       return geoWalk(c, 0);
     case 'walk1':
@@ -484,6 +510,27 @@ function layer(ctx: CanvasRenderingContext2D, parts: Part[], fill: string, lw: n
       ctx.fill(part.path);
     }
   }
+}
+
+/** An organic blob: seven jittered points joined through their midpoints. */
+function blobPath(cx: number, cy: number, rx: number, ry: number, seed: number): Path2D {
+  const n = 7;
+  const pts: Pt[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const j = 0.78 + 0.4 * (Math.abs(Math.sin((i + 1) * 12.9898 + seed * 78.233)) % 1);
+    pts.push({ x: cx + Math.cos(a) * rx * j, y: cy + Math.sin(a) * ry * j });
+  }
+  const mid = (a: Pt, b: Pt): Pt => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  const path = new Path2D();
+  const start = mid(pts[n - 1], pts[0]);
+  path.moveTo(start.x, start.y);
+  for (let i = 0; i < n; i++) {
+    const m = mid(pts[i], pts[(i + 1) % n]);
+    path.quadraticCurveTo(pts[i].x, pts[i].y, m.x, m.y);
+  }
+  path.closePath();
+  return path;
 }
 
 function fillPts(ctx: CanvasRenderingContext2D, pts: Pt[]): void {
@@ -607,14 +654,15 @@ function drawGeo(p: Pen, c: Coat, g: Geo, s: number, withShadow: boolean): void 
   p.lineWidth = lw;
   const ink = c.eye ?? INK;
   const feet = c.feet ?? c.points;
-  const fillParts = g.body.filter((q) => !q.w);
+  const body = [...g.body, ...g.feet.map((e) => ell(e.x, e.y, e.rx, e.ry))];
+  const fillParts = body.filter((q) => !q.w);
   const union = new Path2D();
   for (const q of fillParts) union.addPath(q.path);
   const torsoPath = ellPath(g.torso.x, g.torso.y, g.torso.rx, g.torso.ry);
 
   if (withShadow && g.shadow) p.shadow(0, 0.6, g.shadow[0], g.shadow[1], 0.22);
   if (g.back) layer(ctx, g.back.parts, g.back.fill, lw);
-  layer(ctx, g.body, c.fur, lw);
+  layer(ctx, body, c.fur, lw);
 
   if (c.shade) {
     // lit from the top left: the lower right edge of the torso stays in the shade colour
@@ -634,9 +682,13 @@ function drawGeo(p: Pen, c: Coat, g: Geo, s: number, withShadow: boolean): void 
     const h = g.head;
     const t = g.torso;
     ctx.fillStyle = c.patches[0];
-    ctx.fill(ellPath(h.x + 0.55 * h.r, h.y - 0.3 * h.r, 0.62 * h.r, 0.56 * h.r));
+    ctx.fill(blobPath(h.x - 0.7 * h.r, h.y - 0.6 * h.r, 0.62 * h.r, 0.7 * h.r, 1));
     ctx.fillStyle = c.patches[1];
-    ctx.fill(ellPath(t.x - 0.52 * t.rx, t.y - 0.1 * t.ry, 0.5 * t.rx, 0.72 * t.ry));
+    ctx.fill(blobPath(t.x + 0.25 * t.rx, t.y - 0.5 * t.ry, 0.5 * t.rx, 0.5 * t.ry, 2));
+    if (c.patches[2]) {
+      ctx.fillStyle = c.patches[2];
+      ctx.fill(blobPath(t.x - 0.72 * t.rx, t.y + 0.3 * t.ry, 0.34 * t.rx, 0.5 * t.ry, 3));
+    }
   }
   if (c.stripes) {
     ctx.strokeStyle = c.stripes;
@@ -688,15 +740,15 @@ export function paintCat(p: Pen, coat: Coat, pose: CatPose): void {
   p.restore();
 }
 
-/** Collection-book portrait: head and shoulders, transparent background. */
+/** Collection-book portrait: the head fills about three quarters of the icon, transparent background. */
 function paintPortrait(p: Pen, coat: Coat): void {
   p.save();
   p.ctx.beginPath();
   p.ctx.rect(0, 0, ICON, ICON);
   p.ctx.clip();
-  p.ctx.translate(20, 36);
-  p.ctx.scale(1.5, 1.5);
-  drawGeo(p, coat, geoSit(coat, true), 1.5, false);
+  p.ctx.translate(ICON / 2, 24.6);
+  p.ctx.scale(2.45, 2.45);
+  drawGeo(p, coat, geoPortrait(coat), 2.45, false);
   p.restore();
 }
 

@@ -430,14 +430,31 @@ const stagBeetle: Painter = (p) => {
 };
 
 const rhinoBeetle: Painter = (p) => {
-  const shell = '#8f6240';
-  p.poly([{ x: 16.6, y: 18 }, { x: 23.4, y: 18 }, { x: 21.8, y: 10 }, { x: 20.6, y: 3 }, { x: 19.4, y: 3 }, { x: 18.2, y: 10 }], '#7a5234');
-  p.line([{ x: 19.4, y: 16 }, { x: 19.6, y: 8 }], '#b48a62', 1);
-  p.circle(20, 3.4, 1.1, '#b48a62', null);
-  soft(p, 20, 18, 6.8, 4, '#6a4630');
-  soft(p, 20, 26, 12.5, 10.5, shell);
-  shine(p, 14.5, 20, 2.6);
-  face(p, 20, 27, 2.4);
+  const shell = '#5b3a26';
+  const leg = '#3a2418';
+  // six little legs poking out from under the shell edge
+  for (const [y, x] of [[18, 11], [25, 8], [32, 11]] as const) {
+    limb(p, { x: x + 1, y }, { x: x - 3, y: y - 0.5 }, { x: x - 6, y: y + 3.5 }, leg, 1.2);
+    limb(p, { x: 39 - x, y }, { x: 43 - x, y: y - 0.5 }, { x: 46 - x, y: y + 3.5 }, leg, 1.2);
+  }
+  // glossy oval shell split down the middle
+  soft(p, 20, 26, 12, 10.5, shell);
+  p.line([{ x: 20, y: 16.5 }, { x: 20, y: 35.5 }], O, 1);
+  shine(p, 13.5, 21, 2.8);
+  shine(p, 13.8, 29, 1.3);
+  // a short second horn on the thorax
+  p.poly([{ x: 23.5, y: 19.5 }, { x: 26.5, y: 20 }, { x: 27.8, y: 14.8 }], '#efe2c4', O, 0.9);
+  // one big curved horn sweeping up and back from the head
+  path(p, (c) => {
+    c.moveTo(16.4, 12.5);
+    c.quadraticCurveTo(12.5, 4, 5.5, 2.8);
+    c.quadraticCurveTo(10.5, 6.5, 23.2, 11.5);
+    c.closePath();
+  }, '#efe2c4', O, 1);
+  p.line([{ x: 15.4, y: 11 }, { x: 9.5, y: 5.6 }], '#c8b48e', 0.8);
+  // smaller head with a cute face
+  soft(p, 20, 13.5, 6, 4.4, '#8a5e40');
+  face(p, 20, 14, 1.3);
 };
 
 const lunaMoth: Painter = (p) => {
@@ -766,21 +783,22 @@ const koiGardenPond: Painter = (p) => {
       p.line(pts, 'rgba(255,255,255,0.6)', 0.8);
     }
     koi(p, 24, 28, 0.5, '#ff8a4c', '#fff8ee');
-    koi(p, 40, 37, 2.5, '#fff8ee', '#ff5a4a');
-    koi(p, 29, 44, -0.8, '#ffc24a', '#fff8ee');
-    lilyPad(p, 19, 40, 4.4, 4.6);
-    lilyPad(p, 45, 22, 4.2, 3.4);
-    lilyPad(p, 46, 46, 3.6, 0.2);
-    lilyPad(p, 18, 21, 3.8, 1.2);
+    koi(p, 38, 40, 2.5, '#fff8ee', '#ff5a4a');
+    koi(p, 22, 45, -0.6, '#ffc24a', '#fff8ee');
+    lilyPad(p, 15, 31, 3.8, 4.6);
+    lilyPad(p, 20, 20, 3.8, 1.2);
+    lilyPad(p, 46, 27, 3.4, 0.2);
     for (let i = 0; i < 5; i++) {
       const a = (i / 5) * Math.PI * 2;
-      p.circle(45 + Math.cos(a) * 2.4, 22 + Math.sin(a) * 2.4, 1.6, '#ffb3c9', null);
+      p.circle(46 + Math.cos(a) * 2.2, 27 + Math.sin(a) * 2.2, 1.5, '#ffb3c9', null);
     }
-    p.circle(45, 22, 1.5, '#ffd84a', null);
+    p.circle(46, 27, 1.3, '#ffd84a', null);
+    // two round stepping stones leading in from the upper-right rim
+    for (const [x, y, r] of [[40, 16, 3.2], [35, 23, 3.4]] as const) {
+      p.circle(x, y, r, STONE_L, O);
+      p.ellipse(x - 0.8, y - 0.9, r * 0.4, r * 0.25, 'rgba(255,255,255,0.7)', null);
+    }
   });
-  p.box(0.2, 0.92, 1.6, 0.16, 4, { top: '#ece8dc', left: '#c9c4b6', right: '#9f9a8c' }, 9);
-  p.box(0.2, 0.92, 0.14, 0.16, 9, STONE, 0);
-  p.box(1.66, 0.92, 0.14, 0.16, 9, STONE, 0);
 };
 
 const goldenFishFountain: Painter = (p) => {
@@ -872,17 +890,58 @@ const bugTerrarium: Painter = (p) => {
 
 const butterflyHouse: Painter = (p) => {
   const c = p.center;
+  const white = '#fffdf6';
+  const mint = 'rgba(178,240,214,0.5)';
+  const mesh = 'rgba(255,255,255,0.85)';
   p.shadow(c.x, c.y + 2, 40, 18, 0.24);
-  p.box(0.12, 0.12, 1.76, 1.76, 4, { top: '#f6efdc', left: STONE_L, right: STONE }, 0);
-  for (const [u, v] of [[1.6, 0.4], [0.4, 1.6], [1.6, 1.8]] as const) {
-    const f = p.iso(u, v, 2);
-    p.flower(f.x, f.y, 3.4, u > 1 ? '#ff8fb1' : '#ffd84a');
-    leafAt(p, f.x, f.y + 2, 4, UP - 0.5, 1.6, LEAF);
+  // white-painted plinth and a grassy floor
+  p.box(0.12, 0.12, 1.76, 1.76, 4, { top: white, left: '#e9e0cc', right: '#cfc4aa' }, 0);
+  p.diamond(0.22, 0.22, 1.56, 1.56, '#c8f0b8', null, 4);
+  for (const [u, v, col] of [[0.6, 0.7, '#ff8fb1'], [1.2, 0.5, '#fff3a0'], [0.9, 1.3, '#c9a6ff'], [1.5, 1.2, '#ff8fb1']] as const) {
+    const f = p.iso(u, v, 7);
+    leafAt(p, f.x, f.y + 2, 3.6, UP - 0.4, 1.4, LEAF);
+    p.flower(f.x, f.y, 3, col);
   }
-  const inside = p.iso(0.7, 0.6, 4);
-  p.flower(inside.x, inside.y, 2.8, '#c9a6ff');
-  const i2 = p.iso(1.3, 1.1, 4);
-  p.flower(i2.x, i2.y, 2.8, '#fff3a0');
+  // white corner post behind, then the mint mesh walls
+  p.box(0.16, 0.16, 0.08, 0.08, 36, white, 4);
+  p.box(0.22, 0.22, 1.56, 1.56, 36, { top: 'rgba(240,255,250,0.25)', left: mint, right: 'rgba(150,226,196,0.5)' }, 4);
+  for (const u of [0.6, 1.0, 1.4]) p.line([p.iso(u, 1.78, 4), p.iso(u, 1.78, 40)], mesh, 0.8);
+  for (const z of [16, 28]) p.line([p.iso(0.22, 1.78, z), p.iso(1.78, 1.78, z)], mesh, 0.8);
+  for (const v of [0.4, 1.5]) p.line([p.iso(1.78, v, 4), p.iso(1.78, v, 40)], mesh, 0.8);
+  for (const z of [16, 28]) p.line([p.iso(1.78, 0.22, z), p.iso(1.78, 1.78, z)], mesh, 0.8);
+  // white frame rails along the top of the walls
+  const rail = (a: Pt, b: Pt) => limb(p, a, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, b, white, 1.6);
+  rail(p.iso(0.22, 1.78, 40), p.iso(1.78, 1.78, 40));
+  rail(p.iso(1.78, 0.22, 40), p.iso(1.78, 1.78, 40));
+  // a little door with a white frame on the right wall
+  p.poly([p.iso(1.78, 0.72, 3), p.iso(1.78, 1.18, 3), p.iso(1.78, 1.18, 29), p.iso(1.78, 0.72, 29)], white, O, 0.9);
+  p.poly([p.iso(1.78, 0.78, 4), p.iso(1.78, 1.12, 4), p.iso(1.78, 1.12, 27), p.iso(1.78, 0.78, 27)], WOOD, O, 0.9);
+  p.line([p.iso(1.78, 0.95, 4), p.iso(1.78, 0.95, 27)], WOOD_D, 0.8);
+  const knob = p.iso(1.78, 1.05, 15);
+  p.circle(knob.x, knob.y, 0.9, '#ffd84a');
+  // white corner posts in front
+  for (const [u, v] of [[0.16, 1.72], [1.72, 0.16], [1.72, 1.72]] as const) p.box(u, v, 0.1, 0.1, 37, white, 4);
+  // flower box along the front-left base, with blooms spilling over
+  p.box(0.3, 1.8, 1.36, 0.16, 6, { top: '#c98a55', left: '#a46b3c', right: '#7d4f2a' }, 4);
+  for (const [u, col] of [[0.5, '#ff8fb1'], [0.85, '#ffd84a'], [1.2, '#c9a6ff'], [1.55, '#ff8fb1']] as const) {
+    const f = p.iso(u, 1.88, 11);
+    leafAt(p, f.x, f.y + 1, 4, UP - 0.7, 1.6, LEAF);
+    leafAt(p, f.x, f.y + 1, 4, UP + 0.7, 1.6, LEAF);
+    p.flower(f.x, f.y, 3, col);
+  }
+  // scalloped pink roof with a little finial
+  p.hipRoof(0.2, 0.2, 1.6, 1.6, 40, 20, '#ffb8cc', 0.12);
+  for (let i = 0; i < 6; i++) {
+    const u = 0.08 + ((i + 0.5) / 6) * 1.84;
+    const a = p.iso(u, 1.92, 40);
+    p.circle(a.x, a.y + 2, 2.8, '#ffb8cc');
+    const b = p.iso(1.92, u, 40);
+    p.circle(b.x, b.y + 2, 2.8, '#ffb8cc');
+  }
+  const peak = p.iso(1, 1, 60);
+  p.line([peak, { x: peak.x, y: peak.y - 6 }], O, 2);
+  p.circle(peak.x, peak.y - 8, 2.8, '#ffd84a');
+  // butterflies fluttering outside the pavilion
   const bf = (x: number, y: number, s: number, col: string) => {
     p.ellipse(x - s * 0.9, y - s * 0.5, s * 0.95, s * 0.7, col, O, -0.4);
     p.ellipse(x + s * 0.9, y - s * 0.5, s * 0.95, s * 0.7, col, O, 0.4);
@@ -890,22 +949,14 @@ const butterflyHouse: Painter = (p) => {
     p.ellipse(x + s * 0.7, y + s * 0.45, s * 0.6, s * 0.5, shade(col, 0.15), O, -0.3);
     p.ellipse(x, y, s * 0.28, s * 0.85, O, null);
   };
-  const b1 = p.iso(0.8, 0.9, 24);
-  bf(b1.x, b1.y, 5, '#ff8fb1');
-  const b2 = p.iso(1.25, 1.2, 34);
-  bf(b2.x, b2.y, 4.6, '#7fb8ff');
-  const b3 = p.iso(0.9, 1.45, 14);
-  bf(b3.x, b3.y, 4.2, '#ffd23f');
-  p.box(0.25, 0.25, 1.5, 1.5, 40, { top: 'rgba(255,255,255,0.22)', left: 'rgba(225,255,238,0.42)', right: 'rgba(190,240,215,0.42)' }, 4, '#6fae8a');
-  const mesh = 'rgba(255,255,255,0.7)';
-  for (const u of [0.625, 1.0, 1.375]) p.line([p.iso(u, 1.75, 4), p.iso(u, 1.75, 44)], mesh, 0.7);
-  for (const z of [14, 24, 34]) p.line([p.iso(0.25, 1.75, z), p.iso(1.75, 1.75, z)], mesh, 0.7);
-  for (const v of [0.625, 1.375]) p.line([p.iso(1.75, v, 4), p.iso(1.75, v, 44)], mesh, 0.7);
-  for (const z of [14, 24, 34]) p.line([p.iso(1.75, 0.25, z), p.iso(1.75, 1.75, z)], mesh, 0.7);
-  p.poly([p.iso(1.75, 0.8, 4), p.iso(1.75, 1.1, 4), p.iso(1.75, 1.1, 26), p.iso(1.75, 0.8, 26)], WOOD, O, 0.9);
-  p.hipRoof(0.2, 0.2, 1.6, 1.6, 44, 20, '#8fd8a8', 0.12);
-  const top = p.iso(1, 1, 74);
-  p.star(top.x, top.y, 5, '#ffd84a', O);
+  const b1 = p.iso(2.3, 0.7, 30);
+  bf(b1.x, b1.y, 4.2, '#ff8fb1');
+  const b2 = p.iso(0.9, 2.4, 24);
+  bf(b2.x, b2.y, 4.2, '#7fb8ff');
+  const b3 = p.iso(2.5, 2.3, 46);
+  bf(b3.x, b3.y, 3.8, '#ffd23f');
+  const b4 = p.iso(-0.3, 1, 36);
+  bf(b4.x, b4.y, 3.6, '#c9a6ff');
 };
 
 const goldenBeetleStatue: Painter = (p) => {
@@ -944,7 +995,7 @@ const ART: Record<string, { h: number; paint: Painter }> = {
   golden_fish_statue: { h: 74, paint: goldenFishFountain },
   bug_net_stand: { h: 60, paint: bugNetStand },
   bug_terrarium: { h: 56, paint: bugTerrarium },
-  butterfly_house: { h: 60, paint: butterflyHouse },
+  butterfly_house: { h: 56, paint: butterflyHouse },
   golden_beetle_statue: { h: 70, paint: goldenBeetleStatue },
 };
 

@@ -371,6 +371,37 @@ export const QUEST_LIST: QuestDef[] = [
     goals: [stat('cook', 10, 'Cook 10 dishes')],
     reward: { coins: 600, xp: 80 },
   },
+  // Kitty Corner
+  {
+    id: 'kitty_corner',
+    title: 'Here, Kitty Kitty!',
+    text: "I keep seeing little paw prints by your barn! Put out a Kitty Food Bowl and some food, and see who comes to play.",
+    giver: 'Rosie',
+    level: 2,
+    requires: ['welcome'],
+    goals: [stat('kittyFeed', 1, 'Fill a kitty food bowl')],
+    reward: { coins: 120, xp: 15 },
+  },
+  {
+    id: 'kitty_friends',
+    title: 'Purr-fect Friends',
+    text: 'The neighborhood cats adore your farm! Collect their little thank-you gifts and give them some gentle pets.',
+    giver: 'Rosie',
+    level: 3,
+    requires: ['kitty_corner'],
+    goals: [stat('kittyVisit', 8, 'Welcome 8 kitty visits'), stat('pet', 5, 'Pet kitties 5 times')],
+    reward: { coins: 300, xp: 40, items: { yarn_ball: 1 } },
+  },
+  {
+    id: 'forever_home',
+    title: 'A Forever Home',
+    text: "One of those cats keeps coming back just for you. When a kitty loves you with all ten hearts, give it a forever home!",
+    giver: 'Mama Marigold',
+    level: 4,
+    requires: ['kitty_friends'],
+    goals: [stat('adopt', 1, 'Adopt a kitty')],
+    reward: { coins: 800, xp: 100, items: { cat_bed: 1 } },
+  },
   // Nature: fishing and critter catching
   {
     id: 'gone_fishing',

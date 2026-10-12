@@ -230,6 +230,11 @@ export class FarmScene extends Phaser.Scene {
   // -------------------------------------------------------------------------
   // Little bits of life
 
+  /** A little particle burst (hearts, sparkles) at a world position. For features. */
+  burst(tex: string, n: number, x: number, y: number): void {
+    this.emitter(tex, 'burst').explode(n, x, y);
+  }
+
   private emitter(tex: string, kind: 'burst' | 'twinkle' | 'smoke' | 'dust'): Phaser.GameObjects.Particles.ParticleEmitter {
     const key = `${tex}|${kind}`;
     let e = this.emitters.get(key);
@@ -1106,7 +1111,10 @@ export class FarmScene extends Phaser.Scene {
     if (pet) {
       pet.pet();
       if (pet.kind === 'dog') sfx.bark();
-      else sfx.meow();
+      else {
+        sfx.meow();
+        setTimeout(() => sfx.purr(1.3), 350);
+      }
       this.emitter('fx:heart', 'burst').explode(4, pet.img.x, pet.img.y - 24);
       return;
     }
