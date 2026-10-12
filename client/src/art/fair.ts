@@ -118,67 +118,64 @@ function carouselHorse(p: Pen): void {
   const { x: cx, y: G } = p.center;
   p.shadow(cx, G + 2, 21, 10, 0.25);
 
-  // round base: a pink drum with a gold inlay on top
+  // round striped base: a pink drum with cream stripes and a gold inlay
   p.cylinder(cx, G + 1, 18, 5, PINK);
+  for (const x of [cx - 13, cx - 5, cx + 3, cx + 11]) p.rect(x, G - 6, 3.4, 11, CREAM, null);
   p.ellipse(cx, G - 4, 12, 6, GOLD, O);
 
-  // the striped pole: gold and pink rings, a gold finial on top
+  // the striped pole, up through the middle of the back, with a finial
   for (let i = 0; i < 7; i++) p.rect(cx - 2.2, G - 4 - (i + 1) * 7, 4.4, 7, i % 2 ? PINK : GOLD);
-  p.ball(cx, G - 56, 3, GOLD);
+  p.ball(cx, G - 55, 2.8, GOLD);
 
-  // legs: two fore, two hind, each ending in a little gold hoof
-  stick(p, [pt(22, G - 34), pt(15, G - 21)], 4, HORSE);
-  stick(p, [pt(27, G - 33), pt(25, G - 19)], 4, HORSE);
-  stick(p, [pt(37, G - 33), pt(40, G - 19)], 4, HORSE);
-  stick(p, [pt(42, G - 35), pt(50, G - 23)], 4, HORSE);
-  const hooves: [number, number][] = [
-    [15, G - 21],
-    [25, G - 19],
-    [40, G - 19],
-    [50, G - 23],
+  // tail, flowing off the rump
+  stick(p, [pt(43, G - 40), pt(51, G - 44), pt(55, G - 38)], 3.4, LILAC);
+  p.circle(55, G - 38, 3.3, LILAC);
+
+  // tucked-up fore legs (one bent forward) and hind legs held together
+  stick(p, [pt(22, G - 32), pt(16, G - 27), pt(18, G - 22)], 4.6, HORSE);
+  stick(p, [pt(26, G - 30), pt(25, G - 24), pt(29, G - 21)], 4.6, HORSE);
+  stick(p, [pt(38, G - 30), pt(37, G - 22), pt(40, G - 17)], 4.6, HORSE);
+  stick(p, [pt(42, G - 30), pt(43, G - 22), pt(46, G - 17)], 4.6, HORSE);
+  for (const [x, y] of [[18, G - 21], [29, G - 20], [40, G - 16], [46, G - 16]] as [number, number][]) {
+    p.ellipse(x, y, 2.6, 1.9, GOLD, O);
+  }
+
+  // neck, then the round plush body over its base
+  stick(p, [pt(22, G - 42), pt(17, G - 52)], 11, HORSE);
+  p.ellipse(31, G - 37, 14, 9, p.vgrad(G - 46, G - 28, '#fff4fa', HORSE));
+  p.ellipse(31, G - 30, 10, 2.2, shade(HORSE, -0.12), null);
+  p.curve(pt(20, G - 38), pt(23, G - 42), pt(27, G - 43), 'rgba(255,255,255,0.7)', 1.4);
+
+  // lilac mane in soft curls down the back of the neck and up the crest
+  const curls: [number, number, number][] = [
+    [26.4, G - 46, 3.2],
+    [24.3, G - 51, 3.2],
+    [21.6, G - 55.5, 3.2],
+    [18.4, G - 59.5, 3],
+    [11.6, G - 63.5, 2.6],
+    [16.6, G - 64.5, 2.6],
   ];
-  for (const [x, y] of hooves) p.ellipse(x, y, 2.4, 1.8, GOLD, O);
+  for (const [x, y, r] of curls) p.circle(x, y, r, LILAC);
+  for (const [x, y, r] of curls) p.circle(x - r * 0.3, y - r * 0.3, r * 0.35, 'rgba(255,255,255,0.45)', null);
 
-  // tail, flowing back to the right
-  stick(p, [pt(46, G - 43), pt(54, G - 47), pt(57, G - 40)], 3.2, LILAC);
-  p.circle(57, G - 40, 3.4, LILAC);
+  // a big round head with a closed-eye smile and blush
+  p.ellipse(19.5, G - 65.5, 2.6, 3.8, HORSE, O, 0.3);
+  p.ellipse(19.5, G - 65, 1.3, 2.2, PINK_D, null, 0.3);
+  p.ellipse(15, G - 57, 8.5, 8, HORSE, O);
+  p.ellipse(9.5, G - 52, 4.6, 3.8, shade(HORSE, 0.2), O);
+  p.circle(7.6, G - 53.5, 0.7, PINK_D, null);
+  p.curve(pt(7.5, G - 50), pt(9.5, G - 48.2), pt(11.5, G - 50), INK, 1.1);
+  p.curve(pt(12, G - 58), pt(14.5, G - 60.5), pt(17, G - 58), INK, 1.5);
+  p.ellipse(11, G - 53.5, 2.4, 1.4, BLUSH, null);
+  p.ellipse(19, G - 53, 2.2, 1.3, BLUSH, null);
+  p.ellipse(12, G - 62, 2.2, 1.1, 'rgba(255,255,255,0.7)', null, -0.4);
 
-  // body, a soft gradient from cream at the top to pink below
-  p.roundRect(19, G - 48, 28, 17, 8, p.vgrad(G - 48, G - 31, '#fff3f9', HORSE));
-  p.ellipse(33, G - 34, 10, 2.4, shade(HORSE, -0.1), null);
-  p.curve(pt(21, G - 37), pt(24, G - 35), pt(27, G - 34), 'rgba(255,255,255,0.7)', 1.4);
+  // a little saddle with a heart
+  p.roundRect(22, G - 50, 15, 9, 4, MINT);
+  p.heart(30, G - 45.5, 3.2, PINK, PINK_D);
 
-  // neck, then the lilac mane puffing along its back
-  stick(p, [pt(22, G - 44), pt(14, G - 56)], 9, HORSE);
-  const mane: [number, number, number][] = [
-    [24.4, G - 46.4, 3.2],
-    [22, G - 50, 3.2],
-    [19.6, G - 53.6, 3.1],
-    [18, G - 56, 3],
-  ];
-  for (const [x, y, r] of mane) p.circle(x, y, r, LILAC);
-
-  // ear, head, muzzle and face
-  p.poly([pt(9.5, G - 61), pt(8.5, G - 67.5), pt(14, G - 62.5)], HORSE, O, 1);
-  p.poly([pt(10.4, G - 62.4), pt(9.8, G - 65.6), pt(12.6, G - 63)], PINK_D, null);
-  p.ellipse(11.5, G - 58, 7, 5.6, HORSE, O, -0.35);
-  // a little pink bow where the mane meets the ear
-  p.ellipse(15.2, G - 63.4, 2.2, 1.6, PINK, O, -0.4);
-  p.ellipse(18.6, G - 63.4, 2.2, 1.6, PINK, O, 0.4);
-  p.circle(17, G - 63.2, 1.1, PINK_D, O);
-  p.ellipse(7.2, G - 54.5, 3.6, 3, shade(HORSE, 0.25), O, -0.3);
-  p.circle(5.2, G - 55.5, 0.6, PINK_D, null);
-  p.circle(12, G - 59.5, 1.5, INK, null);
-  p.circle(12.5, G - 60, 0.5, '#ffffff', null);
-  p.ellipse(14.5, G - 55, 2, 1.2, BLUSH, null);
-
-  // a tiny saddle on the back, with a heart
-  p.roundRect(25, G - 52, 14, 10, 4, MINT);
-  p.line([pt(26.8, G - 43.6), pt(37.2, G - 43.6)], shade(MINT, -0.3), 0.9);
-  p.heart(32, G - 47, 3.2, PINK, PINK_D);
-
-  sparkle(p, 55, G - 61, 2.8);
-  sparkle(p, 58, G - 30, 2);
+  sparkle(p, 54, G - 60, 2.6);
+  sparkle(p, 58, G - 28, 2);
 }
 
 // ---------------------------------------------------------------------------
@@ -411,72 +408,140 @@ function highStriker(p: Pen): void {
 
 function ferrisWheel(p: Pen): void {
   const ctr = p.center; // footprint centre on the ground
-  p.shadow(ctr.x, ctr.y + 2, 46, 22, 0.25);
-
-  // the round platform, with a grassy top and a few flowers round its edge
-  p.cylinder(ctr.x, ctr.y + 1, 44, 10, MINT);
-  const topY = ctr.y + 1 - 10;
-  p.ellipse(ctr.x, topY, 37, 18, '#c6eeb0', O);
-  const flowerCols = [PINK, BUTTER, LILAC, PINK, BUTTER];
-  [1.25, 1.75, 2.3, 5.1, 5.7].forEach((a, i) => {
-    p.flower(ctr.x + Math.cos(a) * 31, topY + Math.sin(a) * 15.5, 2.6, flowerCols[i]);
-  });
-
-  // the A-frame stand, its feet on the platform and its tip at the hub
-  const hub = p.iso(1, 1, 58);
-  const lb = p.iso(0.3, 1, 10);
-  const rb = p.iso(1.7, 1, 10);
-  stick(p, [lb, hub], 4.2, LILAC);
-  stick(p, [rb, hub], 4.2, LILAC);
-  const along = (a: Pt, b: Pt, t: number): Pt => pt(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
-  stick(p, [along(lb, hub, 0.4), along(rb, hub, 0.4)], 2.2, LILAC);
-  p.ellipse(lb.x, lb.y, 3.6, 1.8, shade(LILAC, -0.1), O);
-  p.ellipse(rb.x, rb.y, 3.6, 1.8, shade(LILAC, -0.1), O);
-
-  // the wheel is a circle in the plane of the stand: wide along the grid's
-  // x axis, tall along the screen's y axis, so it reads as iso-correct
-  const RU = { x: 28.8, y: 14.4 };
-  const RZ = 40;
-  const rim = (t: number): Pt => pt(hub.x + Math.cos(t) * RU.x, hub.y + Math.cos(t) * RU.y - Math.sin(t) * RZ);
   const deg = (d: number): number => (d * Math.PI) / 180;
 
-  // spokes
-  for (let k = 0; k < 6; k++) stick(p, [hub, rim(deg(30 + 60 * k))], 1.6, CREAM);
+  // the hub sits high on the stand; the wheel is a circle in the plane v = 1
+  const hub = p.iso(1, 1, 62);
+  const rimAt = (t: number, s = 1): Pt =>
+    pt(hub.x + Math.cos(t) * 32 * s, hub.y + Math.cos(t) * 16 * s - Math.sin(t) * 52 * s);
 
-  // the rim
-  const ring: Pt[] = [];
-  for (let i = 0; i <= 72; i++) ring.push(rim((i / 72) * Math.PI * 2));
-  p.line(ring, O, 5);
-  p.line(ring, '#fff8ec', 2.6);
+  p.shadow(ctr.x, ctr.y + 2, 42, 20, 0.25);
 
-  // six gondolas hanging from the rim
+  // the round platform, with a grassy top
+  p.cylinder(ctr.x, ctr.y + 1, 38, 9, MINT);
+  const topY = ctr.y + 1 - 9;
+  p.ellipse(ctr.x, topY, 33, 16.5, '#c6eeb0', O);
+
+  // a pastel picket fence round the platform: back half first, front later
+  const fence = (back: boolean): void => {
+    const rx = 34.5;
+    const ry = 17.3;
+    const c = p.ctx;
+    const arc = (): void => {
+      c.beginPath();
+      c.ellipse(ctr.x, topY - 5, rx, ry, 0, back ? Math.PI : 0, back ? Math.PI * 2 : Math.PI);
+    };
+    arc();
+    c.strokeStyle = O;
+    c.lineWidth = 2.4;
+    c.stroke();
+    arc();
+    c.strokeStyle = CREAM;
+    c.lineWidth = 1.2;
+    c.stroke();
+    for (let i = 0; i < 20; i++) {
+      const a = (i / 20) * Math.PI * 2;
+      const s = Math.sin(a);
+      if ((s < 0) !== back) continue;
+      p.rect(ctr.x + Math.cos(a) * rx - 1.3, topY + s * ry - 6, 2.6, 6, i % 2 ? PINK : CREAM);
+    }
+  };
+  fence(true);
+
+  // the A-frame: two pairs of legs from the hub axle, splaying to the platform
+  const feet: [number, number][] = [
+    [0.3, 0.7],
+    [1.7, 0.7],
+    [0.3, 1.3],
+    [1.7, 1.3],
+  ];
+  for (const [u, v] of feet) {
+    const f = p.iso(u, v, 9);
+    stick(p, [hub, f], 4, LILAC);
+    p.ellipse(f.x, f.y, 3.4, 1.7, shade(LILAC, -0.12), O);
+  }
+  // a cross-brace inside each pair
+  for (const v of [0.7, 1.3]) {
+    const a = p.iso(0.3, v, 9);
+    const b = p.iso(1.7, v, 9);
+    const at = (q: Pt): Pt => pt(q.x + (hub.x - q.x) * 0.45, q.y + (hub.y - q.y) * 0.45);
+    stick(p, [at(a), at(b)], 2.2, LILAC);
+  }
+
+  // twelve radial struts between the two rings, and twelve spokes
+  for (let k = 0; k < 12; k++) {
+    stick(p, [rimAt(deg(15 + 30 * k), 0.84), rimAt(deg(15 + 30 * k), 1)], 2, CREAM);
+  }
+  for (let k = 0; k < 12; k++) stick(p, [hub, rimAt(deg(30 * k), 1)], 1.8, CREAM);
+
+  // the double rim: an outer cream ring and an inner pink ring
+  const ring = (s: number): Pt[] => {
+    const pts: Pt[] = [];
+    for (let i = 0; i <= 96; i++) pts.push(rimAt((i / 96) * Math.PI * 2, s));
+    return pts;
+  };
+  p.line(ring(1), O, 5.4);
+  p.line(ring(1), '#fff8ec', 3);
+  p.line(ring(0.84), O, 4);
+  p.line(ring(0.84), PINK_L, 2);
+
+  // twelve gondolas, each hung from the outer rim on a short pin
   const cars = [PINK, MINT, BUTTER, LILAC, BLUE, PINK_L];
-  for (let k = 0; k < 6; k++) {
-    const r0 = rim(deg(30 + 60 * k));
-    const col = cars[k];
-    p.line([r0, pt(r0.x, r0.y + 4)], O, 1.2);
-    p.roundRect(r0.x - 6, r0.y + 3.5, 12, 11, 3.5, col);
-    p.ellipse(r0.x, r0.y + 3.5, 6, 2.4, shade(col, 0.25));
-    p.circle(r0.x, r0.y + 9, 2, 'rgba(255,255,255,0.85)', null);
+  for (let k = 0; k < 12; k++) {
+    const r0 = rimAt(deg(30 * k), 1);
+    const col = cars[k % cars.length];
+    p.line([r0, pt(r0.x, r0.y + 3.5)], O, 1.4);
+    shape(
+      p,
+      (c) => {
+        c.moveTo(r0.x - 6.5, r0.y + 7);
+        c.lineTo(r0.x, r0.y + 3.5);
+        c.lineTo(r0.x + 6.5, r0.y + 7);
+      },
+      shade(col, -0.12),
+      O,
+      1,
+    );
+    p.roundRect(r0.x - 5.5, r0.y + 7, 11, 9, 2.5, col);
+    p.circle(r0.x, r0.y + 11.5, 1.6, 'rgba(255,255,255,0.85)', null);
   }
 
-  // the hub
-  p.circle(hub.x, hub.y, 4.6, GOLD, O);
-  p.circle(hub.x, hub.y, 1.9, PINK, O);
-
-  // twelve star lights along the rim, each with a warm glow
+  // twelve star lights, evenly spaced on the outer rim, each with a glow
+  for (let k = 0; k < 12; k++) p.glow(rimAt(deg(15 + 30 * k), 1).x, rimAt(deg(15 + 30 * k), 1).y, 6.5, BUTTER, 0.6);
   for (let k = 0; k < 12; k++) {
-    const s = rim(deg(15 + 30 * k));
-    p.glow(s.x, s.y, 6.5, BUTTER, 0.6);
-  }
-  for (let k = 0; k < 12; k++) {
-    const s = rim(deg(15 + 30 * k));
+    const s = rimAt(deg(15 + 30 * k), 1);
     p.star(s.x, s.y, 2.6, '#fff1a8', O);
   }
 
-  sparkle(p, 14, ctr.y - 60, 3.2);
-  sparkle(p, 114, ctr.y - 50, 2.6);
-  sparkle(p, 112, ctr.y - 12, 2);
+  // the hub
+  p.circle(hub.x, hub.y, 6, GOLD, O);
+  p.circle(hub.x, hub.y, 2.4, PINK, O);
+
+  // a little ticket booth at the front-left of the platform
+  const z0 = 9;
+  p.box(0.5, 1.4, 0.4, 0.4, 12, { top: CREAM, left: '#ffe3ee', right: shade('#ffe3ee', -0.2) }, z0);
+  p.hipRoof(0.5, 1.4, 0.4, 0.4, 12, 13, MINT, 0.04);
+  p.poly(
+    [p.iso(0.6, 1.8, z0 + 3), p.iso(0.8, 1.8, z0 + 3), p.iso(0.8, 1.8, z0 + 8), p.iso(0.6, 1.8, z0 + 8)],
+    '#fffdf6',
+    O,
+    0.9,
+  );
+
+  // the fence's front half, then flower tufts on the grass
+  fence(false);
+  for (const [a, s] of [
+    [0.9, 0.62],
+    [2.1, 0.7],
+    [3.9, 0.55],
+    [5.1, 0.72],
+  ] as [number, number][]) {
+    p.flower(ctr.x + Math.cos(a) * 30 * s, topY + Math.sin(a) * 15 * s, 2.6, a < 3 ? PINK : BUTTER);
+  }
+
+  sparkle(p, 10, 62, 3.2);
+  sparkle(p, 118, 72, 2.6);
+  sparkle(p, 116, 112, 2);
 }
 
 // ---------------------------------------------------------------------------
@@ -670,12 +735,12 @@ function iconTicket(p: Pen): void {
 // Exports
 
 export const sprites: SpriteSpec[] = [
-  { key: 'deco:carousel_horse', fw: 1, fh: 1, height: 60, paint: carouselHorse },
+  { key: 'deco:carousel_horse', fw: 1, fh: 1, height: 62, paint: carouselHorse },
   { key: 'deco:cotton_candy_cart', fw: 1, fh: 1, height: 78, paint: cottonCandyCart },
   { key: 'deco:ribbon_board', fw: 1, fh: 1, height: 58, paint: ribbonBoard },
   { key: 'deco:blue_ribbon_pumpkin', fw: 1, fh: 1, height: 46, paint: prizePumpkin },
   { key: 'deco:high_striker', fw: 1, fh: 1, height: 86, paint: highStriker },
-  { key: 'deco:ferris_wheel', fw: 2, fh: 2, height: 80, paint: ferrisWheel },
+  { key: 'deco:ferris_wheel', fw: 2, fh: 2, height: 92, paint: ferrisWheel },
   { key: 'deco:golden_trophy', fw: 1, fh: 1, height: 44, paint: goldenTrophy },
 ];
 
