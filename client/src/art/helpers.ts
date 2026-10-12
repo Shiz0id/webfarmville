@@ -26,7 +26,6 @@ const WOOD_L = '#f2c58f';
 const APPLE = '#ff8a8a';
 const APPLE_D = '#e85c6a';
 const PEAR = '#d8ee8a';
-const PEAR_D = '#b5d45a';
 const CHERRY = '#ff6f8a';
 const CHERRY_D = '#d8415f';
 const LEAF = '#6cbf55';
@@ -37,7 +36,6 @@ const LILAC_D = '#a48fe0';
 const GEM = '#ff9fc4';
 const GEM_D = '#e77fa6';
 const GOLD = '#f4c24a';
-const GOLD_D = '#c98b1f';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -132,43 +130,39 @@ function farmhand(p: Pen): void {
 // Arborist: a wicker basket of apples, pears and cherries, with a ladder leaning on it.
 
 function arborist(p: Pen): void {
-  // a wooden ladder leaning on the basket's rim: two rails, a few rungs
-  const railA = [pt(3.5, 37.5), pt(20, 5.5)];
-  const railB = [pt(9.5, 37.5), pt(24.5, 8)];
-  for (const [a, b] of [railA, railB] as [Pt, Pt][]) {
-    const t = (k: number) => pt(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k);
-    for (const k of [0.3, 0.52, 0.74]) {
-      const s = t(k);
-      const e = pt(s.x + 4.5, s.y - 0.8);
-      stick(p, [s, e], 1.4, WOOD_L);
-    }
-  }
+  // a wooden ladder leaning on the basket: two rails and three rungs
+  const railA: [Pt, Pt] = [pt(3.5, 38), pt(14.5, 8.5)];
+  const railB: [Pt, Pt] = [pt(10.5, 38), pt(21, 9)];
+  const at = (r: [Pt, Pt], k: number) => pt(r[0].x + (r[1].x - r[0].x) * k, r[0].y + (r[1].y - r[0].y) * k);
+  for (const k of [0.3, 0.52, 0.74]) stick(p, [at(railA, k), at(railB, k)], 1.3, WOOD_L);
   stick(p, railA, 2.4, WOOD);
   stick(p, railB, 2.4, WOOD);
 
-  // leaves at the top of the fruit
-  leaf(p, pt(31, 9), pt(37.5, 2.8), 2.2, LEAF);
-  leaf(p, pt(28, 11), pt(22, 5), 1.8, LEAF_D);
+  // leaves poking out of the fruit
+  leaf(p, pt(30.5, 8), pt(37.2, 2.6), 2.2, LEAF);
+  leaf(p, pt(24, 6), pt(18.5, 1.8), 1.9, LEAF_D);
 
-  // fruit heaped over the rim
-  fruit(p, 22.5, 17.5, 4.6, APPLE);
-  fruit(p, 30.5, 17.8, 4.4, APPLE_D);
-  pear(p, 26.8, 13.2, 4.1, PEAR);
-  // a pair of cherries on their shared stalk
-  stick(p, [pt(35.5, 13.5), pt(33.5, 6.8)], 0.9, STEM);
-  stick(p, [pt(35.5, 13.5), pt(37.6, 7.6)], 0.9, STEM);
-  p.ball(35.2, 17.5, 3, CHERRY);
-  p.ball(37.8, 16.6, 2.9, CHERRY_D);
-  p.ellipse(34.3, 15.7, 0.9, 0.5, rgba(WHITE, 0.8), null, -0.4);
+  // fruit heaped over the rim: apples, a pear and a pair of cherries
+  fruit(p, 18.8, 18.6, 4.9, APPLE);
+  fruit(p, 26.8, 16.4, 5.2, APPLE_D);
+  pear(p, 34.2, 17.6, 4.7, PEAR);
+  stick(p, [pt(22.6, 13.4), pt(26.4, 4.6)], 0.9, STEM);
+  stick(p, [pt(28.6, 12.6), pt(26.6, 4.6)], 0.9, STEM);
+  p.ball(22.4, 13.6, 2.9, CHERRY);
+  p.ball(28.6, 13, 2.8, CHERRY_D);
+  p.ellipse(21.6, 12.6, 0.9, 0.5, rgba(WHITE, 0.8), null, -0.4);
 
   // the wicker basket: a rounded trapezoid, woven with a few lines
-  const bask = [pt(16, 22), pt(36.5, 22), pt(33.8, 35.5), pt(18.6, 35.5)];
+  const bask = [pt(13.5, 22.5), pt(38, 22.5), pt(34.8, 38), pt(16.8, 38)];
   p.poly(bask, WICKER, O, 1.3);
-  for (const y of [27.4, 31.6]) p.line([pt(16.8 + (y - 22) * 0.18, y), pt(35.6 - (y - 22) * 0.18, y)], WICKER_D, 1);
-  for (const x of [22.5, 27.5, 32.5]) p.line([pt(x + 1, 23.4), pt(x - 0.6 + (x - 27.5) * -0.05, 34.4)], WICKER_D, 0.9);
-  p.roundRect(14.8, 20.4, 23.4, 3.6, 1.8, shade(WICKER, -0.12), O);
-  // soft shine along the front
-  p.line([pt(19.6, 30.5), pt(20.8, 34.2)], 'rgba(255,255,255,0.45)', 1);
+  for (const y of [28, 33]) {
+    const dx = (y - 22.5) * 0.11;
+    p.line([pt(13.5 + dx, y), pt(38 - dx, y)], WICKER_D, 1);
+  }
+  for (const x of [20.5, 26, 31.5]) p.line([pt(x + 0.8, 24), pt(x - 0.3 + (x - 26) * -0.06, 37)], WICKER_D, 0.9);
+  p.roundRect(11, 20.4, 29.5, 4.2, 2, shade(WICKER, -0.14), O);
+  // soft shine along the front of the basket
+  p.line([pt(20, 31), pt(21, 35.6)], 'rgba(255,255,255,0.45)', 1.1);
 }
 
 // ---------------------------------------------------------------------------
@@ -177,10 +171,10 @@ function arborist(p: Pen): void {
 function unwitherCharm(p: Pen): void {
   // wings behind the ring
   for (const s of [-1, 1]) {
-    const cx = 20 + s * 16.6;
-    p.ellipse(cx, 16.5, 6.2, 4.4, rgba(WHITE, 0.9), '#b9a8e8', s * 0.5);
-    p.ellipse(cx + s * 0.4, 22.5, 4.6, 3.1, rgba(WHITE, 0.82), '#b9a8e8', s * 0.2);
-    p.line([pt(cx - s * 4, 13.5), pt(cx + s * 3.5, 16.5)], '#c9b8f5', 0.6);
+    const cx = 20 + s * 12.8;
+    p.ellipse(cx, 15.5, 5, 3.8, rgba(WHITE, 0.92), '#b9a8e8', s * 0.5);
+    p.ellipse(cx + s * 0.6, 21.5, 4.2, 2.8, rgba(WHITE, 0.85), '#b9a8e8', s * 0.2);
+    p.line([pt(cx - s * 3.2, 13.6), pt(cx + s * 2.6, 15.8)], '#c9b8f5', 0.6);
   }
 
   // the pendant ring: a lilac rim with a mint inside

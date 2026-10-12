@@ -97,7 +97,8 @@ function drove(e: Extract<GameEvent, { type: 'drove' }>): void {
     .setOrigin(0.5, 0.85)
     .setScale(0.6 / RES)
     .setDepth(sc.depthAt(e.x + e.size, midY) + 50)
-    .setFlipX(true);
+    // Painted vehicles already face their way along x; the stand-in tractor faces the other way.
+    .setFlipX(key === 'deco:vintage_tractor');
   if (key === 'deco:vintage_tractor' && TINTS[e.vehicle] !== 0xffffff) img.setTint(TINTS[e.vehicle]);
   for (let i = 0; i <= e.size; i++) {
     const p = sc.tileToWorld(e.x + i, midY);
