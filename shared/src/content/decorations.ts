@@ -1,6 +1,7 @@
 // Cozy, wholesome decorations in the spirit of Animal Crossing. Each one adds
 // "charm" to the farm, which raises the farm's star rating and daily bonus.
 
+import { HORTICULTURE_DECORATIONS, LIFESTYLE_DECORATIONS } from './decorations2';
 import { table } from './table';
 
 export type DecoCategory =
@@ -13,6 +14,7 @@ export type DecoCategory =
   | 'water'
   | 'garden'
   | 'whimsy'
+  | 'horticulture'
   | 'seasonal';
 
 export interface DecoDef {
@@ -28,6 +30,8 @@ export interface DecoDef {
   flat?: boolean;
   /** Only purchasable while this seasonal event is running. */
   event?: string;
+  /** Later decoration collections (painted in their own art module). */
+  set?: 'lifestyle' | 'horticulture';
 }
 
 type Opts = Partial<Pick<DecoDef, 'w' | 'h' | 'flat' | 'event'>>;
@@ -45,7 +49,8 @@ const d = (
 const ev = (event: string, id: string, name: string, cost: number, charm: number, opts: Opts = {}) =>
   d(id, name, 'seasonal', 1, cost, charm, { ...opts, event });
 
-export const DECORATION_LIST: DecoDef[] = [
+/** The original collection. */
+export const CORE_DECORATIONS: DecoDef[] = [
   // Flowers
   d('tulips_red', 'Red Tulips', 'flowers', 1, 20, 1),
   d('tulips_yellow', 'Yellow Tulips', 'flowers', 1, 20, 1),
@@ -225,10 +230,13 @@ export const DECORATION_LIST: DecoDef[] = [
   ev('new_year', 'confetti_cannon', 'Confetti Cannon', 90, 3),
 ];
 
+export const DECORATION_LIST: DecoDef[] = [...CORE_DECORATIONS, ...LIFESTYLE_DECORATIONS, ...HORTICULTURE_DECORATIONS];
+
 export const DECORATIONS: Record<string, DecoDef> = table(DECORATION_LIST);
 
 export const DECO_CATEGORIES: { id: DecoCategory; name: string }[] = [
   { id: 'seasonal', name: 'Seasonal' },
+  { id: 'horticulture', name: 'Gardening' },
   { id: 'flowers', name: 'Flowers' },
   { id: 'plants', name: 'Plants' },
   { id: 'fences', name: 'Fences' },

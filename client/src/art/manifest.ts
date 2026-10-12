@@ -1,5 +1,15 @@
 // The texture keys each art module is expected to provide, derived from game content.
-import { ANIMAL_LIST, BUILDING_LIST, CROP_LIST, DECORATION_LIST, ITEM_LIST, TREE_LIST } from '@farm/shared';
+import {
+  ANIMAL_LIST,
+  BUILDING_LIST,
+  CORE_DECORATIONS,
+  CROP_LIST,
+  HORTICULTURE_DECORATIONS,
+  ITEM_LIST,
+  LIFESTYLE_DECORATIONS,
+  QUEST_LIST,
+  TREE_LIST,
+} from '@farm/shared';
 
 export const UI_ICONS = ['coin', 'xp', 'charm', 'level'];
 
@@ -36,9 +46,17 @@ export function expectedKeys(mod: string): string[] {
       'wild:rock',
       'wild:bush',
     ],
-    decorations: () => DECORATION_LIST.filter((d) => !d.event).map((d) => `deco:${d.id}`),
-    seasonal: () => DECORATION_LIST.filter((d) => d.event).map((d) => `deco:${d.id}`),
+    decorations: () => CORE_DECORATIONS.filter((d) => !d.event).map((d) => `deco:${d.id}`),
+    seasonal: () => CORE_DECORATIONS.filter((d) => d.event).map((d) => `deco:${d.id}`),
+    lifestyle: () => LIFESTYLE_DECORATIONS.map((d) => `deco:${d.id}`),
+    horticulture: () => HORTICULTURE_DECORATIONS.map((d) => `deco:${d.id}`),
+    portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());
   return byModule[mod]?.() ?? [];
+}
+
+/** 'Grandma Fern' -> 'grandma_fern' */
+export function giverKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z]+/g, '_');
 }

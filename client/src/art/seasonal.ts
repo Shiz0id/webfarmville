@@ -2794,7 +2794,7 @@ function fallback(p: Pen): void {
   gift(p, x, y, 0.4, 0.4, 12, '#a678f0', GOLD);
 }
 
-export const sprites: SpriteSpec[] = DECORATION_LIST.filter((d) => d.event).map((d) => {
+export const sprites: SpriteSpec[] = DECORATION_LIST.filter((d) => d.event && !d.set).map((d) => {
   const art = ART[d.id] ?? { h: 24, paint: fallback };
   return { key: `deco:${d.id}`, fw: d.w, fh: d.h, height: art.h, paint: art.paint };
 });
