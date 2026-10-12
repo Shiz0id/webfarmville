@@ -161,7 +161,11 @@ function carouselHorse(p: Pen): void {
   // ear, head, muzzle and face
   p.poly([pt(9.5, G - 61), pt(8.5, G - 67.5), pt(14, G - 62.5)], HORSE, O, 1);
   p.poly([pt(10.4, G - 62.4), pt(9.8, G - 65.6), pt(12.6, G - 63)], PINK_D, null);
-  p.ellipse(11.5, G - 58, 6.2, 5, HORSE, O, -0.35);
+  p.ellipse(11.5, G - 58, 7, 5.6, HORSE, O, -0.35);
+  // a little pink bow where the mane meets the ear
+  p.ellipse(15.2, G - 63.4, 2.2, 1.6, PINK, O, -0.4);
+  p.ellipse(18.6, G - 63.4, 2.2, 1.6, PINK, O, 0.4);
+  p.circle(17, G - 63.2, 1.1, PINK_D, O);
   p.ellipse(7.2, G - 54.5, 3.6, 3, shade(HORSE, 0.25), O, -0.3);
   p.circle(5.2, G - 55.5, 0.6, PINK_D, null);
   p.circle(12, G - 59.5, 1.5, INK, null);
@@ -451,9 +455,9 @@ function ferrisWheel(p: Pen): void {
     const r0 = rim(deg(30 + 60 * k));
     const col = cars[k];
     p.line([r0, pt(r0.x, r0.y + 4)], O, 1.2);
-    p.roundRect(r0.x - 5.5, r0.y + 3.5, 11, 10, 3, col);
-    p.ellipse(r0.x, r0.y + 3.5, 5.5, 2.2, shade(col, 0.25));
-    p.circle(r0.x, r0.y + 8.5, 1.8, 'rgba(255,255,255,0.85)', null);
+    p.roundRect(r0.x - 6, r0.y + 3.5, 12, 11, 3.5, col);
+    p.ellipse(r0.x, r0.y + 3.5, 6, 2.4, shade(col, 0.25));
+    p.circle(r0.x, r0.y + 9, 2, 'rgba(255,255,255,0.85)', null);
   }
 
   // the hub
@@ -607,13 +611,13 @@ function iconTicket(p: Pen): void {
   c.rotate(-0.24);
   c.translate(-20, -20);
 
-  const x0 = 5;
-  const x1 = 35;
-  const y0 = 11;
-  const y1 = 29;
+  const x0 = 4;
+  const x1 = 36;
+  const y0 = 10;
+  const y1 = 30;
   const mid = 20;
-  const n = 3.4; // notch radius
-  const perf = 27.5; // the perforation, between the main ticket and its stub
+  const n = 3.6; // notch radius
+  const perf = 28.5; // the perforation, between the main ticket and its stub
   const body = (k: Ctx): void => {
     k.moveTo(x0 + 2, y0);
     k.lineTo(x1 - 2, y0);
@@ -653,11 +657,11 @@ function iconTicket(p: Pen): void {
   c.setLineDash([]);
 
   // the star, with a glint, and a tiny heart on the stub
-  p.star(14.5, mid, 5.4, GOLD, O);
-  p.ellipse(12.5, mid - 2.5, 1.2, 0.7, 'rgba(255,255,255,0.85)', null, -0.5);
-  p.circle(9, 14.5, 0.9, PINK_L, null);
-  p.circle(21.5, 25.5, 0.9, PINK_L, null);
-  p.heart(31.2, mid, 2.2, PINK, PINK_D);
+  p.star(15, mid, 6, GOLD, O);
+  p.ellipse(12.6, mid - 2.8, 1.3, 0.7, 'rgba(255,255,255,0.85)', null, -0.5);
+  p.circle(8.5, 14.5, 0.9, PINK_L, null);
+  p.circle(22, 25.5, 0.9, PINK_L, null);
+  p.heart(32.6, mid, 2.2, PINK, PINK_D);
 
   c.restore();
 }
@@ -669,7 +673,7 @@ export const sprites: SpriteSpec[] = [
   { key: 'deco:carousel_horse', fw: 1, fh: 1, height: 60, paint: carouselHorse },
   { key: 'deco:cotton_candy_cart', fw: 1, fh: 1, height: 78, paint: cottonCandyCart },
   { key: 'deco:ribbon_board', fw: 1, fh: 1, height: 58, paint: ribbonBoard },
-  { key: 'deco:prize_pumpkin', fw: 1, fh: 1, height: 46, paint: prizePumpkin },
+  { key: 'deco:blue_ribbon_pumpkin', fw: 1, fh: 1, height: 46, paint: prizePumpkin },
   { key: 'deco:high_striker', fw: 1, fh: 1, height: 86, paint: highStriker },
   { key: 'deco:ferris_wheel', fw: 2, fh: 2, height: 80, paint: ferrisWheel },
   { key: 'deco:golden_trophy', fw: 1, fh: 1, height: 44, paint: goldenTrophy },
