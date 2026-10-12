@@ -882,6 +882,36 @@ function angora(p: Pen): void {
   p.circle(10, 9, 0.9, '#ffffff', null);
 }
 
+const EYE = '#2b1b12';
+
+/**
+ * A tiny kawaii face centred on (x, y): two dark dot eyes with a glint, pink
+ * blush and a small smile. `k` is half the gap between the eyes in px.
+ */
+function face(p: Pen, x: number, y: number, k: number): void {
+  for (const sx of [-1, 1]) {
+    const ex = x + sx * k;
+    const ey = y - k * 0.2;
+    p.ellipse(ex, ey, k * 0.36, k * 0.5, EYE, null);
+    if (k >= 1.6) p.circle(ex - k * 0.14, ey - k * 0.22, k * 0.14, '#ffffff', null);
+    p.ellipse(x + sx * k * 1.6, y + k * 0.45, k * 0.42, k * 0.26, 'rgba(255,110,140,0.75)', null);
+  }
+  const lw = Math.max(0.45, k * 0.22);
+  p.curve({ x: x - k * 0.55, y: y + k * 0.5 }, { x, y: y + k * 1.2 }, { x: x + k * 0.55, y: y + k * 0.5 }, EYE, lw);
+}
+
+/** Where each product icon's face sits, as [x, y, k] (k = half the eye gap in px). */
+const PRODUCT_FACE: Record<string, [number, number, number]> = {
+  egg: [20, 19, 2.4],
+  milk: [20, 18, 2.2],
+  wool: [20, 21.5, 2.4],
+  honey: [20, 16.5, 2],
+  truffle: [19, 21, 2.4],
+  feather: [23.5, 15.5, 1.5],
+  goat_milk: [20, 25, 2.8],
+  angora: [17, 24, 2.4],
+};
+
 const PRODUCT_ART: Record<string, (p: Pen) => void> = {
   egg,
   milk,
@@ -900,5 +930,9 @@ function fallbackProduct(p: Pen): void {
 
 export const icons: IconSpec[] = ANIMAL_LIST.map((a) => ({
   key: `icon:${a.product}`,
-  paint: PRODUCT_ART[a.product] ?? fallbackProduct,
+  paint: (p: Pen) => {
+    (PRODUCT_ART[a.product] ?? fallbackProduct)(p);
+    const f = PRODUCT_FACE[a.product];
+    if (f) face(p, f[0], f[1], f[2]);
+  },
 }));

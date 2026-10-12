@@ -20,6 +20,8 @@ export interface BusEvents {
   mama: [];
   levelUp: [level: number];
   questReady: [quest: string];
+  /** The farm scene finished create(). */
+  sceneReady: [];
 }
 
 type Handler<K extends keyof BusEvents> = (...args: BusEvents[K]) => void;

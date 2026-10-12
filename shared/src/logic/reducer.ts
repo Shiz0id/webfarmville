@@ -28,6 +28,8 @@ import {
 import { footprint, placeable } from './catalog';
 import { completeQuestSet, farmCharm, isQuestComplete, refreshQuests } from './quests';
 import { buildingStatus, cropStatus, producerStatus } from './status';
+import { afterFeatures, featureHandler, migrateFeatures, type FeatureKit } from './features';
+import '../features';
 
 export interface ActionResult {
   state: FarmState;
@@ -175,6 +177,8 @@ function placeObject(state: FarmState, def: string, x: number, y: number, flip: 
   return obj;
 }
 
+const KIT: FeatureKit = { spend, earn, addXp, addItem, takeItem, bumpStat, getObject, nextRandom, utcDay, eventOn, canPlace, centerOf };
+
 // ---------------------------------------------------------------------------
 // The reducer
 
@@ -188,6 +192,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
   const events: GameEvent[] = [];
   const now = ctx.now;
   ensureOrders(state);
+  migrateFeatures(state);
   const wasComplete = completeQuestSet(state);
 
   switch (action.type) {
@@ -525,10 +530,14 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       break;
     }
 
-    default:
-      throw new GameError('Unknown action');
+    default: {
+      const handler = featureHandler((action as { type: string }).type);
+      if (!handler) throw new GameError('Unknown action');
+      handler(state, action, ctx, events, KIT);
+    }
   }
 
+  afterFeatures(state, action, ctx, events, KIT);
   refreshQuests(state, events, wasComplete, ctx);
   return { state, events };
 }

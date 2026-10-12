@@ -16,6 +16,7 @@ import { closeAllModals, setupTooltip, toast } from './ui/dom';
 import { mountHud } from './ui/hud';
 import { dailyAvailable, initPanels, showUnwrap, openBuilding, openFarmhouse, openQuests, openSeedPicker, showLevelUp } from './ui/panels';
 import { villagerSay } from './ui/villager';
+import { initFeatures } from './features';
 
 async function signIn(): Promise<MePayload> {
   if (getToken()) {
@@ -62,6 +63,18 @@ async function start(): Promise<void> {
   const recenter = () => scene().centerCamera();
   initPanels(store, recenter);
   initCooking(store);
+  const sceneWaiters: ((s: FarmScene) => void)[] = [];
+  let sceneReady = false;
+  bus.on('sceneReady', () => {
+    sceneReady = true;
+    for (const fn of sceneWaiters.splice(0)) fn(scene());
+  });
+  initFeatures({
+    store,
+    game,
+    scene,
+    onScene: (fn) => (sceneReady ? fn(scene()) : sceneWaiters.push(fn)),
+  });
   setupTooltip();
   mountHud({
     store,

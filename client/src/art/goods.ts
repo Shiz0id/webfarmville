@@ -206,7 +206,7 @@ function jar(
   p.roundRect(x0, top, w, 35 - top, 5, hgrad(p, x0, x0 + w, jam, 0.15, -0.3));
   p.rect(x0 + 1, top + 1, w - 2, 2.5, 'rgba(255,255,255,0.35)', null);
   // label
-  p.roundRect(x0 + 3, top + 7, w - 6, 11, 3, '#fff7e6');
+  p.roundRect(x0 + 3, top + 9, w - 6, wide ? 9 : 10, 3, '#fff7e6');
   label(p);
   shine(p, x0 + 2.6, top + 4, 31, 0.55);
   const cx = x0 + w / 2;
@@ -537,11 +537,11 @@ function goatCheese(p: Pen): void {
   leaf(p, 11, 15, 3.4, -0.6, '#7cb85a');
 }
 
-const strawberryJam = (p: Pen) => jar(p, '#d9233c', { kind: 'cloth', color: '#e8424a', pattern: 'gingham' }, (p) => strawberryEmblem(p, 20, 24.5, 1.1));
-const appleJam = (p: Pen) => jar(p, '#e2a33a', { kind: 'metal', color: '#7cbf4f' }, (p) => appleEmblem(p, 20, 24.5));
-const cherryJam = (p: Pen) => jar(p, '#8e1630', { kind: 'cloth', color: '#f49ac1', pattern: 'dots' }, (p) => cherryEmblem(p, 20, 23.5));
+const strawberryJam = (p: Pen) => jar(p, '#d9233c', { kind: 'cloth', color: '#e8424a', pattern: 'gingham' }, (p) => strawberryEmblem(p, 20, 26, 1.1));
+const appleJam = (p: Pen) => jar(p, '#e2a33a', { kind: 'metal', color: '#7cbf4f' }, (p) => appleEmblem(p, 20, 26));
+const cherryJam = (p: Pen) => jar(p, '#8e1630', { kind: 'cloth', color: '#f49ac1', pattern: 'dots' }, (p) => cherryEmblem(p, 20, 25.5));
 const marmalade = (p: Pen) =>
-  jar(p, '#f28a1c', { kind: 'metal', color: '#ffd23f' }, (p) => orangeSlice(p, 20, 27.5, 4), true);
+  jar(p, '#f28a1c', { kind: 'metal', color: '#ffd23f' }, (p) => orangeSlice(p, 20, 28.5, 4), true);
 
 function cranberrySauce(p: Pen): void {
   base(p, 34, 16);
@@ -1017,6 +1017,64 @@ function fallbackGood(id: string): (p: Pen) => void {
   };
 }
 
+const EYE = '#2b1b12';
+
+/**
+ * A tiny kawaii face centred on (x, y): two dark dot eyes with a glint, pink
+ * blush and a small smile. `k` is half the gap between the eyes in px.
+ */
+function face(p: Pen, x: number, y: number, k: number): void {
+  for (const sx of [-1, 1]) {
+    const ex = x + sx * k;
+    const ey = y - k * 0.2;
+    p.ellipse(ex, ey, k * 0.36, k * 0.5, EYE, null);
+    if (k >= 1.6) p.circle(ex - k * 0.14, ey - k * 0.22, k * 0.14, '#ffffff', null);
+    p.ellipse(x + sx * k * 1.6, y + k * 0.45, k * 0.42, k * 0.26, 'rgba(255,110,140,0.75)', null);
+  }
+  const lw = Math.max(0.45, k * 0.22);
+  p.curve({ x: x - k * 0.55, y: y + k * 0.5 }, { x, y: y + k * 1.2 }, { x: x + k * 0.55, y: y + k * 0.5 }, EYE, lw);
+}
+
+/** Paints `art`, then the item's face if it has one. */
+function withFace(art: (p: Pen) => void, f: [number, number, number] | undefined): (p: Pen) => void {
+  return (p) => {
+    art(p);
+    if (f) face(p, f[0], f[1], f[2]);
+  };
+}
+
+/** Where each crafted good's face sits, as [x, y, k] (k = half the eye gap in px). */
+const GOOD_FACE: Record<string, [number, number, number]> = {
+  flour: [20, 31.5, 2],
+  cornmeal: [20, 31.5, 2],
+  rice_flour: [20, 31.5, 2],
+  bread: [20, 25, 2.8],
+  blueberry_muffin: [20, 28, 2.4],
+  cornbread: [19, 25.5, 2],
+  pumpkin_pie: [20, 26.5, 2.4],
+  butter: [13.5, 24.5, 1.8],
+  cheese: [18, 21, 1.8],
+  ice_cream: [20, 15.5, 2.4],
+  goat_cheese: [17, 24.5, 2.2],
+  strawberry_jam: [20, 17.6, 2],
+  apple_jam: [20, 17.6, 2],
+  cherry_jam: [20, 17.6, 2],
+  marmalade: [20, 20.6, 2],
+  cranberry_sauce: [20, 30.5, 2],
+  yarn: [20, 21.5, 2.6],
+  sweater: [20, 28, 2],
+  cotton_cloth: [15.5, 19.5, 2.2],
+  quilt: [19, 16.5, 2.4],
+  lemonade: [19.5, 30, 2.4],
+  veggie_juice: [20, 26, 2.4],
+  grape_juice: [20, 17.5, 2.3],
+  smoothie: [20, 19, 2.4],
+  latte: [20, 24.5, 2.3],
+  pancakes: [20, 23.5, 2.1],
+  truffle_pasta: [20, 29.8, 2],
+  lavender_tea: [20, 26.5, 2.2],
+};
+
 // ---------------------------------------------------------------------------
 // UI icons
 
@@ -1115,7 +1173,7 @@ const UI_ART: Record<string, (p: Pen) => void> = { coin, xp, charm, level };
 export const icons: IconSpec[] = [
   ...ITEM_LIST.filter((i) => i.category === 'good').map((i) => ({
     key: `icon:${i.id}`,
-    paint: GOOD_ART[i.id] ?? fallbackGood(i.id),
+    paint: withFace(GOOD_ART[i.id] ?? fallbackGood(i.id), GOOD_FACE[i.id]),
   })),
   ...Object.entries(UI_ART).map(([k, paint]) => ({ key: `icon:${k}`, paint })),
 ];

@@ -97,7 +97,19 @@ export interface Order {
 }
 
 /** Something the UI may want to celebrate (floating text, sounds, popups). */
+/**
+ * Feature modules (shared/src/features) add their own actions and events by
+ * augmenting these maps, e.g.
+ *   declare module '../types' { interface ExtraActions { fish: { type: 'fish'; score: number } } }
+ * FarmState is an interface, so features can add (optional) fields to it the same way.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ExtraActions {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ExtraEvents {}
+
 export type GameEvent =
+  | ExtraEvents[keyof ExtraEvents]
   | { type: 'gain'; what: 'coins' | 'xp' | string; amount: number; x?: number; y?: number }
   | { type: 'spend'; amount: number; x?: number; y?: number }
   | { type: 'levelUp'; level: number }
@@ -110,6 +122,7 @@ export type GameEvent =
   | { type: 'meal'; dish: string };
 
 export type Action =
+  | ExtraActions[keyof ExtraActions]
   | { type: 'plow'; x: number; y: number }
   | { type: 'plant'; id: string; crop: string }
   | { type: 'harvest'; id: string }

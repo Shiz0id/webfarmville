@@ -185,6 +185,7 @@ export class FarmScene extends Phaser.Scene {
       spawnEventParticles(this, feature, DEPTH_UI - 190);
       this.time.addEvent({ delay: 8000, loop: true, callback: () => this.maybeTrickOrTreat() });
     }
+    bus.emit('sceneReady');
   }
 
   /** The seasonal event currently setting the mood, if any. */

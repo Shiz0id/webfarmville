@@ -7,6 +7,7 @@ import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
 import { openKitchen, readyDishes } from './cooking';
 import { fmtNum, h } from '../util';
+import { HUD_BUTTONS } from '../features/registry';
 import {
   claimableQuests,
   dailyAvailable,
@@ -102,7 +103,20 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     music.btn.firstChild!.textContent = audioSettings.music ? '🎵' : '🔇';
   });
   music.btn.classList.add('small-round');
-  const corner = h('div', { class: 'corner' }, quests.btn, orders.btn, neighbors.btn, barn.btn, catalog.btn, daily.btn, music.btn);
+  // Feature buttons (fishing, critters, ...) slot in before Farm and Music.
+  const extraCorner = HUD_BUTTONS.filter((b) => b.where === 'corner').map((b) => ({ def: b, ...roundBtn(b.em, b.label, b.onClick) }));
+  const corner = h(
+    'div',
+    { class: 'corner' },
+    quests.btn,
+    orders.btn,
+    neighbors.btn,
+    barn.btn,
+    catalog.btn,
+    ...extraCorner.map((b) => b.btn),
+    daily.btn,
+    music.btn,
+  );
 
   // Icons fly from the farm into the HUD when you earn things.
   let flying = 0;
@@ -152,6 +166,13 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     );
     toolButtons.set(t.id, btn);
     toolbar.append(btn);
+    // Feature tools sit right after Cook.
+    if (t.id === 'cook')
+      for (const b of HUD_BUTTONS.filter((x) => x.where === 'toolbar')) {
+        const fb = h('button', { class: 'tool', style: { position: 'relative' }, onclick: b.onClick }, h('span', { class: 'em' }, b.em), b.label);
+        toolButtons.set(`feature:${b.id}`, fb);
+        toolbar.append(fb);
+      }
   }
   const hint = h('div', { class: 'mode-hint', style: { display: 'none' } });
 
@@ -212,6 +233,19 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     setBadge(barn.badge, st.inventory.mystery_gift ?? 0);
     setBadge(orders.badge, readyOrders());
     setBadge(catalog.badge, claimableRibbons());
+    for (const b of extraCorner) {
+      setBadge(b.badge, b.def.badge?.() ?? 0);
+      b.btn.classList.toggle('pulse', !!b.def.pulse?.());
+      b.btn.style.display = store.visit && b.def.hideWhileVisiting ? 'none' : '';
+    }
+    for (const def of HUD_BUTTONS.filter((x) => x.where === 'toolbar')) {
+      const btn = toolButtons.get(`feature:${def.id}`);
+      if (!btn) continue;
+      let b = btn.querySelector('.badge') as HTMLElement | null;
+      if (!b) btn.append((b = h('span', { class: 'badge' })));
+      setBadge(b, def.badge?.() ?? 0);
+      btn.classList.toggle('pulse', !!def.pulse?.());
+    }
     const cookBtn = toolButtons.get('cook');
     if (cookBtn) {
       let b = cookBtn.querySelector('.badge') as HTMLElement | null;

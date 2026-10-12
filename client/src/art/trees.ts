@@ -376,7 +376,9 @@ const lemonTree: TreeArt = {
     trunkW: 6,
     canopyZ: 48,
     clumps: [
-      [0, 0, 21, '#6eac3e', 1.3],
+      [-9, 3, 13, '#9fcb3f'],
+      [9, 3, 13, '#a9d248'],
+      [0, -7, 15, '#b8dc5a'],
     ],
     fruit: (p, x, y, i) => lemonShape(p, x, y, 3.1, i % 2 ? 0.5 : -0.4),
     fruitN: 8,
@@ -415,21 +417,21 @@ const bananaTree: TreeArt = {
     // pseudostem built from overlapping leaf sheaths
     const ctx = p.ctx;
     ctx.beginPath();
-    ctx.moveTo(c.x - 6, c.y + 1);
-    ctx.quadraticCurveTo(c.x - 4.5, c.y - h * 0.5, top.x - 3.5, top.y);
-    ctx.lineTo(top.x + 3.5, top.y);
-    ctx.quadraticCurveTo(c.x + 4.5, c.y - h * 0.5, c.x + 6, c.y + 1);
-    ctx.quadraticCurveTo(c.x, c.y + 3, c.x - 6, c.y + 1);
+    ctx.moveTo(c.x - 7.5, c.y + 1);
+    ctx.quadraticCurveTo(c.x - 6, c.y - h * 0.5, top.x - 5, top.y);
+    ctx.lineTo(top.x + 5, top.y);
+    ctx.quadraticCurveTo(c.x + 6, c.y - h * 0.5, c.x + 7.5, c.y + 1);
+    ctx.quadraticCurveTo(c.x, c.y + 3, c.x - 7.5, c.y + 1);
     ctx.closePath();
-    const g = ctx.createLinearGradient(c.x - 6, 0, c.x + 6, 0);
-    g.addColorStop(0, '#b5b863');
-    g.addColorStop(0.5, '#93a04c');
-    g.addColorStop(1, '#6b7a36');
+    const g = ctx.createLinearGradient(c.x - 7.5, 0, c.x + 7.5, 0);
+    g.addColorStop(0, '#a4bc4c');
+    g.addColorStop(0.5, '#6e9e34');
+    g.addColorStop(1, '#4b7324');
     finish(p, g);
     for (const t of [0.25, 0.55, 0.8])
-      p.curve({ x: c.x - 4.5, y: c.y - h * t + 3 }, { x: c.x, y: c.y - h * t - 2 }, { x: c.x + 4.5, y: c.y - h * t - 5 }, '#5e6a2e', 0.8);
+      p.curve({ x: c.x - 4.5, y: c.y - h * t + 3 }, { x: c.x, y: c.y - h * t - 2 }, { x: c.x + 4.5, y: c.y - h * t - 5 }, '#2f4f1c', 1);
     p.curve({ x: c.x - 2.5, y: c.y - 2 }, { x: c.x - 3.5, y: c.y - 12 }, { x: c.x - 2.5, y: c.y - 20 }, '#c8c97a', 0.8);
-    const leafCol = '#78bf45';
+    const leafCol = '#34a040';
     const back: [number, number, number][] = [
       [-2.2, 27, 2],
       [-0.95, 27, 2],
@@ -597,6 +599,36 @@ function fallbackTree(t: ProducerDef): TreeArt {
 // ---------------------------------------------------------------------------
 // Icons (flat 40×40)
 
+const EYE = '#2b1b12';
+
+/**
+ * A tiny kawaii face centred on (x, y): two dark dot eyes with a glint, pink
+ * blush and a small smile. `k` is half the gap between the eyes in px.
+ */
+function face(p: Pen, x: number, y: number, k: number): void {
+  for (const sx of [-1, 1]) {
+    const ex = x + sx * k;
+    const ey = y - k * 0.2;
+    p.ellipse(ex, ey, k * 0.36, k * 0.5, EYE, null);
+    if (k >= 1.6) p.circle(ex - k * 0.14, ey - k * 0.22, k * 0.14, '#ffffff', null);
+    p.ellipse(x + sx * k * 1.6, y + k * 0.45, k * 0.42, k * 0.26, 'rgba(255,110,140,0.75)', null);
+  }
+  const lw = Math.max(0.45, k * 0.22);
+  p.curve({ x: x - k * 0.55, y: y + k * 0.5 }, { x, y: y + k * 1.2 }, { x: x + k * 0.55, y: y + k * 0.5 }, EYE, lw);
+}
+
+/** Where each fruit icon's face sits, as [x, y, k] (k = half the eye gap in px). */
+const ICON_FACE: Record<string, [number, number, number]> = {
+  apple: [20, 22, 2.6],
+  cherry: [23.5, 29.5, 1.8],
+  orange: [20, 23, 2.8],
+  lemon: [20, 22, 2.4],
+  peach: [22.5, 23, 2.4],
+  banana: [20, 22, 1.7],
+  coconut: [25, 17, 2.6],
+  maple_syrup: [20, 24.5, 1.9],
+};
+
 function iconShadow(p: Pen, y = 35, rx = 12): void {
   p.shadow(20, y, rx, 2.6, 0.25);
 }
@@ -752,6 +784,14 @@ export const sprites: SpriteSpec[] = TREE_LIST.flatMap((t) => {
 
 export const icons: IconSpec[] = TREE_LIST.map((t) => ({
   key: `icon:${t.product}`,
-  paint: (p: Pen) => (ICONS[t.product] ?? fallbackIcon)(p),
+  paint: (p: Pen) => {
+    (ICONS[t.product] ?? fallbackIcon)(p);
+    const f = ICON_FACE[t.product];
+    if (f) {
+      const [x, y, k] = f;
+      p.glow(x - k, y - k * 1.2, k * 2.4, '#ffffff', 0.3); // soft highlight on the body
+      face(p, x, y, k);
+    }
+  },
 }));
 
