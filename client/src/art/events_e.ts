@@ -21,7 +21,7 @@ const SHINE = 'rgba(255,255,255,0.7)';
 const GOLD = '#ffc53a';
 const LEAF = '#7fcf4a';
 const LEAF_LT = '#b6ea6a';
-const BABY_FRUIT = '#dcef84';
+const BABY_FRUIT = '#9fdc5c';
 
 // butternut
 const SQUASH = '#f3d7a2';
@@ -242,10 +242,26 @@ function sprawl(p: Pen, x: number, y: number, len: number, n: number, w: number,
 /** Stage 0: a patch of tiny spiky rosettes. */
 function pineSprout(p: Pen): void {
   spots(p, grid(3, 0.24, 0.76)).forEach((s, k) => {
-    p.shadow(s.x, s.y, 3.8, 1.6, 0.25);
-    fan(p, s.x, s.y - 0.6, 4.6, 5, 0.9, 1.1);
-    p.circle(s.x, s.y - 0.6, 0.9, LEAF_LT, null);
-    if (k % 3 === 0) sparkle(p, s.x + 4.2, s.y - 7, 1.3);
+    p.shadow(s.x, s.y, 3.6, 1.5, 0.25);
+    const base = { x: s.x, y: s.y - 0.4 };
+    const n = 4 + (k % 2); // four or five short, pointy leaves
+    for (let i = 0; i < n; i++) {
+      const t = (i / (n - 1)) * 2 - 1;
+      const a = -Math.PI / 2 + t * 1.05;
+      const l = 5.8 - Math.abs(t) * 1.1;
+      const tip = { x: base.x + Math.cos(a) * l, y: base.y + Math.sin(a) * l };
+      spike(p, base, tip, 1.3, i % 2 ? '#b4f274' : '#d4fca0');
+      p.line(
+        [
+          { x: base.x + Math.cos(a) * l * 0.25, y: base.y + Math.sin(a) * l * 0.25 },
+          { x: base.x + Math.cos(a) * l * 0.6, y: base.y + Math.sin(a) * l * 0.6 },
+        ],
+        'rgba(255,255,255,0.8)',
+        0.4,
+      );
+    }
+    p.circle(base.x, base.y, 1, '#eaffc4', null);
+    if (k % 3 === 0) sparkle(p, s.x + 4.2, s.y - 7, 1.2);
   });
 }
 
@@ -865,7 +881,7 @@ function iconButternut(p: Pen): void {
 // Exports
 
 export const sprites: SpriteSpec[] = [
-  { key: 'crop:pineapple:0', fw: 1, fh: 1, height: 40, paint: (p) => thin(p, 0.7, () => pineSprout(p)) },
+  { key: 'crop:pineapple:0', fw: 1, fh: 1, height: 40, paint: (p) => thin(p, 0.6, () => pineSprout(p)) },
   { key: 'crop:pineapple:1', fw: 1, fh: 1, height: 40, paint: (p) => thin(p, 0.9, () => pineLeafy(p)) },
   { key: 'crop:pineapple:2', fw: 1, fh: 1, height: 40, paint: (p) => thin(p, 0.9, () => pineBearing(p)) },
   { key: 'crop:butternut:0', fw: 1, fh: 1, height: 36, paint: (p) => thin(p, 0.7, () => squashSprout(p)) },
