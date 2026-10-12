@@ -786,7 +786,8 @@ export function openQuests(): void {
           h(
             'div',
             { class: 'goal' },
-            `${g.have >= g.need ? '✅' : '⬜'} ${g.label} (${fmtNum(g.have)}/${fmtNum(g.need)})`,
+            h('span', { class: `check${g.have >= g.need ? ' on' : ''}` }),
+            ` ${g.label} (${fmtNum(g.have)}/${fmtNum(g.need)})`,
             h('div', { class: 'progress' }, h('div', { style: { width: `${(g.have / g.need) * 100}%` } })),
           ),
         );
