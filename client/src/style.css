@@ -1955,3 +1955,234 @@ body.event-halloween .round-btn {
 .k-got {
   font-weight: 900;
 }
+
+/* ------------------------------------------------------------------------ */
+/* Nature: Meadow Pond fishing, catch cards and the Nature Journal */
+
+.pond {
+  position: fixed;
+  inset: 0;
+  /* Just under #ui, so the catch card, journal and toasts show on top. */
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 18px;
+  background: linear-gradient(#bfe6a3, #8fcf73);
+  animation: fade 0.2s;
+  user-select: none;
+  touch-action: none;
+}
+.pond.autumn { background: linear-gradient(#dfe39a, #b9c76c); }
+.pond.winter { background: linear-gradient(#eef6fb, #cfe3ee); }
+.pond.spring { background: linear-gradient(#d9f2c4, #a8dc8a); }
+.pond.night { filter: saturate(0.8) brightness(0.72) hue-rotate(-12deg); }
+.pond .k-top, .pond-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  background: var(--cream);
+  border: 3px solid var(--dark);
+  border-radius: 20px;
+  padding: 8px 12px 8px 10px;
+  box-shadow: var(--shadow);
+  width: min(720px, calc(100% - 24px));
+}
+.pond-top .close { margin-left: 4px; }
+.pond-info { font-weight: 800; font-size: 14px; }
+.pond-water {
+  position: relative;
+  width: min(720px, calc(100% - 24px));
+  flex: 1;
+  min-height: 220px;
+  max-height: 460px;
+  border: 4px solid #6d8f4a;
+  border-radius: 48% 52% 46% 54% / 40% 38% 62% 60%;
+  background:
+    radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.35), transparent 40%),
+    radial-gradient(ellipse at 70% 75%, rgba(255, 255, 255, 0.18), transparent 35%),
+    linear-gradient(#6fc6e8, #3e93c7);
+  box-shadow: inset 0 10px 30px rgba(20, 60, 90, 0.35), var(--shadow);
+  overflow: hidden;
+  cursor: pointer;
+}
+.winter .pond-water { background: radial-gradient(ellipse at 30% 30%, rgba(255,255,255,.5), transparent 45%), linear-gradient(#a8dcef, #6fb0d4); }
+.pond-ripples {
+  position: absolute;
+  inset: 0;
+  background: repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.07) 0 6px, transparent 6px 26px);
+  animation: ripple 6s linear infinite;
+  pointer-events: none;
+}
+@keyframes ripple { from { background-size: 100% 100%; } to { background-size: 130% 130%; } }
+.pond-reeds { position: absolute; width: 110px; pointer-events: none; }
+.pond-reeds.a { left: 6%; bottom: 8%; }
+.pond-reeds.b { right: 7%; bottom: 14%; transform: scaleX(-1); }
+.pond-lily { position: absolute; width: 70px; pointer-events: none; animation: bob 4s ease-in-out infinite; }
+.pond-lily.a { left: 14%; top: 12%; }
+.pond-lily.b { right: 18%; bottom: 14%; width: 56px; animation-delay: -1.3s; }
+.pond-lily.c { left: 58%; top: 6%; width: 46px; animation-delay: -2.6s; }
+.pond-dock { position: absolute; left: 50%; bottom: -14px; width: 120px; transform: translateX(-50%); pointer-events: none; }
+@keyframes bob { 50% { transform: translateY(-3px) rotate(2deg); } }
+.pond-bobber {
+  position: absolute;
+  width: 34px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: left 0.5s ease-out, top 0.5s ease-out;
+  pointer-events: none;
+  z-index: 3;
+}
+.pond-bobber.flying { opacity: 1; animation: fly-in 0.55s ease-out; }
+.pond-bobber.floating { opacity: 1; animation: bob 1.6s ease-in-out infinite; }
+.pond-bobber.nibble { opacity: 1; animation: nibble 0.35s ease-in-out; }
+.pond-bobber.bite { opacity: 1; animation: plunge 0.25s ease-in forwards; }
+@keyframes fly-in { from { transform: translate(-50%, -260%) scale(0.6); } 60% { transform: translate(-50%, -90%) scale(1.1); } }
+@keyframes nibble { 50% { transform: translate(-50%, -30%); } }
+@keyframes plunge { to { transform: translate(-50%, -10%) scale(0.8); filter: brightness(0.6); } }
+.pond-shadow {
+  position: absolute;
+  width: 70px;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(var(--s, 1));
+  transition: left 2.6s ease-in-out, top 2.6s ease-in-out, opacity 0.6s;
+  pointer-events: none;
+  z-index: 2;
+}
+.pond-shadow.show { opacity: 0.55; }
+.pond-bang {
+  position: absolute;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  font-size: 54px;
+  font-weight: 900;
+  color: #fff;
+  -webkit-text-stroke: 3px var(--red);
+  animation: pop 0.25s cubic-bezier(0.2, 1.8, 0.4, 1);
+  pointer-events: none;
+}
+.pond-meter {
+  position: absolute;
+  right: max(20px, calc(50% - 400px));
+  top: 50%;
+  transform: translateY(-50%);
+  gap: 8px;
+  padding: 10px;
+  background: var(--cream);
+  border: 3px solid var(--dark);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  z-index: 5;
+}
+.reel-track {
+  position: relative;
+  width: 46px;
+  height: 260px;
+  border-radius: 12px;
+  background: linear-gradient(#7fd0ef, #2f7fb5);
+  border: 2px solid var(--dark);
+  overflow: hidden;
+}
+.reel-bar {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 0;
+  border-radius: 8px;
+  background: rgba(124, 201, 90, 0.55);
+  border: 2px solid #4f9a3c;
+}
+.reel-bar.on { background: rgba(160, 235, 110, 0.85); box-shadow: 0 0 12px #c8ff9a; }
+.reel-fish { position: absolute; left: 7px; top: 0; width: 32px; height: 32px; }
+.reel-progress {
+  position: relative;
+  width: 14px;
+  height: 260px;
+  border: 2px solid var(--dark);
+  border-radius: 8px;
+  background: #f2e3c4;
+  overflow: hidden;
+}
+.reel-fill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(var(--gold), #7cc95a); }
+.pond-bottom { min-height: 52px; }
+.btn.big { font-size: 20px; padding: 12px 34px; }
+
+.catch-card { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.catch-burst {
+  width: 140px;
+  height: 140px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 40%, #fff4c9 60%, transparent 72%);
+  animation: pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.catch-burst.r3 { background: radial-gradient(circle, #fff 0 40%, #d7f0ff 60%, transparent 72%); }
+.catch-burst.r4 { background: radial-gradient(circle, #fff 0 40%, #f1d9ff 60%, transparent 72%); }
+.catch-burst.r5 { background: conic-gradient(from 0deg, #ffe08a, #ffb3d1, #b8e2ff, #c6f5b0, #ffe08a); animation: pop 0.45s, spin 6s linear infinite; }
+.catch-burst.r5 .catch-img { animation: spin 6s linear infinite reverse; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.catch-img { width: 104px; height: 104px; image-rendering: auto; }
+.catch-name { font-size: 22px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+.new-tag, .record-tag {
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  background: var(--red);
+  padding: 2px 8px;
+  border-radius: 99px;
+  animation: pulse 1s infinite;
+}
+.record-tag { background: var(--gold-d); margin-left: 6px; }
+.catch-rarity { font-weight: 900; color: var(--muted); letter-spacing: 1px; }
+.catch-rarity.r3 { color: #3d8fc9; }
+.catch-rarity.r4 { color: #a35bd4; }
+.catch-rarity.r5 { color: #e09b12; }
+.catch-size { font-weight: 800; }
+.catch-note { font-style: italic; max-width: 280px; color: var(--brown); }
+.catch-meta { font-size: 13px; color: var(--muted); font-weight: 700; }
+
+.journal-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.journal-reward {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--paper-2);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: 6px 10px;
+}
+.journal-reward .ico.big { width: 48px; height: 48px; object-fit: contain; }
+.journal-reward .xpbar { width: 140px; }
+.journal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
+.journal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 6px;
+  background: var(--cream);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  text-align: center;
+}
+.journal-card img { width: 56px; height: 56px; }
+.journal-card .name { font-weight: 900; font-size: 13px; }
+.journal-card .rar { color: var(--gold-d); font-size: 11px; letter-spacing: 1px; }
+.journal-card .meta { font-size: 11px; font-weight: 800; }
+.journal-card .when { font-size: 10px; color: var(--muted); font-weight: 700; }
+.journal-card.r3 { border-color: #9fd0f0; }
+.journal-card.r4 { border-color: #d3a8ef; background: #fbf4ff; }
+.journal-card.r5 { border-color: var(--gold); background: #fffbe8; }
+.journal-card.unknown { opacity: 0.75; }
+.journal-card .silhouette { filter: brightness(0) opacity(0.25); }
+body.pond-open .hud,
+body.pond-open .corner,
+body.pond-open .toolbar,
+body.pond-open .mode-hint,
+body.pond-open .zoom,
+body.pond-open .visit-banner {
+  display: none !important;
+}

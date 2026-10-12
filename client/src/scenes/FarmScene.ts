@@ -429,6 +429,16 @@ export class FarmScene extends Phaser.Scene {
     img.setPosition(isoX(x, y + h), isoY(x + w, y + h));
   }
 
+  /** World position of a (fractional) tile coordinate, at ground level. For features. */
+  tileToWorld(x: number, y: number): { x: number; y: number } {
+    return { x: isoX(x, y), y: isoY(x, y) };
+  }
+
+  /** Draw depth for something standing on tile (x, y). For features. */
+  depthAt(x: number, y: number): number {
+    return this.depthFor(Math.floor(x), Math.floor(y), 1, 1);
+  }
+
   private depthFor(x: number, y: number, w: number, h: number): number {
     return (x + w + y + h) * 100 + (x + w) * 0.5;
   }
