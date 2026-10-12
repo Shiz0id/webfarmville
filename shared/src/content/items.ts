@@ -4,7 +4,7 @@
 
 import { table } from './table';
 
-export type ItemCategory = 'crop' | 'fruit' | 'animal' | 'good';
+export type ItemCategory = 'crop' | 'fruit' | 'animal' | 'good' | 'special';
 
 export interface ItemDef {
   id: string;
@@ -39,6 +39,10 @@ export const ITEM_LIST: ItemDef[] = [
   item('lavender', 'Lavender', 'crop', 70),
   item('watermelon', 'Watermelon', 'crop', 190),
   item('cranberry', 'Cranberry', 'crop', 85),
+  item('candy_corn', 'Candy Corn', 'crop', 25),
+  item('ghost_pumpkin', 'Ghost Pumpkin', 'crop', 70),
+  // Halloween currency, spent in the Candy Shop.
+  item('candy', 'Candy', 'special', 0),
   // Fruit
   item('apple', 'Apple', 'fruit', 20),
   item('cherry', 'Cherries', 'fruit', 22),

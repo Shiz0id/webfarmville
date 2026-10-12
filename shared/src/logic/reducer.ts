@@ -14,6 +14,7 @@ import {
 } from '../content/progression';
 import { MYSTERY_CHANCE, MYSTERY_GIFT, ensureOrders, generateOrder, nextRandom, rollMysteryGift } from '../content/orders';
 import { QUESTS } from '../content/quests';
+import { RIBBONS, RIBBON_REWARDS } from '../content/ribbons';
 import {
   GameError,
   type Action,
@@ -92,6 +93,7 @@ export function addItem(state: FarmState, item: string, qty: number, events?: Ga
   if (qty <= 0) return;
   state.inventory[item] = (state.inventory[item] ?? 0) + qty;
   if (DECORATIONS[item]) state.stats[`got:${item}`] = 1;
+  if (item === 'candy') bumpStat(state, 'candy', qty);
   events?.push({ type: 'gain', what: item, amount: qty, ...at });
 }
 
@@ -111,6 +113,20 @@ function getObject<K extends FarmObject['kind']>(state: FarmState, id: string, k
   if (!obj) throw new GameError('That object is gone');
   if (kind && obj.kind !== kind) throw new GameError('Wrong kind of object');
   return obj as Extract<FarmObject, { kind: K }>;
+}
+
+export const TREATS_PER_DAY = 6;
+/** Chance each harvest or collection during Halloween drops a piece of candy. */
+const CANDY_CHANCE = 0.4;
+
+function eventOn(ctx: ActionContext, event: string): boolean {
+  return !!ctx.allEvents || isEventActive(EVENTS[event], ctx.now);
+}
+
+function halloweenCandy(state: FarmState, ctx: ActionContext, events: GameEvent[], at: { x: number; y: number }, bonus: number): void {
+  if (!eventOn(ctx, 'halloween')) return;
+  const n = bonus + (nextRandom(state) < CANDY_CHANCE ? 1 : 0);
+  if (n > 0) addItem(state, 'candy', n, events, at);
 }
 
 function maybeMysteryGift(state: FarmState, events: GameEvent[], at: { x: number; y: number }): void {
@@ -186,12 +202,14 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       if (!def) throw new GameError('Unknown crop');
       if (plot.crop) throw new GameError('Something is already growing here');
       if (state.level < def.level) throw new GameError(`${def.name} unlock at level ${def.level}`);
+      if (def.event && !eventOn(ctx, def.event)) throw new GameError(`${def.name} only grow during ${EVENTS[def.event]?.name}`);
       spend(state, def.cost, events, centerOf(plot));
       plot.crop = def.id;
       plot.plantedAt = now;
       delete plot.fertilized;
       state.lastSeed = def.id;
       bumpStat(state, 'plant');
+      bumpStat(state, `plant:${def.id}`);
       break;
     }
 
@@ -205,6 +223,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       addItem(state, def.id, def.yield + (plot.fertilized ? 1 : 0), events, at);
       addXp(state, def.xp, events, at);
       maybeMysteryGift(state, events, at);
+      halloweenCandy(state, ctx, events, at, def.event === 'halloween' ? 2 : 0);
       bumpStat(state, 'harvest');
       bumpStat(state, `harvest:${def.id}`);
       delete plot.crop;
@@ -231,6 +250,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       addItem(state, def.product, def.yield, events, at);
       addXp(state, def.xp, events, at);
       maybeMysteryGift(state, events, at);
+      halloweenCandy(state, ctx, events, at, 0);
       bumpStat(state, 'collect');
       bumpStat(state, `collect:${def.id}`);
       obj.cycleStart = now;
@@ -244,7 +264,12 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       if (state.level < p.level) throw new GameError(`Unlocks at level ${p.level}`);
       if (p.event && !ctx.allEvents && !isEventActive(EVENTS[p.event], now))
         throw new GameError(`Only available during ${EVENTS[p.event]?.name ?? 'its event'}`);
-      spend(state, p.cost, events, { x: action.x + p.w / 2, y: action.y + p.h / 2 });
+      if (p.candy) {
+        if ((state.inventory.candy ?? 0) < p.candy) throw new GameError(`Needs ${p.candy} candy`);
+        takeItem(state, 'candy', p.candy);
+      } else {
+        spend(state, p.cost, events, { x: action.x + p.w / 2, y: action.y + p.h / 2 });
+      }
       placeObject(state, action.def, action.x, action.y, action.flip, now);
       if (p.kind === 'deco') {
         state.stats[`got:${p.def}`] = 1;
@@ -340,6 +365,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       const item = ITEMS[action.item];
       const deco = DECORATIONS[action.item];
       if (!item && !deco) throw new GameError('Unknown item');
+      if (item?.category === 'special') throw new GameError("That can't be sold");
       takeItem(state, action.item, qty);
       const price = item ? item.sell : Math.floor(deco.cost * SELL_BACK);
       earn(state, price * qty, events);
@@ -417,6 +443,37 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       break;
     }
 
+    case 'treat': {
+      if (!eventOn(ctx, 'halloween')) throw new GameError('Trick-or-treaters only come at Halloween');
+      const today = utcDay(now);
+      if (state.treats.day !== today) state.treats = { day: today, count: 0 };
+      if (state.treats.count >= TREATS_PER_DAY) throw new GameError('All the trick-or-treaters have gone home for today');
+      state.treats.count++;
+      const candy = 3 + Math.floor(nextRandom(state) * 4);
+      addItem(state, 'candy', candy, events);
+      earn(state, 15, events);
+      addXp(state, 3, events);
+      if (nextRandom(state) < 0.15) {
+        addItem(state, MYSTERY_GIFT, 1, events);
+        events.push({ type: 'mystery', item: MYSTERY_GIFT });
+      }
+      bumpStat(state, 'treat');
+      break;
+    }
+
+    case 'claimRibbon': {
+      const r = RIBBONS[action.ribbon];
+      if (!r) throw new GameError('Unknown ribbon');
+      const tier = state.ribbons[r.id] ?? 0;
+      if (tier >= r.tiers.length) throw new GameError('You already have every ribbon here');
+      if ((state.stats[r.stat] ?? 0) < r.tiers[tier]) throw new GameError('Not earned yet');
+      state.ribbons[r.id] = tier + 1;
+      earn(state, RIBBON_REWARDS[tier].coins, events);
+      addXp(state, RIBBON_REWARDS[tier].xp, events);
+      events.push({ type: 'ribbon', ribbon: r.id, tier: tier + 1 });
+      break;
+    }
+
     case 'rename': {
       const name = String(action.name ?? '').trim().replace(/\s+/g, ' ');
       if (name.length < 1 || name.length > 24) throw new GameError('Farm names must be 1-24 characters');
@@ -428,6 +485,6 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       throw new GameError('Unknown action');
   }
 
-  refreshQuests(state, events, wasComplete);
+  refreshQuests(state, events, wasComplete, ctx);
   return { state, events };
 }

@@ -52,8 +52,10 @@ export function createFarm(name: string, now: number): FarmState {
     createdAt: now,
     seed: (now % 2147483647) | 0,
     orders: [],
+    ribbons: {},
+    treats: { day: '', count: 0 },
   };
   ensureOrders(state);
-  refreshQuests(state, []);
+  refreshQuests(state, [], undefined, { now });
   return state;
 }

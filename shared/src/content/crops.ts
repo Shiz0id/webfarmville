@@ -13,6 +13,8 @@ export interface CropDef {
   xp: number;
   /** Palette hint for the renderer: [plant, produce, accent]. */
   colors: [string, string, string];
+  /** Only plantable while this seasonal event is running. */
+  event?: string;
 }
 
 const crop = (
@@ -43,6 +45,9 @@ export const CROP_LIST: CropDef[] = [
   crop('lavender', 'Lavender', 13, 100, 28800, 4, 10, ['#6f9a5a', '#9c7fe0', '#c8b6ff']),
   crop('watermelon', 'Watermelons', 14, 150, 36000, 2, 12, ['#3f8a35', '#2f9e44', '#e9445c']),
   crop('cranberry', 'Cranberries', 15, 140, 43200, 3, 12, ['#3e7a3a', '#c2183c', '#7a1027']),
+  // Halloween specials
+  { ...crop('candy_corn', 'Candy Corn', 1, 20, 300, 3, 2, ['#5f9e3a', '#ffb02e', '#fff4d6']), event: 'halloween' },
+  { ...crop('ghost_pumpkin', 'Ghost Pumpkins', 3, 45, 1500, 2, 4, ['#4f8f2f', '#f4f1ea', '#8a7fb8']), event: 'halloween' },
 ];
 
 export const CROPS: Record<string, CropDef> = table(CROP_LIST);

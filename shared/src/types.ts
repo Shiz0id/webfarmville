@@ -77,6 +77,10 @@ export interface FarmState {
   seed: number;
   /** The villager order board. */
   orders: Order[];
+  /** Ribbon id -> number of tiers claimed (0-4). */
+  ribbons: Record<string, number>;
+  /** Trick-or-treaters greeted today. */
+  treats: { day: string; count: number };
 }
 
 export interface Order {
@@ -98,7 +102,8 @@ export type GameEvent =
   | { type: 'questReady'; quest: string }
   | { type: 'questComplete'; quest: string }
   | { type: 'mystery'; item: string }
-  | { type: 'unwrap'; item: string };
+  | { type: 'unwrap'; item: string }
+  | { type: 'ribbon'; ribbon: string; tier: number };
 
 export type Action =
   | { type: 'plow'; x: number; y: number }
@@ -120,6 +125,8 @@ export type Action =
   | { type: 'fulfillOrder'; order: number }
   | { type: 'skipOrder'; order: number }
   | { type: 'openGift' }
+  | { type: 'treat' }
+  | { type: 'claimRibbon'; ribbon: string }
   | { type: 'rename'; name: string };
 
 /** An action stamped with the client time it happened. */

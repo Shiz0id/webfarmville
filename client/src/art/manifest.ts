@@ -59,6 +59,16 @@ export function expectedKeys(mod: string): string[] {
     country_b: () => COUNTRY_DECORATIONS.slice(18).map((d) => `deco:${d.id}`),
     festivals_a: () => FESTIVAL_DECORATIONS.slice(0, 17).map((d) => `deco:${d.id}`),
     festivals_b: () => FESTIVAL_DECORATIONS.slice(17).map((d) => `deco:${d.id}`),
+    halloween: () => [
+      ...['candy_corn', 'ghost_pumpkin'].flatMap((c) => [0, 1, 2].map((s) => `crop:${c}:${s}`).concat(`icon:${c}`)),
+      'icon:candy',
+      ...['ghost', 'pumpkin', 'witch'].flatMap((k) => [`npc:kid_${k}`, `npc:kid_${k}_walk`]),
+      'costume:witch_hat',
+      'costume:pumpkin_hat',
+      'costume:bat_bow',
+      'fx:bat',
+      ...['yellow', 'white', 'red', 'blue'].map((c) => `icon:ribbon_${c}`),
+    ],
     portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());

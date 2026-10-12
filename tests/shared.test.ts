@@ -294,3 +294,61 @@ describe('orders and mystery gifts', () => {
     expect(s.inventory.mystery_gift).toBe(1);
   });
 });
+
+describe('halloween event', () => {
+  const JUNE = Date.UTC(2026, 5, 10, 12);
+
+  it('offers Halloween quests only during Halloween', () => {
+    expect(createFarm('Oct', T0).quests.active).toContain('spooky_sprouts');
+    expect(createFarm('Jun', JUNE).quests.active).not.toContain('spooky_sprouts');
+    // Event quests leave when the event ends.
+    const s = createFarm('Oct', T0);
+    const later = applyAction(s, { type: 'rename', name: 'x' }, { now: JUNE }).state;
+    expect(later.quests.active).not.toContain('spooky_sprouts');
+  });
+
+  it('grows candy corn only in season, and harvests drop candy', () => {
+    let s = createFarm('Candy', T0);
+    const plot = plots(s).find((p) => !p.crop)!;
+    expect(() => applyAction(s, { type: 'plant', id: plot.id, crop: 'candy_corn' }, { now: JUNE })).toThrow('Halloween');
+    s = act(s, { type: 'plant', id: plot.id, crop: 'candy_corn' }).state;
+    expect(s.stats['plant:candy_corn']).toBe(1);
+    s = applyAction(s, { type: 'harvest', id: plot.id }, { now: T0 + 300_000 }).state;
+    expect(s.inventory.candy).toBeGreaterThanOrEqual(2);
+    expect(s.stats.candy).toBe(s.inventory.candy);
+    expect(() => act(s, { type: 'sellItem', item: 'candy', qty: 1 })).toThrow();
+  });
+
+  it('greets a limited number of trick-or-treaters per day', () => {
+    let s = createFarm('Treats', T0);
+    expect(() => applyAction(s, { type: 'treat' }, { now: JUNE })).toThrow();
+    for (let i = 0; i < 6; i++) s = act(s, { type: 'treat' }).state;
+    expect(() => act(s, { type: 'treat' })).toThrow('gone home');
+    expect(s.inventory.candy).toBeGreaterThanOrEqual(18);
+    expect(applyAction(s, { type: 'treat' }, { now: T0 + 86_400_000 }).state.treats.count).toBe(1);
+  });
+
+  it('sells Candy Shop exclusives for candy', () => {
+    const s = createFarm('Shop', T0);
+    const coins = s.coins;
+    expect(() => act(s, { type: 'buy', def: 'candy_corn_statue', x: 12, y: 12 })).toThrow('candy');
+    s.inventory.candy = 30;
+    const next = act(s, { type: 'buy', def: 'candy_corn_statue', x: 12, y: 12 }).state;
+    expect(next.inventory.candy).toBe(5);
+    expect(next.coins).toBe(coins);
+  });
+});
+
+describe('ribbons', () => {
+  it('awards yellow, then white ribbons as milestones are reached', () => {
+    let s = createFarm('Ribbons', T0);
+    expect(() => act(s, { type: 'claimRibbon', ribbon: 'green_thumb' })).toThrow('Not earned');
+    s.stats.harvest = 80;
+    const coins = s.coins;
+    s = act(s, { type: 'claimRibbon', ribbon: 'green_thumb' }).state;
+    s = act(s, { type: 'claimRibbon', ribbon: 'green_thumb' }).state;
+    expect(s.ribbons.green_thumb).toBe(2);
+    expect(s.coins).toBeGreaterThanOrEqual(coins + 400);
+    expect(() => act(s, { type: 'claimRibbon', ribbon: 'green_thumb' })).toThrow('Not earned');
+  });
+});

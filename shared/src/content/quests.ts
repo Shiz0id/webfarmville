@@ -21,6 +21,8 @@ export interface QuestDef {
   requires: string[];
   goals: QuestGoal[];
   reward: { coins: number; xp: number; items?: Record<string, number> };
+  /** Seasonal quests only appear (and stay) while their event is running. */
+  event?: string;
 }
 
 const stat = (s: string, count: number, label: string): QuestGoal => ({ type: 'stat', stat: s, count, label });
@@ -276,6 +278,62 @@ export const QUEST_LIST: QuestDef[] = [
     requires: ['lovely'],
     goals: [have('charm', 600, 'Reach 600 charm')],
     reward: { coins: 3000, xp: 300 },
+  },
+  // Halloween event chain
+  {
+    id: 'spooky_sprouts',
+    title: 'Spooky Sprouts',
+    text: 'Hoo-hoo! Candy Corn only grows in the Halloween moonlight. Plant some before the season ends!',
+    giver: 'Mayor Maple',
+    level: 1,
+    requires: [],
+    event: 'halloween',
+    goals: [stat('plant:candy_corn', 6, 'Plant 6 Candy Corn')],
+    reward: { coins: 100, xp: 20, items: { candy: 20 } },
+  },
+  {
+    id: 'trick_or_treat',
+    title: 'Trick or Treat!',
+    text: 'Little ghosts and pumpkins are knocking on doors. Say hello to the trick-or-treaters who visit your farm!',
+    giver: 'Rosie',
+    level: 1,
+    requires: ['spooky_sprouts'],
+    event: 'halloween',
+    goals: [stat('treat', 3, 'Greet 3 trick-or-treaters')],
+    reward: { coins: 150, xp: 25, items: { candy: 25, mystery_gift: 1 } },
+  },
+  {
+    id: 'haunted_homestead',
+    title: 'Haunted Homestead',
+    text: 'A farm just isn\'t ready for Halloween without a few spooky-cute decorations, dearie.',
+    giver: 'Grandma Fern',
+    level: 1,
+    requires: ['trick_or_treat'],
+    event: 'halloween',
+    goals: [stat('place:seasonal', 5, 'Place 5 seasonal decorations')],
+    reward: { coins: 200, xp: 30, items: { candy: 30, ghost_kitty: 1 } },
+  },
+  {
+    id: 'pumpkin_king',
+    title: 'The Pumpkin King',
+    text: 'Ghost pumpkins glow in the dark, you know. Grow me a patch and I\'ll make it worth your while!',
+    giver: 'Penny',
+    level: 3,
+    requires: ['haunted_homestead'],
+    event: 'halloween',
+    goals: [stat('harvest:ghost_pumpkin', 5, 'Harvest Ghost Pumpkins 5 times')],
+    reward: { coins: 400, xp: 50, items: { candy: 40 } },
+  },
+  {
+    id: 'sweet_tooth',
+    title: 'Sweet Tooth',
+    text: 'Bawk! Collect a mountain of candy and I\'ll give you my most precious treasure.',
+    giver: 'Henrietta',
+    level: 1,
+    requires: ['pumpkin_king'],
+    event: 'halloween',
+    goals: [stat('candy', 200, 'Collect 200 candy')],
+    reward: { coins: 500, xp: 80, items: { golden_pumpkin: 1 } },
   },
 ];
 

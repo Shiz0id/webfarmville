@@ -1,5 +1,6 @@
 import { BUILDINGS } from '../content/buildings';
 import { DECORATIONS } from '../content/decorations';
+import { EVENTS, isEventActive } from '../content/events';
 import { MAX_ACTIVE_QUESTS, QUESTS, QUEST_LIST, type QuestGoal } from '../content/quests';
 import type { FarmState, GameEvent } from '../types';
 
@@ -60,11 +61,23 @@ export function isQuestComplete(state: FarmState, questId: string): boolean {
  * that just became claimable. `wasComplete` is the set of active quests that
  * were already complete before the current action.
  */
-export function refreshQuests(state: FarmState, events: GameEvent[], wasComplete?: Set<string>): void {
+export function refreshQuests(
+  state: FarmState,
+  events: GameEvent[],
+  wasComplete?: Set<string>,
+  ctx?: { now: number; allEvents?: boolean },
+): void {
   const qs = state.quests;
+  const eventOn = (ev: string) => !!ctx && (!!ctx.allEvents || isEventActive(EVENTS[ev], ctx.now));
+  if (ctx) {
+    // Seasonal quests leave once their event is over.
+    qs.active = qs.active.filter((id) => !QUESTS[id]?.event || eventOn(QUESTS[id].event!));
+  }
+  const normalActive = () => qs.active.filter((id) => !QUESTS[id]?.event).length;
   for (const q of QUEST_LIST) {
-    if (qs.active.length >= MAX_ACTIVE_QUESTS) break;
     if (qs.completed.includes(q.id) || qs.active.includes(q.id)) continue;
+    // Event quests don't count toward the cap, so they always show up.
+    if (q.event ? !eventOn(q.event) : normalActive() >= MAX_ACTIVE_QUESTS) continue;
     if (state.level < q.level) continue;
     if (!q.requires.every((r) => qs.completed.includes(r))) continue;
     qs.active.push(q.id);

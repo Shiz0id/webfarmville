@@ -93,6 +93,8 @@ export function ensureOrders(state: FarmState): void {
   if (typeof state.seed !== 'number') state.seed = (state.createdAt % 2147483647) | 0;
   if (!Array.isArray(state.orders)) state.orders = [];
   while (state.orders.length < ORDER_SLOTS) state.orders.push(generateOrder(state));
+  if (!state.ribbons || typeof state.ribbons !== 'object') state.ribbons = {};
+  if (!state.treats || typeof state.treats !== 'object') state.treats = { day: '', count: 0 };
 }
 
 /** A random decoration from a mystery gift, weighted toward nicer things. */

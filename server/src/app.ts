@@ -310,7 +310,7 @@ export function createApp(db: DB, opts: AppOptions = {}) {
         const mine = loadFarm(db, me.id);
         const was = completeQuestSet(mine.state);
         bumpStat(mine.state, 'visit');
-        refreshQuests(mine.state, [], was);
+        refreshQuests(mine.state, [], was, ctx(now));
         myRev = saveFarm(db, me.id, mine.state, now);
         myState = mine.state;
       }
@@ -350,7 +350,7 @@ export function createApp(db: DB, opts: AppOptions = {}) {
       events.push({ type: 'gain', what: 'coins', amount: HELP_REWARD.coins });
       addXp(mine.state, HELP_REWARD.xp, events);
       bumpStat(mine.state, 'help');
-      refreshQuests(mine.state, events, was);
+      refreshQuests(mine.state, events, was, ctx(now));
       const myRev = saveFarm(db, me.id, mine.state, now);
       if (!other.is_npc) notify(db, other.id, `${me.username} ${HELP_VERBS[result.kind]} your ${result.name}.`, now);
       return { target: target.state, myState: mine.state, myRev, result, events, helpsLeft: HELPS_PER_FRIEND_PER_DAY - used - 1 };
@@ -381,7 +381,7 @@ export function createApp(db: DB, opts: AppOptions = {}) {
       );
       const was = completeQuestSet(mine.state);
       bumpStat(mine.state, 'gift');
-      refreshQuests(mine.state, [], was);
+      refreshQuests(mine.state, [], was, ctx(now));
       const myRev = saveFarm(db, me.id, mine.state, now);
       if (!other.is_npc) notify(db, other.id, `${me.username} sent you ${gift.qty}× ${itemName(gift.id)}!`, now);
       return { myState: mine.state, myRev };
