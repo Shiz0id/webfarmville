@@ -135,7 +135,7 @@ export const FAIR_DECORATIONS: DecoDef[] = [
   fd('ribbon_board', 'Prize Ribbon Board', 4),
   fd('cotton_candy_cart', 'Cotton Candy Cart', 5),
   fd('carousel_horse', 'Carousel Horse', 5),
-  fd('prize_pumpkin', 'Prize Pumpkin', 6),
+  fd('blue_ribbon_pumpkin', 'Blue Ribbon Pumpkin', 6),
   fd('high_striker', 'High Striker', 6),
   fd('ferris_wheel', 'Little Ferris Wheel', 14, 2, 2),
   { ...fd('golden_trophy', 'Grand Champion Trophy', 10), reward: 'Win every contest at one County Fair' },
@@ -145,7 +145,7 @@ export const FAIR_PRIZES: FairPrize[] = [
   { deco: 'ribbon_board', tickets: 40 },
   { deco: 'cotton_candy_cart', tickets: 55 },
   { deco: 'carousel_horse', tickets: 70 },
-  { deco: 'prize_pumpkin', tickets: 80 },
+  { deco: 'blue_ribbon_pumpkin', tickets: 80 },
   { deco: 'high_striker', tickets: 90 },
   { deco: 'ferris_wheel', tickets: 200 },
 ];
