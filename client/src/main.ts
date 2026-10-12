@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import { EVENTS, QUESTS, RIBBONS, RIBBON_COLORS } from '@farm/shared';
+import { EVENTS, MAMA, MAMA_BRAGS, QUESTS, RIBBONS, RIBBON_COLORS } from '@farm/shared';
+import { nameOf } from './util';
+import { initCooking } from './ui/cooking';
 import './style.css';
 import { ApiError, api, getToken, setToken, type MePayload } from './api';
 import { buildArt } from './art';
@@ -59,6 +61,7 @@ async function start(): Promise<void> {
 
   const recenter = () => scene().centerCamera();
   initPanels(store, recenter);
+  initCooking(store);
   setupTooltip();
   mountHud({
     store,
@@ -107,6 +110,8 @@ async function start(): Promise<void> {
       if (e.type === 'mystery') {
         toast('🎁 You found a Mystery Gift! Open it from your barn.', 'good');
         setTimeout(() => sfx.quest(), 100);
+      } else if (e.type === 'meal') {
+        toast(`🍲 Mama Marigold brought you ${nameOf(e.dish)}!`, 'good');
       } else if (e.type === 'ribbon') {
         const r = RIBBONS[e.ribbon];
         toast(`🎀 You won the ${RIBBON_COLORS[e.tier - 1]} ${r?.name ?? ''} ribbon!`, 'good');
@@ -125,6 +130,15 @@ async function start(): Promise<void> {
   bus.on('toast', (msg, kind) => toast(msg, kind));
   bus.on('openBuilding', (id) => openBuilding(id));
   bus.on('openFarmhouse', () => openFarmhouse());
+  bus.on('mama', () => {
+    const brag = MAMA_BRAGS[Math.floor(Math.random() * MAMA_BRAGS.length)];
+    villagerSay(MAMA, brag, {
+      label: 'Visit her garden 🌻',
+      onClick: () => {
+        void store.startVisit('Mama_Marigold').then(() => recenter());
+      },
+    });
+  });
   bus.on('snapshot', () => {
     // A keepsake postcard of the farm, saved as a PNG.
     game.renderer.snapshot((img) => {

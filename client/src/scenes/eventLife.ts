@@ -49,11 +49,13 @@ export class Visitor {
   constructor(
     private scene: Phaser.Scene,
     private o: WalkerOpts,
-    readonly feature: EventFeature,
+    /** The event this visitor belongs to, or null for Mama Marigold. */
+    readonly feature: EventFeature | null,
     private onGone: () => void,
+    look: { kinds: string[]; icon: string } = { kinds: feature?.visitors ?? [], icon: `icon:${feature?.currency}` },
   ) {
     const st = o.state();
-    const kinds = feature.visitors;
+    const kinds = look.kinds;
     this.kind = kinds[Math.floor(Math.random() * kinds.length)];
     // Arrive from the lane along the bottom-right edge of the farm.
     this.x = st.size + 1.5;
@@ -65,7 +67,7 @@ export class Visitor {
     g.fillRoundedRect(-20, -14, 40, 24, 10).strokeRoundedRect(-20, -14, 40, 24, 10);
     g.fillTriangle(-4, 9, 4, 9, 0, 15);
     this.bubble.add(g);
-    this.bubble.add(scene.add.image(-7, -2, texture(scene, `icon:${feature.currency}`)).setDisplaySize(18, 18));
+    this.bubble.add(scene.add.image(-7, -2, texture(scene, look.icon)).setDisplaySize(18, 18));
     this.bubble.add(scene.add.text(3, -2, '?', { fontFamily: 'Nunito, sans-serif', fontSize: '16px', fontStyle: '900', color: '#4a3426' }).setOrigin(0, 0.5));
     this.place();
     const target = this.pickDoorstep();

@@ -17,6 +17,7 @@ export interface BusEvents {
   openSeedPicker: [plotId: string | null];
   tool: [];
   snapshot: [];
+  mama: [];
   levelUp: [level: number];
   questReady: [quest: string];
 }

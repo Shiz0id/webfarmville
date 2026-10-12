@@ -1501,3 +1501,457 @@ body.event-halloween .pill,
 body.event-halloween .round-btn {
   box-shadow: 0 4px 0 rgba(76, 42, 116, 0.35), 0 10px 24px rgba(40, 10, 60, 0.2);
 }
+
+/* ---------- Mama's kitchen ---------- */
+
+.mama-row {
+  background: #fff1e6;
+}
+
+.recipes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.recipe-card {
+  position: relative;
+  background: #fffdf6;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.recipe-card.ready {
+  border-color: var(--green-d);
+  background: #f3fbe9;
+}
+
+.recipe-card.locked {
+  filter: grayscale(0.7);
+  opacity: 0.7;
+}
+
+.recipe-card .dish-img {
+  width: 64px;
+  height: 64px;
+}
+
+.recipe-card .name {
+  font-weight: 900;
+}
+
+.recipe-card .inputs {
+  justify-content: center;
+}
+
+.recipe-card .steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+}
+
+.recipe-card .steps span {
+  font-size: 10px;
+  font-weight: 900;
+  background: #ffe8cc;
+  color: #b4530f;
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.recipe-card .meta {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.recipe-card .tag {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: var(--dark);
+  color: var(--cream);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.kitchen {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background:
+    linear-gradient(rgba(255, 248, 231, 0.6), rgba(255, 248, 231, 0.6)),
+    repeating-linear-gradient(45deg, #ffd6d6 0 24px, #fff3f3 24px 48px);
+  animation: fade 0.2s;
+  user-select: none;
+  touch-action: none;
+}
+
+.k-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  background: var(--cream);
+  border: 3px solid var(--dark);
+  border-radius: 20px;
+  padding: 8px 18px 8px 10px;
+  box-shadow: var(--shadow);
+  max-width: calc(100% - 24px);
+}
+
+.k-dish {
+  width: 60px;
+  height: 60px;
+}
+
+.k-dishname {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--muted);
+}
+
+.k-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #e5604f;
+}
+
+.k-hint {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.k-timer {
+  width: min(420px, 80vw);
+  height: 14px;
+  border: 2px solid var(--dark);
+  border-radius: 999px;
+  background: #fff;
+  overflow: hidden;
+  margin: 10px 0 0;
+}
+
+.k-timer > div {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff8fb1, #f5c542);
+}
+
+.k-arena {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.k-prop {
+  pointer-events: none;
+  filter: drop-shadow(0 6px 4px rgba(74, 52, 38, 0.25));
+}
+
+.k-cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  transition: transform 0.03s linear;
+}
+
+.k-cursor.chop {
+  animation: chop 0.18s ease-out;
+}
+
+@keyframes chop {
+  50% {
+    margin-top: 26px;
+  }
+}
+
+.k-board,
+.k-pot,
+.k-bowl,
+.k-plate,
+.k-panwrap,
+.k-ringwrap {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  cursor: none;
+}
+
+.k-under {
+  position: absolute;
+  inset: 0;
+}
+
+.k-food {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150px;
+  height: 150px;
+  transform: translate(-50%, -55%);
+  pointer-events: none;
+  transition: transform 0.3s;
+}
+
+.k-food.sliced {
+  transform: translate(-50%, -55%) scale(1.1) rotate(-6deg);
+  filter: drop-shadow(6px 0 0 rgba(255, 255, 255, 0.8));
+}
+
+.k-cut {
+  position: absolute;
+  top: 18%;
+  bottom: 22%;
+  border-left: 4px dashed rgba(74, 52, 38, 0.55);
+  pointer-events: none;
+}
+
+.k-cut.cut-good {
+  border-left: 4px solid #4f9a3c;
+}
+
+.k-cut.cut-ok {
+  border-left: 4px solid #f59f00;
+}
+
+.k-swirl {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  border: 6px dashed rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+}
+
+.k-oven {
+  position: relative;
+}
+
+.k-flame {
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  transform: translateX(-50%);
+  animation: flicker 0.25s infinite alternate;
+}
+
+@keyframes flicker {
+  to {
+    transform: translateX(-50%) scale(1.08, 0.94);
+  }
+}
+
+.k-gauge {
+  position: relative;
+  width: min(420px, 80vw);
+  height: 34px;
+  border: 3px solid var(--dark);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8fd3f4, #fff3a3 40%, #ffb26b 70%, #e5604f);
+}
+
+.k-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(124, 201, 90, 0.85);
+  border-left: 3px solid #2f7a3a;
+  border-right: 3px solid #2f7a3a;
+}
+
+.k-needle {
+  position: absolute;
+  top: -10px;
+  width: 6px;
+  height: 52px;
+  margin-left: -3px;
+  background: var(--dark);
+  border-radius: 3px;
+}
+
+.k-whisk {
+  position: absolute;
+  left: 50%;
+  top: 20%;
+  margin-left: -55px;
+  transition: transform 0.08s;
+}
+
+.k-half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  color: rgba(74, 52, 38, 0.35);
+  cursor: pointer;
+}
+
+.k-half.left {
+  left: 0;
+}
+
+.k-half.right {
+  right: 0;
+}
+
+.k-spot {
+  position: absolute;
+  font-size: 26px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: bob 1s ease-in-out infinite;
+}
+
+.k-toss {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: 110px;
+  height: 110px;
+  pointer-events: none;
+}
+
+.k-ringwrap {
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.k-target,
+.k-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.k-target {
+  transform: translate(-50%, -50%) scale(0.8);
+  border: 6px solid rgba(124, 201, 90, 0.8);
+}
+
+.k-ring {
+  border: 5px solid #ff8fb1;
+}
+
+.k-egg.squish,
+.k-dough.squish {
+  animation: squish 0.2s ease-out;
+}
+
+@keyframes squish {
+  50% {
+    transform: scale(1.15, 0.85);
+  }
+}
+
+.k-ready,
+.k-verdict {
+  position: absolute;
+  font-size: 56px;
+  font-weight: 900;
+  color: #fff;
+  -webkit-text-stroke: 3px var(--dark);
+  text-shadow: 0 5px 0 var(--dark);
+  animation: pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.k-verdict.vperfect {
+  color: #ffd43b;
+}
+
+.k-verdict.vgreat {
+  color: #7cc95a;
+}
+
+.k-verdict.voops {
+  color: #ff8fb1;
+}
+
+.k-mama {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: min(420px, calc(100% - 32px));
+}
+
+.k-bubble {
+  background: var(--cream);
+  border: 2px solid var(--dark);
+  border-radius: 18px 18px 18px 6px;
+  padding: 10px 14px;
+  font-weight: 800;
+  box-shadow: var(--shadow);
+}
+
+.k-bubble.pop {
+  animation: pop 0.3s ease-out;
+}
+
+.k-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--cream);
+  border: 3px solid var(--dark);
+  border-radius: 24px;
+  padding: 18px 26px;
+  box-shadow: var(--shadow);
+  animation: pop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.k-final {
+  width: 140px;
+  height: 140px;
+}
+
+.k-stars {
+  font-size: 40px;
+  color: #ffb300;
+  text-shadow: 0 2px 0 var(--dark);
+  letter-spacing: 4px;
+}
+
+.k-score {
+  font-weight: 900;
+  color: var(--muted);
+}
+
+.k-got {
+  font-weight: 900;
+}

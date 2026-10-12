@@ -100,6 +100,7 @@ export class FarmScene extends Phaser.Scene {
   private emitters = new Map<string, Phaser.GameObjects.Particles.ParticleEmitter>();
   private pets: Pet[] = [];
   private treater: Visitor | null = null;
+  private mama: Visitor | null = null;
 
   private drag: {
     mode: 'none' | 'pending' | 'pan' | 'paint' | 'harvest' | 'pinch';
@@ -170,6 +171,8 @@ export class FarmScene extends Phaser.Scene {
     };
     this.pets = [new Pet(this, 'dog', petOpts), new Pet(this, 'cat', petOpts)];
 
+    // Mama Marigold drops by once a day with a home-cooked meal.
+    this.time.addEvent({ delay: 15_000, loop: true, callback: () => this.maybeMama() });
     const feature = this.feature;
     if (feature) {
       spawnEventParticles(this, feature, DEPTH_UI - 190);
@@ -182,7 +185,20 @@ export class FarmScene extends Phaser.Scene {
     return featuredEvent(this.store.now(), this.store.allEvents);
   }
 
-  /** Send a trick-or-treater over if there are treats left today. */
+  private maybeMama(): void {
+    if (this.mama || this.store.isVisiting) return;
+    const today = new Date(this.store.now()).toISOString().slice(0, 10);
+    if (this.store.state.mama?.day === today) return;
+    this.mama = new Visitor(
+      this,
+      { isoX, isoY, depthFor: (x, y) => this.depthFor(x, y, 1, 1), state: () => this.store.state },
+      null,
+      () => (this.mama = null),
+      { kinds: ['mama'], icon: 'icon:tomato_soup' },
+    );
+  }
+
+  /** Send a costumed visitor over if there are visits left today. */
   private maybeTrickOrTreat(): void {
     const feature = this.feature;
     if (this.treater || this.store.isVisiting || !feature) return;
@@ -1004,13 +1020,23 @@ export class FarmScene extends Phaser.Scene {
       return;
     }
 
-    if (this.treater?.at(tile.x, tile.y) && tools.tool === 'hand') {
+    if (this.mama?.at(tile.x, tile.y) && tools.tool === 'hand') {
+      const mama = this.mama;
+      if (store.dispatch({ type: 'mamaVisit' })) {
+        mama.happy();
+        sfx.quest();
+        this.emitter('fx:heart', 'burst').explode(6, mama.img.x, mama.img.y - 34);
+        bus.emit('mama');
+      } else mama.leave();
+      return;
+    }
+    if (this.treater?.at(tile.x, tile.y) && tools.tool === 'hand' && this.treater.feature) {
       const kid = this.treater;
-      if (store.dispatch({ type: 'treat', event: kid.feature.event })) {
+      if (store.dispatch({ type: 'treat', event: kid.feature!.event })) {
         kid.happy();
         sfx.quest();
         this.emitter('fx:heart', 'burst').explode(5, kid.img.x, kid.img.y - 30);
-        bus.emit('toast', kid.feature.visitorThanks, 'good');
+        bus.emit('toast', kid.feature!.visitorThanks, 'good');
       } else kid.leave();
       return;
     }

@@ -5,6 +5,7 @@ import type { Store } from '../store';
 import { setTool, tools, type Tool } from '../tools';
 import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
+import { openKitchen, readyDishes } from './cooking';
 import { fmtNum, h } from '../util';
 import {
   claimableQuests,
@@ -29,11 +30,12 @@ interface HudDeps {
   zoom: (factor: number) => void;
 }
 
-const TOOLS: { id: Tool | 'shop'; label: string; em: string; hint?: string }[] = [
+const TOOLS: { id: Tool | 'shop' | 'cook'; label: string; em: string; hint?: string }[] = [
   { id: 'hand', label: 'Hand', em: '✋' },
   { id: 'plow', label: 'Plow', em: '⛏️', hint: 'Click or drag over grass to plow plots (15 coins each)' },
   { id: 'seed', label: 'Seeds', em: '🌱' },
   { id: 'shop', label: 'Market', em: '🛒' },
+  { id: 'cook', label: 'Cook', em: '🍳' },
   { id: 'move', label: 'Move', em: '🔀', hint: 'Click something to pick it up, then click where it should go' },
   { id: 'store', label: 'Store', em: '📦', hint: 'Click a decoration to put it in your barn' },
   { id: 'sell', label: 'Sell', em: '💰', hint: 'Click something to sell it (or remove a plot)' },
@@ -139,6 +141,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
         class: `tool${t.id === 'shop' ? ' shop' : ''}`,
         onclick: () => {
           if (t.id === 'shop') return openShop();
+          if (t.id === 'cook') return openKitchen();
           if (t.id === 'seed') return openSeedPicker(null);
           setTool(t.id);
           if (t.hint) bus.emit('toast', t.hint, 'info');
@@ -209,6 +212,16 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     setBadge(barn.badge, st.inventory.mystery_gift ?? 0);
     setBadge(orders.badge, readyOrders());
     setBadge(catalog.badge, claimableRibbons());
+    const cookBtn = toolButtons.get('cook');
+    if (cookBtn) {
+      let b = cookBtn.querySelector('.badge') as HTMLElement | null;
+      if (!b) {
+        b = h('span', { class: 'badge' });
+        cookBtn.style.position = 'relative';
+        cookBtn.append(b);
+      }
+      setBadge(b, readyDishes());
+    }
 
     const seed = CROPS[tools.seed];
     seedImg.src = iconURL(seed?.id ?? 'strawberry');
