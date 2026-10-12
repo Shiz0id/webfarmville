@@ -311,9 +311,12 @@ function tulipHead(p: Pen, x: number, y: number, r: number, col: string): void {
   p.ellipse(x - r * 0.62, y + r * 0.05, r * 0.16, r * 0.42, rgba('#ffffff', 0.55), null);
 }
 
-function tulips(col: string): Painter {
+/** A tulip bed in one colour, or a mixed bed cycling through a palette. */
+function tulips(cols: string | string[]): Painter {
+  const pal = Array.isArray(cols) ? cols : [cols];
   return (p) =>
-    flowerBed(p, 'tulip' + col, 9, (x, y, r) => {
+    flowerBed(p, 'tulip' + pal.join(), 9, (x, y, r, i) => {
+      const col = pal[i % pal.length];
       const h = 10 + r() * 6;
       const bend = (r() - 0.5) * 3;
       leafAt(p, x, y, 8 + r() * 2, -Math.PI / 2 - 0.55 - r() * 0.3, LEAF, 0.2);
@@ -360,6 +363,30 @@ function roses(col: string): Painter {
     leafAt(p, x - 1, y - 16, 4, -2.5, LEAF_L);
     leafAt(p, x + 12, y - 11, 4, -0.4, LEAF_L);
   };
+}
+
+/** Golden roses: a rose bush that twinkles. */
+function goldRoses(p: Pen): void {
+  roses('#f4c430')(p);
+  const { x, y } = p.center;
+  const c = p.ctx;
+  for (const [dx, dy, s] of [
+    [-13, -20, 3.2],
+    [12, -23, 2.6],
+    [17, -11, 2.2],
+    [-17, -9, 2.2],
+  ] as const) {
+    const sx = x + dx;
+    const sy = y + dy;
+    c.fillStyle = '#fffbe6';
+    c.beginPath();
+    c.moveTo(sx, sy - s);
+    c.quadraticCurveTo(sx, sy, sx + s, sy);
+    c.quadraticCurveTo(sx, sy, sx, sy + s);
+    c.quadraticCurveTo(sx, sy, sx - s, sy);
+    c.quadraticCurveTo(sx, sy, sx, sy - s);
+    c.fill();
+  }
 }
 
 function daisies(p: Pen): void {
@@ -4358,6 +4385,16 @@ const TABLE: Record<string, [number, Painter]> = {
   roses_red: [28, roses('#e23a48')],
   roses_white: [28, roses('#fbf6ee')],
   roses_pink: [28, roses('#f590b0')],
+  // bred hybrids
+  tulips_orange: [24, tulips('#f8913a')],
+  tulips_white: [24, tulips('#fbf5ee')],
+  tulips_black: [24, tulips('#4b2c63')],
+  tulips_rainbow: [24, tulips(['#e8484a', '#f8913a', '#f7cd3c', '#7fcf6a', '#6aa8f0', '#9b6ad6'])],
+  roses_yellow: [28, roses('#f8d84a')],
+  roses_orange: [28, roses('#fbae84')],
+  roses_lavender: [28, roses('#c3a6ec')],
+  roses_blue: [28, roses('#6f9bea')],
+  roses_gold: [28, goldRoses],
   daisies: [20, daisies],
   pansies: [18, pansies],
   cosmos: [30, cosmos],

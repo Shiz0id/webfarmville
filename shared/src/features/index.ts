@@ -6,3 +6,5 @@ export * from './weather';
 export * from './friends';
 export * from './market';
 export * from './town';
+export * from './blooms';
+export * from './fair';

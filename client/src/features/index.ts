@@ -1,4 +1,6 @@
 // Every client feature module. Add one import + one call per feature.
+import * as blooms from './blooms';
+import * as fair from './fair';
 import * as friends from './friends';
 import * as kitties from './kitties';
 import * as market from './market';
@@ -14,4 +16,6 @@ export function initFeatures(ctx: FeatureContext): void {
   friends.init(ctx);
   market.init(ctx);
   town.init(ctx);
+  blooms.init(ctx);
+  fair.init(ctx);
 }

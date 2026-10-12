@@ -43,6 +43,15 @@ All of the art is drawn in code at startup, so there are no image assets to down
   double.
 - **Town Projects**: chip in goods and coins to improve Meadowbrook: the pond bridge, a market square, a kitty
   shelter, an orchard, a community kitchen and a bandstand. Each finished project gives your farm a lasting perk.
+- **Flower breeding**: tulips and roses planted next to their own kind sprout new flowers beside them, four times
+  a day. Tap a flower with the hand to water it (rain waters them all) and it is far more likely to breed. The
+  right colour pairs bloom into nine rare hybrids, from orange tulips to golden roses that only open in the rain.
+  The Flower Album keeps track, with villagers' hints for the ones you haven't found, and five hybrids earn a
+  Florist's Cart.
+- **County Fair**: every weekend (Saturday and Sunday, UTC) Meadowbrook holds four contests: Prize Produce, a
+  Bake-Off, a Flower Show and Biggest Catch. Enter one thing in each; the judge scores it on its value, their own
+  taste and a bonus for the fair's featured item, against three villagers' entries. Ribbons pay prize tickets for
+  the Prize Booth's fairground decorations, and a clean sweep earns the Grand Champion Trophy.
 - **Mystery gifts**: surprise presents that drop while you farm and unwrap into decorations.
 - **About 320 decorations** in six collections:
   - *core*: flowers, plants, fences, paths, furniture, lights, water and whimsy
@@ -126,7 +135,8 @@ There are also two helper scripts:
   `events_a` through `events_e`, `cooking`, `portraits`, `pets` and `fx`. You can also view
   it live at http://localhost:5173/art-preview.html?mod=all.
 - `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Two companion
-  scripts check other features: `scripts/halloween-check.mjs` covers seasonal visitors and the token shop
+  scripts check other features (`scripts/blooms-check.mjs` runs with `npx tsx`; `scripts/fair-check.mjs` needs the server started with
+  `FARM_ALL_EVENTS=1` on weekdays): `scripts/halloween-check.mjs` covers seasonal visitors and the token shop
   (try `?debug&event=winter`), and `scripts/cooking-check.mjs` covers the kitchen mini-games. Point it at a
   running game with `?debug` in the URL, for example `http://localhost:3001/?debug` after `npm run build &&
   npm start`.

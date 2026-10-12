@@ -20,6 +20,8 @@ export * from './content/weather';
 export * from './content/friends';
 export * from './content/market';
 export * from './content/town';
+export * from './content/blooms';
+export * from './content/fair';
 export * from './content/kitties';
 export * from './logic/catalog';
 export * from './logic/status';

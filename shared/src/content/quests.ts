@@ -433,6 +433,38 @@ export const QUEST_LIST: QuestDef[] = [
     goals: [stat('letters', 2, 'Open 2 presents from letters')],
     reward: { coins: 600, xp: 80 },
   },
+  // Flower breeding
+  {
+    id: 'flower_friends',
+    title: 'Flower Friends',
+    text: 'Flowers get lonely too, dear! Plant some tulips or roses side by side, give them a little water with your hand, and see what sprouts.',
+    giver: 'Grandma Fern',
+    level: 2,
+    requires: ['welcome'],
+    goals: [stat('waterFlower', 3, 'Water 3 tulips or roses'), stat('sprout', 1, 'See a new flower sprout')],
+    reward: { coins: 150, xp: 25, items: { roses_white: 1 } },
+  },
+  {
+    id: 'cross_pollination',
+    title: 'Cross-Pollination',
+    text: "Ooh, I heard the right colours side by side make brand-new flowers! Can you breed a hybrid? The Flower Album has hints from everyone in town!",
+    giver: 'Rosie',
+    level: 3,
+    requires: ['flower_friends'],
+    goals: [stat('hybrid', 1, 'Breed a hybrid flower')],
+    reward: { coins: 400, xp: 60 },
+  },
+  // County fair
+  {
+    id: 'county_fair',
+    title: 'Off to the Fair!',
+    text: 'Hoo-hoo! Every weekend the Meadowbrook County Fair comes to town. Bring your finest harvest, a home-cooked dish, a flower or a fish and try for a ribbon!',
+    giver: 'Mayor Maple',
+    level: 4,
+    requires: ['welcome'],
+    goals: [stat('contest', 2, 'Enter 2 contests at the County Fair')],
+    reward: { coins: 300, xp: 50 },
+  },
   // Town projects
   {
     id: 'town_spirit',

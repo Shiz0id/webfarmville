@@ -7,6 +7,8 @@ import { NATURE_DECORATIONS } from './nature';
 import { KITTY_DECORATIONS } from './kitties';
 import { FRIEND_DECORATIONS } from './friends';
 import { MARKET_DECORATIONS } from './market';
+import { BLOOM_DECORATIONS, FLORIST_DECORATIONS } from './blooms';
+import { FAIR_DECORATIONS } from './fair';
 import { table } from './table';
 
 export type DecoCategory =
@@ -39,7 +41,7 @@ export interface DecoDef {
   /** Only purchasable while this seasonal event is running. */
   event?: string;
   /** Later decoration collections (painted in their own art module). */
-  set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals' | 'nature' | 'kitty' | 'friends' | 'market';
+  set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals' | 'nature' | 'kitty' | 'friends' | 'market' | 'blooms' | 'fair';
   /** Earned, never sold: how to get it (e.g. "Discover 10 kinds of fish"). */
   reward?: string;
   /** Bought with the event's currency (e.g. Halloween candy) instead of coins. */
@@ -240,6 +242,8 @@ export const CORE_DECORATIONS: DecoDef[] = [
   ev('new_year', 'party_lanterns', 'Party Lantern Post', 70, 3),
   ev('new_year', 'countdown_clock', 'Countdown Clock', 0, 5, { tokens: 40 }),
   ev('new_year', 'confetti_cannon', 'Confetti Cannon', 0, 3, { tokens: 25 }),
+  // Hybrid flowers (bred, never sold)
+  ...BLOOM_DECORATIONS,
 ];
 
 export const DECORATION_LIST: DecoDef[] = [
@@ -253,6 +257,8 @@ export const DECORATION_LIST: DecoDef[] = [
   ...KITTY_DECORATIONS,
   ...FRIEND_DECORATIONS,
   ...MARKET_DECORATIONS,
+  ...FLORIST_DECORATIONS,
+  ...FAIR_DECORATIONS,
 ];
 
 export const DECORATIONS: Record<string, DecoDef> = table(DECORATION_LIST);
