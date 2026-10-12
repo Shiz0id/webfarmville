@@ -29,6 +29,8 @@ import {
   KEEPSAKE_DECORATIONS,
   COLLECTION_LIST,
   NURSERY_DECORATIONS,
+  FEED_ITEMS,
+  FEED_MILL,
 } from '@farm/shared';
 
 /** Every cat sprite frame (key `cat:<id>:<frame>`); `#1` frames animate. */
@@ -51,9 +53,9 @@ export function expectedKeys(mod: string): string[] {
       ...TREE_LIST.map((t) => `icon:${t.product}`),
     ],
     animals: () => [...ANIMAL_LIST.map((a) => `animal:${a.id}`), ...ANIMAL_LIST.map((a) => `icon:${a.product}`)],
-    buildings: () => BUILDING_LIST.map((b) => `building:${b.id}`),
+    buildings: () => BUILDING_LIST.filter((b) => b.id !== FEED_MILL).map((b) => `building:${b.id}`),
     goods: () => [
-      ...ITEM_LIST.filter((i) => i.category === 'good').map((i) => `icon:${i.id}`),
+      ...ITEM_LIST.filter((i) => i.category === 'good' && !FEED_ITEMS.includes(i)).map((i) => `icon:${i.id}`),
       ...UI_ICONS.map((k) => `icon:${k}`),
     ],
     ground: () => [
@@ -137,6 +139,8 @@ export function expectedKeys(mod: string): string[] {
     collections: () => [...COLLECTION_LIST.flatMap((c) => c.items.map((i) => `icon:${i.id}`)), ...KEEPSAKE_DECORATIONS.map((d) => `deco:${d.id}`)],
     // Baby animals: the Nursery Barn (babies themselves reuse the grown-up sprite, drawn smaller).
     nursery: () => NURSERY_DECORATIONS.map((d) => `deco:${d.id}`),
+    // Feed Mill: the workshop (borrows a rosy-gold Windmill until painted) and its two feed sacks.
+    feedmill: () => [`building:${FEED_MILL}`, ...FEED_ITEMS.map((i) => `icon:${i.id}`)],
     portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());

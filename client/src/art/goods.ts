@@ -1175,7 +1175,8 @@ function level(p: Pen): void {
 const UI_ART: Record<string, (p: Pen) => void> = { coin, xp, charm, level };
 
 export const icons: IconSpec[] = [
-  ...ITEM_LIST.filter((i) => i.category === 'good').map((i) => ({
+  // (Feed Mill feeds are left unpainted here: features/feedmill.ts borrows art for them.)
+  ...ITEM_LIST.filter((i) => i.category === 'good' && !i.id.endsWith('_feed')).map((i) => ({
     key: `icon:${i.id}`,
     paint: withFace(GOOD_ART[i.id] ?? fallbackGood(i.id), GOOD_FACE[i.id]),
   })),

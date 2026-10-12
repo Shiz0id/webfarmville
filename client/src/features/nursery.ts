@@ -11,6 +11,7 @@ import {
   NURSERY_MULT,
   NURSERY_RANGE,
   babyGrowMs,
+  bestFeed,
   cuddleReadyAt,
   isBaby,
   nearNursery,
@@ -48,8 +49,10 @@ export function init(ctx: FeatureContext): void {
     const now = S.now();
     if (obj?.kind !== 'animal' || !isBaby(obj, now)) return;
     const ready = cuddleReadyAt(obj);
-    if (ready > now) return toast(`💤 Shh, ${label(obj)} is napping. Cuddle again in ${fmtDuration(ready - now)}.`);
-    S.dispatch({ type: 'cuddleBaby', id });
+    if (ready <= now) S.dispatch({ type: 'cuddleBaby', id });
+    // Napping babies still love a snack from the Feed Mill.
+    else if (bestFeed(S.state)) S.dispatch({ type: 'feedAnimal', id });
+    else toast(`💤 Shh, ${label(obj)} is napping. Cuddle again in ${fmtDuration(ready - now)}, or bring a snack from a Feed Mill.`);
   });
   bus.on('decoClick', (_id: string, def: string) => {
     if (def === NURSERY_DECO) openNursery();

@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import {
   BABY_NAMES,
+  FEEDS,
+  bestFeed,
   cuddleReadyAt,
   isBaby,
   babyGrowMs,
@@ -895,7 +897,7 @@ export class FarmScene extends Phaser.Scene {
           if (visiting) {
             if (helpKind(obj, now)) lines.push('Click to feed!');
           } else if (cuddleReadyAt(obj) <= now) lines.push('💗 Click for a cuddle!');
-          else lines.push(`Napping · next cuddle in ${fmtDuration(cuddleReadyAt(obj) - now)}`);
+          else lines.push(`Napping · next cuddle in ${fmtDuration(cuddleReadyAt(obj) - now)}${bestFeed(this.store.state) ? ' · click to feed' : ''}`);
           return { title: obj.nick ? `${obj.nick} the ${baby} 💕` : `Baby ${baby}`, lines };
         }
         const lines = [
@@ -906,6 +908,10 @@ export class FarmScene extends Phaser.Scene {
             : `${nameOf(def.product)} in ${fmtDuration(st.readyAt - now)}`,
         ];
         if (visiting && helpKind(obj, now)) lines.push(`Click to ${obj.kind === 'tree' ? 'water' : 'feed'}!`);
+        else if (!visiting && obj.kind === 'animal') {
+          if (obj.fed) lines.push(`🌾 Fed: +${FEEDS[obj.fed]?.bonus ?? 1} at its next collection`);
+          else if (!st.ready && bestFeed(this.store.state)) lines.push('🌾 Hungry: click to feed it');
+        }
         return { title: obj.kind === 'animal' && obj.nick ? `${obj.nick} the ${def.name} 💕` : def.name, lines };
       }
       case 'building': {

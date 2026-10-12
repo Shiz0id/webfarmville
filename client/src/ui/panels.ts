@@ -46,7 +46,7 @@ import { confetti, openModal, toast } from './dom';
 import { portrait } from './villager';
 import { eventLive as liveEvent } from '../events';
 import { bus } from '../bus';
-import { CATALOG_TABS } from '../features/registry';
+import { BUILDING_SECTIONS, CATALOG_TABS } from '../features/registry';
 
 let S: Store;
 let recenter: () => void = () => {};
@@ -672,6 +672,7 @@ export function openBuilding(id: string): void {
       if (!b) return closeTop();
       const now = S.now();
       const st = buildingStatus(b, now);
+      for (const sec of BUILDING_SECTIONS) if (sec.where === 'top') sec.render(body, b);
       const queue = h('div', { class: 'queue' });
       for (let i = 0; i < def.slots; i++) {
         const job = b.queue[i];
@@ -742,6 +743,7 @@ export function openBuilding(id: string): void {
           ),
         );
       }
+      for (const sec of BUILDING_SECTIONS) if (sec.where !== 'top') sec.render(body, b);
     },
     { tick: true, icon: artURL(`building:${def.id}`) },
   );

@@ -1038,7 +1038,10 @@ const BUILDING_ART: Record<string, { paint: (p: Pen) => void; height: number }> 
   cafe: { paint: cafe, height: 90 },
 };
 
-export const sprites: SpriteSpec[] = BUILDING_LIST.map((b) => {
+// Feature workshops not painted here borrow other art until they are (see features/*.ts).
+const UNPAINTED = new Set(['feed_mill']);
+
+export const sprites: SpriteSpec[] = BUILDING_LIST.filter((b) => !UNPAINTED.has(b.id)).map((b) => {
   const art = BUILDING_ART[b.id];
   return {
     key: `building:${b.id}`,

@@ -3,6 +3,7 @@
 // buttons, listen to store events and draw into the farm scene.
 
 import type Phaser from 'phaser';
+import type { BuildingObject } from '@farm/shared';
 import type { FarmScene } from '../scenes/FarmScene';
 import type { Store } from '../store';
 
@@ -61,4 +62,19 @@ export function addCatalogTab(tab: CatalogTab): void {
 /** Total of every catalog tab's badge. */
 export function catalogTabBadges(): number {
   return CATALOG_TABS.reduce((n, t) => n + (t.badge?.() ?? 0), 0);
+}
+
+/** Extra sections for a workshop's panel (e.g. the Feed Mill's "feed everyone" button). */
+export interface BuildingSection {
+  id: string;
+  /** 'top' renders above the production queue, 'bottom' (the default) below the recipes. */
+  where?: 'top' | 'bottom';
+  /** Append to `body` if this section applies to `building`; the panel re-renders about once a second. */
+  render: (body: HTMLElement, building: BuildingObject) => void;
+}
+
+export const BUILDING_SECTIONS: BuildingSection[] = [];
+
+export function addBuildingSection(section: BuildingSection): void {
+  if (!BUILDING_SECTIONS.some((s) => s.id === section.id)) BUILDING_SECTIONS.push(section);
 }

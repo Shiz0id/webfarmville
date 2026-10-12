@@ -1,3 +1,4 @@
+import { FEED_MILL_BUILDING } from './feedmill';
 import { table } from './table';
 
 export interface RecipeDef {
@@ -159,6 +160,9 @@ export const BUILDING_LIST: BuildingDef[] = [
     ],
   },
 ];
+
+// The Feed Mill (feedmill.ts) is the first workshop you can buy.
+BUILDING_LIST.splice(1, 0, FEED_MILL_BUILDING);
 
 export const BUILDINGS: Record<string, BuildingDef> = table(BUILDING_LIST);
 

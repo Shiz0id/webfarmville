@@ -27,6 +27,7 @@ export * from './content/mastery';
 export * from './content/collections';
 export * from './content/lonely';
 export * from './content/nursery';
+export * from './content/feedmill';
 export * from './logic/catalog';
 export * from './logic/status';
 export * from './logic/quests';

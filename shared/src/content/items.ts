@@ -3,6 +3,7 @@
 // decoration id instead and are looked up in DECORATIONS.
 
 import { DISH_LIST } from './cooking';
+import { FEED_ITEMS } from './feedmill';
 import { CRITTER_LIST } from './nature';
 import { table } from './table';
 
@@ -123,6 +124,8 @@ export const ITEM_LIST: ItemDef[] = [
   item('lavender_tea', 'Lavender Honey Tea', 'good', 240),
 ];
 
+// Animal feed from the Feed Mill.
+ITEM_LIST.push(...FEED_ITEMS);
 // Home-cooked dishes from the kitchen mini-games.
 for (const d of DISH_LIST) ITEM_LIST.push(item(d.id, d.name, 'dish', d.sell));
 // Fish and critters from the Nature Journal.

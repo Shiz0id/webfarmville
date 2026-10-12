@@ -2572,3 +2572,14 @@ span.cl-keepsake { font-size: 26px; text-align: center; }
 .nu-bar > div { height: 100%; background: linear-gradient(90deg, #ffb3cb, #ff8fb1); border-radius: 99px; }
 .nu-empty { text-align: center; font-weight: 700; color: var(--muted); padding: 18px 8px; }
 .nu-all { display: block; margin: 12px auto 0; }
+
+/* Feed Mill: the "feeding time" section of its panel */
+.fm-feed { display: flex; align-items: center; gap: 10px; background: #fbf6e4; border: 2px solid var(--line); border-radius: 14px; padding: 8px 10px; }
+.fm-sacks { display: flex; flex-direction: column; gap: 2px; font-weight: 900; font-size: 13px; }
+.fm-sack { display: flex; align-items: center; gap: 3px; }
+.fm-sack .ico { width: 22px; height: 22px; }
+.fm-text { flex: 1; font-size: 12px; font-weight: 700; color: var(--muted); }
+@media (max-width: 480px) {
+  .fm-feed { flex-wrap: wrap; }
+  .fm-feed .btn { width: 100%; }
+}

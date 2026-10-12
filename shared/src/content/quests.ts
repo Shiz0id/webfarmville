@@ -603,6 +603,17 @@ export const QUEST_LIST: QuestDef[] = [
     goals: [stat('cuddle', 3, 'Cuddle a baby animal'), stat('raised', 1, 'Raise a baby into a grown-up')],
     reward: { coins: 250, xp: 40 },
   },
+  // Feed mill
+  {
+    id: 'fresh_feed',
+    title: 'Fresh Feed',
+    text: "Moo-ve over, plain old grass! Grind wheat and carrots into Barnyard Feed at a Feed Mill. A well-fed animal gets its chores done sooner and always gives a little extra.",
+    giver: 'Grandma Fern',
+    level: 3,
+    requires: ['welcome'],
+    goals: [stat('craft:animal_feed', 3, 'Make Barnyard Feed'), stat('feed', 3, 'Feed your animals')],
+    reward: { coins: 200, xp: 35 },
+  },
   ...EVENT_FEATURE_LIST.filter((f) => f.event !== 'halloween').flatMap((f) => eventQuests(f)),
 ];
 
