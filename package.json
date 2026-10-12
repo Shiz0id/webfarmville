@@ -1,0 +1,27 @@
+{
+  "name": "webfarmville",
+  "private": true,
+  "type": "module",
+  "description": "A cozy isometric farming game with neighbors, crafting and seasonal decorations.",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n server,client -c green,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server",
+    "test": "vitest run",
+    "typecheck": "tsc -p shared && tsc -p server && tsc -p client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "playwright": "^1.56.1",
+    "typescript": "~5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

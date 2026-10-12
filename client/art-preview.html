@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Art Preview</title>
+    <style>
+      body { margin: 0; background: #8cc265; font: 11px sans-serif; color: #2b2b2b; }
+      #sheet { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; align-items: flex-end; }
+      .cell { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,.18); border-radius: 6px; padding: 4px; }
+      .cell canvas { image-rendering: auto; }
+      .cell span { max-width: 140px; text-align: center; word-break: break-all; }
+      .missing { color: #b00020; font-weight: bold; padding: 8px; }
+    </style>
+  </head>
+  <body>
+    <div id="sheet"></div>
+    <script type="module" src="/src/art/preview.ts"></script>
+  </body>
+</html>
