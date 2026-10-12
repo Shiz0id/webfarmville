@@ -122,6 +122,17 @@ async function start(): Promise<void> {
   bus.on('toast', (msg, kind) => toast(msg, kind));
   bus.on('openBuilding', (id) => openBuilding(id));
   bus.on('openFarmhouse', () => openFarmhouse());
+  bus.on('snapshot', () => {
+    // A keepsake postcard of the farm, saved as a PNG.
+    game.renderer.snapshot((img) => {
+      const src = (img as HTMLImageElement).src;
+      const a = document.createElement('a');
+      a.href = src;
+      a.download = `${store.state.name.replace(/[^a-z0-9]+/gi, '-')}-postcard.png`;
+      a.click();
+      toast('📸 Postcard saved!', 'good');
+    });
+  });
   bus.on('openSeedPicker', (id) => openSeedPicker(id));
   bus.on('levelUp', (level) => {
     closeAllModals();

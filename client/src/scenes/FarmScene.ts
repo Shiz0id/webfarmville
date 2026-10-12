@@ -346,6 +346,9 @@ export class FarmScene extends Phaser.Scene {
     this.ground = [];
     const lo = -MARGIN;
     const hi = MAX_SIZE + MARGIN;
+    // Grass turns a little golden in autumn and frosty in winter.
+    const month = new Date(this.store.now()).getMonth();
+    const groundTint = month >= 8 && month <= 10 ? 0xfff0c8 : month === 11 || month <= 1 ? 0xe6f2ff : 0xffffff;
     for (let x = lo; x < hi; x++) {
       for (let y = lo; y < hi; y++) {
         const owned = x >= 0 && y >= 0 && x < state.size && y < state.size;
@@ -356,6 +359,7 @@ export class FarmScene extends Phaser.Scene {
           .setOrigin(0, 1)
           .setScale(1 / RES)
           .setDepth(DEPTH_GROUND);
+        if (groundTint !== 0xffffff) img.setTint(groundTint);
         this.ground.push(img);
         // Scenery outside the land you own.
         if (owned) continue;

@@ -36,6 +36,7 @@ import { setTool } from '../tools';
 import { fmtDuration, fmtNum, h, nameOf, timeAgo } from '../util';
 import { confetti, openModal, toast } from './dom';
 import { portrait } from './villager';
+import { bus } from '../bus';
 
 let S: Store;
 let recenter: () => void = () => {};
@@ -1043,6 +1044,17 @@ export function openFarmhouse(): void {
           'div',
           { style: { marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } },
           h('div', { class: 'sub', style: { fontWeight: '800', color: 'var(--muted)' } }, `Signed in as ${S.username}`),
+          h(
+            'button',
+            {
+              class: 'btn small sky',
+              onclick: () => {
+                closeTop();
+                setTimeout(() => bus.emit('snapshot'), 250);
+              },
+            },
+            '📸 Save a postcard',
+          ),
           h('button', { class: 'btn small', onclick: () => S.logout() }, 'Log out'),
         ),
       );

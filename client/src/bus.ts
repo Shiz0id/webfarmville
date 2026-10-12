@@ -16,6 +16,7 @@ export interface BusEvents {
   openFarmhouse: [];
   openSeedPicker: [plotId: string | null];
   tool: [];
+  snapshot: [];
   levelUp: [level: number];
   questReady: [quest: string];
 }
