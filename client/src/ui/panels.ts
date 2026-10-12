@@ -273,7 +273,11 @@ export function openShop(tab: ShopTab = 'seeds'): void {
         if (decoCat === 'seasonal') {
           const evIds = [...new Set(items.map((d) => d.event!))];
           // Running events first.
-          evIds.sort((a, b) => Number(isEventActive(EVENTS[b], now)) - Number(isEventActive(EVENTS[a], now)));
+          evIds.sort(
+            (a, b) =>
+              Number(eventLive(b)) - Number(eventLive(a)) ||
+              (EVENT_FEATURES[a]?.priority ?? 99) - (EVENT_FEATURES[b]?.priority ?? 99),
+          );
           for (const evId of evIds) {
             const ev = EVENTS[evId];
             const on = S.allEvents || isEventActive(ev, now);
