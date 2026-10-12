@@ -1121,18 +1121,26 @@ function frontArc(c: Ctx, x: number, y: number, rx: number, ry: number): void {
 }
 
 /** A wooden chair: four legs, a seat and a backrest on the min or max u side. */
+/**
+ * A small garden chair on the ground: four legs, a seat and a backrest on the
+ * outer side (min or max u), with a heart cut into the backrest's inner face.
+ */
 function chair(p: Pen, u0: number, v0: number, du: number, dv: number, backAt: 'min' | 'max', color: string): void {
+  const bt = 0.06;
   for (const [u, v] of [
     [u0 + 0.02, v0 + 0.02],
-    [u0 + du - 0.06, v0 + 0.02],
-    [u0 + 0.02, v0 + dv - 0.06],
-    [u0 + du - 0.06, v0 + dv - 0.06],
+    [u0 + du - 0.05, v0 + 0.02],
+    [u0 + 0.02, v0 + dv - 0.05],
+    [u0 + du - 0.05, v0 + dv - 0.05],
   ]) {
-    p.box(u, v, 0.05, 0.05, 9, WOOD_DD, 0);
+    p.box(u, v, 0.034, 0.034, 9, WOOD_DD, 0);
   }
-  p.box(u0, v0, du, dv, 2.6, boxColors(color), 9);
-  if (backAt === 'min') p.box(u0, v0, 0.07, dv, 17, boxColors(color), 9);
-  else p.box(u0 + du - 0.07, v0, 0.07, dv, 17, boxColors(color), 9);
+  p.box(u0, v0, du, dv, 2.4, boxColors(color), 9);
+  const backU = backAt === 'min' ? u0 : u0 + du - bt;
+  p.box(backU, v0, bt, dv, 15, boxColors(color), 9);
+  // the heart cut-out sits on the backrest face that looks toward the viewer
+  const h = p.iso(backU + bt, v0 + dv / 2, 17);
+  p.heart(h.x, h.y, 2.2, shade(color, 0.5), null);
 }
 
 /** A little jam jar standing with its base at (x, y): body, cloth lid and label. */
@@ -1294,39 +1302,74 @@ function orchardBirdhouse(p: Pen): void {
   const c = p.ctx;
   p.shadow(cx, G, 12, 4, 0.24);
   // the pole
-  p.cylinder(cx, G, 2.6, 30, '#b8794a');
-  // the apple-crate house
-  p.box(0.22, 0.22, 0.56, 0.56, 22, boxColors(WOOD_L), 30);
-  for (const z of [36, 42, 48]) p.line([p.iso(0.22, 0.78, z), p.iso(0.78, 0.78, z)], shade(WOOD, -0.3), 0.9);
-  // the round doorway, with a bird peeking out of it
-  const hole = p.iso(0.5, 0.78, 42);
-  p.ellipse(hole.x, hole.y, 3.8, 3.6, '#4a3426', O, 0);
+  p.cylinder(cx, G, 2.4, 30, '#b8794a');
+  // the apple crate: a box with horizontal slats on both visible faces
+  p.box(0.2, 0.2, 0.6, 0.6, 20, boxColors(WOOD_L), 30);
+  const slat = shade(WOOD, -0.35);
+  for (const z of [34, 39, 44, 49]) {
+    p.line([p.iso(0.2, 0.8, z), p.iso(0.8, 0.8, z)], slat, 1);
+    p.line([p.iso(0.8, 0.2, z), p.iso(0.8, 0.8, z)], slat, 1);
+  }
+  // a cute apple stamped on the front, above the doorway
+  const a = p.iso(0.5, 0.8, 44.5);
+  p.circle(a.x, a.y, 4, '#ff7f86', O);
+  p.ellipse(a.x - 1.2, a.y - 2.6, 1.2, 0.6, 'rgba(255,255,255,0.7)', null, -0.4);
+  p.line([pt(a.x, a.y - 4), pt(a.x + 0.8, a.y - 6)], WOOD_DD, 1);
+  p.ellipse(a.x + 2, a.y - 5.4, 2, 1, LEAF, O, -0.4);
+  // the round doorway, with a bird's face peeking out of it
+  const hole = p.iso(0.5, 0.8, 37);
+  p.ellipse(hole.x, hole.y, 5.6, 5.1, '#4a3426', O, 0);
   c.save();
   c.beginPath();
-  c.ellipse(hole.x, hole.y, 3.8, 3.6, 0, 0, TAU);
+  c.ellipse(hole.x, hole.y, 5.6, 5.1, 0, 0, TAU);
   c.clip();
-  p.circle(hole.x + 0.4, hole.y + 1.2, 2.6, BLUE, O);
-  p.circle(hole.x - 0.7, hole.y + 0.2, 0.7, INK, null);
+  // the bird's head, with a cream face patch, big eyes and rosy cheeks
+  p.circle(hole.x, hole.y + 1.4, 4.4, '#9fd3f7', O);
+  p.ellipse(hole.x + 0.6, hole.y + 2.8, 2.8, 1.8, CREAM, null);
+  p.circle(hole.x - 1.7, hole.y - 0.6, 1.2, INK, null);
+  p.circle(hole.x - 1.2, hole.y - 1, 0.45, CHALK, null);
+  p.ellipse(hole.x + 0.9, hole.y + 1.2, 1.1, 0.7, PINK, null);
   c.restore();
-  p.poly(
-    [pt(hole.x + 2.6, hole.y + 0.2), pt(hole.x + 4.8, hole.y + 1.2), pt(hole.x + 2.6, hole.y + 2)],
-    TERRA,
-    O,
-    0.8,
-  );
-  // a pitched roof with a red top
-  p.gableRoof(0.14, 0.14, 0.72, 0.72, 52, 11, ROSE, WOOD_L);
-  // an apple stamped on the side
-  const a = p.iso(0.78, 0.5, 38);
-  p.circle(a.x, a.y, 3, '#ff8a8a', O);
-  p.ellipse(a.x + 1.2, a.y - 3.4, 1.8, 0.9, LEAF, O, -0.5);
+  // the beak, poking out of the doorway
+  p.poly([pt(hole.x + 3.8, hole.y + 0.6), pt(hole.x + 6.6, hole.y + 2), pt(hole.x + 3.8, hole.y + 3.2)], TERRA, O, 0.8);
+  p.ellipse(hole.x, hole.y, 5.6, 5.1, null, O, 0);
+  // a little perch peg under the door
+  thick(p, [p.iso(0.5, 0.8, 30), p.iso(0.5, 1.02, 30)], 1.8, WOOD_DD);
+  // a proportionate pitched roof, with a leafy twig and an apple on its slope
+  p.gableRoof(0.2, 0.2, 0.6, 0.6, 50, 10, ROSE, WOOD_L, 0.04);
+  const t0 = p.iso(0.6, 0.7, 54);
+  const t1 = pt(t0.x + 6, t0.y - 7);
+  thick(p, [t0, t1], 1.4, '#8c6a3f');
+  p.ellipse(t0.x + 2.5, t0.y - 3.5, 2.6, 1.2, LEAF, O, -0.9);
+  p.ellipse(t1.x - 1.2, t1.y + 0.8, 2.4, 1.1, LEAF_L, O, 0.6);
+  p.circle(t1.x + 0.4, t1.y + 2.8, 2.6, '#ff7f86', O);
+  p.ellipse(t1.x + 0.2, t1.y + 0.2, 0.9, 0.5, 'rgba(255,255,255,0.7)', null, -0.5);
 }
 
 function gardenTeaTable(p: Pen): void {
   const { x: cx, y: G } = p.center;
   const c = p.ctx;
-  p.shadow(cx, G, 30, 9, 0.22);
-  chair(p, 0.1, 0.8, 0.3, 0.4, 'min', BUTTER);
+  // a rug under the set, a soft shadow, and flower tufts around the edge
+  p.shadow(cx, G, 40, 14, 0.2);
+  p.ellipse(cx, G, 34, 17, '#fbe3ec', O);
+  c.save();
+  c.setLineDash([2, 2]);
+  c.beginPath();
+  c.ellipse(cx, G, 27, 13.5, 0, 0, TAU);
+  c.strokeStyle = PINK_D;
+  c.lineWidth = 0.8;
+  c.stroke();
+  c.restore();
+  for (const [dx, dy, col] of [
+    [-30, 7, PINK],
+    [30, 6, BUTTER],
+    [3, 13, LILAC],
+  ] as [number, number, string][]) {
+    p.foliage(cx + dx, G + dy - 2, 3.4, LEAF, `tuft${dx}`, 5);
+    p.flower(cx + dx, G + dy - 4, 2.6, col);
+  }
+  // the first chair, tucked in at the back-left of the table
+  chair(p, 0.2, 0.82, 0.3, 0.34, 'min', BUTTER);
   // foot, pedestal and the lace cloth
   p.ellipse(cx, G, 9, 4.2, WOOD, O);
   p.cylinder(cx, G - 1, 2.6, 13, WOOD_DD);
@@ -1375,7 +1418,8 @@ function gardenTeaTable(p: Pen): void {
     p.ellipse(sx, sy, 4.6, 2.1, CHALK, O);
     p.cylinder(sx, sy - 0.4, 3.1, 4.6, col);
   }
-  chair(p, 1.6, 0.8, 0.3, 0.4, 'max', MINT);
+  // the second chair, tucked in at the front-right, facing the table
+  chair(p, 1.5, 0.84, 0.3, 0.34, 'max', MINT);
 }
 
 // ---------------------------------------------------------------------------
