@@ -102,7 +102,9 @@ There are also two helper scripts:
   `horticulture`, `spooky_a`/`spooky_b`, `country_a`/`country_b`, `festivals_a`/`festivals_b`, `halloween`,
   `events_a` through `events_e`, `cooking`, `portraits`, `pets` and `fx`. You can also view
   it live at http://localhost:5173/art-preview.html?mod=all.
-- `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Point it at a
+- `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Two companion
+  scripts check other features: `scripts/halloween-check.mjs` covers seasonal visitors and the token shop
+  (try `?debug&event=winter`), and `scripts/cooking-check.mjs` covers the kitchen mini-games. Point it at a
   running game with `?debug` in the URL, for example `http://localhost:3001/?debug` after `npm run build &&
   npm start`.
 
