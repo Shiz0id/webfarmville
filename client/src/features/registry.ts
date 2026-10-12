@@ -27,6 +27,8 @@ export interface HudButton {
   badge?: () => number;
   /** Gently pulse to draw the eye. */
   pulse?: () => boolean;
+  /** Show the button as the active tool (toolbar buttons). */
+  active?: () => boolean;
   /** Toolbar buttons are hidden while visiting anyway; corner ones show unless this is true. */
   hideWhileVisiting?: boolean;
 }
@@ -77,4 +79,11 @@ export const BUILDING_SECTIONS: BuildingSection[] = [];
 
 export function addBuildingSection(section: BuildingSection): void {
   if (!BUILDING_SECTIONS.some((s) => s.id === section.id)) BUILDING_SECTIONS.push(section);
+}
+
+/** Extra lines for the hint above the toolbar (e.g. "🚜 Driving the Tractor"); the first non-empty one wins. */
+export const MODE_HINTS: (() => string | null)[] = [];
+
+export function addModeHint(fn: () => string | null): void {
+  if (!MODE_HINTS.includes(fn)) MODE_HINTS.push(fn);
 }

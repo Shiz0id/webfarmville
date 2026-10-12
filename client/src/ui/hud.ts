@@ -7,7 +7,7 @@ import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
 import { openKitchen, readyDishes } from './cooking';
 import { fmtNum, h } from '../util';
-import { HUD_BUTTONS, HUD_PILLS, catalogTabBadges } from '../features/registry';
+import { HUD_BUTTONS, HUD_PILLS, MODE_HINTS, catalogTabBadges } from '../features/registry';
 import {
   claimableQuests,
   dailyAvailable,
@@ -249,6 +249,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
       if (!b) btn.append((b = h('span', { class: 'badge' })));
       setBadge(b, def.badge?.() ?? 0);
       btn.classList.toggle('pulse', !!def.pulse?.());
+      btn.classList.toggle('active', !!def.active?.());
     }
     const cookBtn = toolButtons.get('cook');
     if (cookBtn) {
@@ -263,7 +264,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
 
     const seed = CROPS[tools.seed];
     seedImg.src = iconURL(seed?.id ?? 'strawberry');
-    for (const [id, btn] of toolButtons) btn.classList.toggle('active', id === tools.tool);
+    for (const [id, btn] of toolButtons) if (!id.startsWith('feature:')) btn.classList.toggle('active', id === tools.tool);
     const lvl = waterLevel(st, store.now());
     waterCount.textContent = `${lvl}`;
     waterCount.classList.toggle('empty', lvl === 0);
@@ -278,8 +279,10 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
       giftBtn.disabled = visiting.giftSent;
       giftBtn.textContent = visiting.giftSent ? '🎁 Gift sent' : '🎁 Gift';
     } else {
-      let text = '';
-      if (tools.tool === 'seed') text = `🌱 Planting ${seed?.name ?? ''} · drag to plant many · Esc to stop`;
+      let text = MODE_HINTS.map((f) => f()).find(Boolean) ?? '';
+      if (text) {
+        /* a feature's tool */
+      } else if (tools.tool === 'seed') text = `🌱 Planting ${seed?.name ?? ''} · drag to plant many · Esc to stop`;
       else if (tools.tool === 'plow') text = '⛏️ Plowing · drag to plow many · Esc to stop';
       else if (tools.tool === 'water') {
         const lvl = waterLevel(st, store.now());

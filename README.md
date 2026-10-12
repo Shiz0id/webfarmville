@@ -73,6 +73,11 @@ All of the art is drawn in code at startup, so there are no image assets to down
   and blueberries into Deluxe Feed). Tap a busy animal to feed it: it skips a quarter of its wait (Deluxe: half) and
   gives +1 (Deluxe: +2) at its next collection. Babies can snack as often as you like and grow up sooner with each
   bite. The mill's panel has a "feed hungry animals" button.
+- **Vehicles** (from the original FarmVille): the toolbar's Garage sells a Tractor (plows a 2×2 patch), a Seeder
+  (plants your chosen seeds in a 2×2 patch) and a Harvester (harvests a 3×3 patch). Pick one and tap the farm: the
+  patch lights up as you aim (red when there's nothing to do there) and the whole patch is worked in one go, with
+  every bonus you'd get by hand. Each drive uses one unit from a shared 12-unit fuel tank that refills one unit
+  every 10 minutes. Dragging still pans the farm while you drive.
 - **Well water** (from FarmVille 2): pick up the Water tool and tap or drag over growing crops to give them a 25%
   head start, once per crop. The can holds 10 splashes and slowly trickles back by itself, or tap a Wishing Well or
   Water Pump to fill it to the brim (each well refills every two hours). On rainy days the sky does the watering.
@@ -161,7 +166,7 @@ There are also two helper scripts:
   it live at http://localhost:5173/art-preview.html?mod=all.
 - `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Companion
   scripts check other features (`scripts/blooms-check.mjs` and `scripts/collections-check.mjs` run with `npx tsx`;
-  `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs`, `scripts/water-check.mjs`, `scripts/nursery-check.mjs` and `scripts/feedmill-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
+  `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs`, `scripts/water-check.mjs`, `scripts/nursery-check.mjs`, `scripts/feedmill-check.mjs` and `scripts/vehicles-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
   `FARM_ALL_EVENTS=1` on weekdays): `scripts/halloween-check.mjs` covers seasonal visitors and the token shop
   (try `?debug&event=winter`), and `scripts/cooking-check.mjs` covers the kitchen mini-games. Point it at a
   running game with `?debug` in the URL, for example `http://localhost:3001/?debug` after `npm run build &&
@@ -170,7 +175,8 @@ There are also two helper scripts:
 ## Controls
 
 - **Click** things to harvest, collect or open them. **Drag** across crops to harvest a whole field.
-- Use the **toolbar** to switch between Hand, Plow, Seeds, Water, Market, Move, Store and Sell.
+- Use the **toolbar** to switch between Hand, Plow, Seeds, Water, Market, Move, Store and Sell, or open the Garage
+  to drive a vehicle.
 - **Drag** empty ground (or right-drag) to pan the camera. **Scroll** or pinch to zoom. **WASD** or the arrow
   keys also pan.
 - **R** flips a decoration while placing or moving it. **Esc** or right-click cancels.

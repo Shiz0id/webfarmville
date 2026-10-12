@@ -13,6 +13,7 @@ import * as lonely from './lonely';
 import * as water from './water';
 import * as nursery from './nursery';
 import * as feedmill from './feedmill';
+import * as vehicles from './vehicles';
 import * as weather from './weather';
 
 export function initFeatures(ctx: FeatureContext): void {
@@ -30,4 +31,5 @@ export function initFeatures(ctx: FeatureContext): void {
   water.init(ctx);
   nursery.init(ctx);
   feedmill.init(ctx);
+  vehicles.init(ctx);
 }

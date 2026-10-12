@@ -1,5 +1,8 @@
 import Phaser from 'phaser';
 import {
+  VEHICLES,
+  driveActions,
+  vehicleOrigin,
   BABY_NAMES,
   FEEDS,
   bestFeed,
@@ -836,8 +839,14 @@ export class FarmScene extends Phaser.Scene {
     let w = 1;
     let h = 1;
     let ok = true;
-    const obj = target ? undefined : objectAt(state, tile.x, tile.y);
-    if (target) {
+    const vehicle = tools.tool === 'vehicle' && !this.store.isVisiting ? VEHICLES[tools.vehicle] : undefined;
+    const obj = target || vehicle ? undefined : objectAt(state, tile.x, tile.y);
+    if (vehicle) {
+      // The whole patch the vehicle will work.
+      ({ x, y } = vehicleOrigin(vehicle, tile.x, tile.y));
+      w = h = vehicle.size;
+      ok = driveActions(this.store.state, vehicle.id, tile.x, tile.y, tools.seed, this.store.now()).length > 0;
+    } else if (target) {
       const o = this.ghostOrigin(tile, target.w, target.h);
       ({ x, y } = o);
       w = target.w;
@@ -848,7 +857,7 @@ export class FarmScene extends Phaser.Scene {
       ({ w, h } = footprint(obj));
     }
     const inside = x >= 0 && y >= 0 && x + w <= state.size && y + h <= state.size;
-    if (!inside && !target) {
+    if (!inside && !target && !vehicle) {
       bus.emit('hover', null);
       return;
     }
@@ -1224,6 +1233,12 @@ export class FarmScene extends Phaser.Scene {
         if (!obj) return;
         if (obj.kind !== 'deco') return bus.emit('toast', 'Only decorations can be put in storage', 'error');
         store.dispatch({ type: 'store', id: obj.id });
+        return;
+      }
+      case 'vehicle': {
+        const def = VEHICLES[tools.vehicle];
+        if (!def) return;
+        store.dispatch({ type: 'drive', vehicle: def.id, x: tile.x, y: tile.y, ...(def.job === 'plant' ? { crop: tools.seed } : {}) });
         return;
       }
       case 'sell': {
