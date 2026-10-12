@@ -52,6 +52,17 @@ All of the art is drawn in code at startup, so there are no image assets to down
   Bake-Off, a Flower Show and Biggest Catch. Enter one thing in each; the judge scores it on its value, their own
   taste and a bonus for the fair's featured item, against three villagers' entries. Ribbons pay prize tickets for
   the Prize Booth's fairground decorations, and a clean sweep earns the Grand Champion Trophy.
+- **Crop mastery** (from the original FarmVille): harvest a crop again and again to earn up to three mastery
+  stars. Each star pays coins and XP and unlocks a perk for that crop: seeds cost 10% less, then a 1-in-4 chance
+  of a bumper harvest, then +1 on every harvest and a Mastery Sign keepsake. Stars show on the seed cards, in the
+  crop's tooltip and on the Crop Mastery tab of the Collections panel.
+- **Collections** (from the original FarmVille): little treasures sometimes turn up while you harvest and collect,
+  in six sets of five (Garden Party, Golden Fields, Berry Basket, Barnyard Treasures, Orchard Keepsakes and
+  Afternoon Tea). Turn a full set in for coins, XP and a mystery gift, plus a keepsake decoration the first time.
+  The villagers will swap three spares for a piece you're missing.
+- **Lonely animals** (from the original FarmVille): from level 3, a lost little animal with a name wanders onto
+  your farm once a day. Adopt it (it settles in nearby with its name and a first collection ready) or walk it to
+  the villager who has been hoping for one, for coins, XP, a mystery gift and friendship.
 - **Mystery gifts**: surprise presents that drop while you farm and unwrap into decorations.
 - **About 320 decorations** in six collections:
   - *core*: flowers, plants, fences, paths, furniture, lights, water and whimsy
@@ -134,8 +145,9 @@ There are also two helper scripts:
   `horticulture`, `spooky_a`/`spooky_b`, `country_a`/`country_b`, `festivals_a`/`festivals_b`, `halloween`,
   `events_a` through `events_e`, `cooking`, `portraits`, `pets` and `fx`. You can also view
   it live at http://localhost:5173/art-preview.html?mod=all.
-- `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Two companion
-  scripts check other features (`scripts/blooms-check.mjs` runs with `npx tsx`; `scripts/fair-check.mjs` needs the server started with
+- `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Companion
+  scripts check other features (`scripts/blooms-check.mjs` and `scripts/collections-check.mjs` run with `npx tsx`;
+  `scripts/mastery-check.mjs` and `scripts/lonely-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
   `FARM_ALL_EVENTS=1` on weekdays): `scripts/halloween-check.mjs` covers seasonal visitors and the token shop
   (try `?debug&event=winter`), and `scripts/cooking-check.mjs` covers the kitchen mini-games. Point it at a
   running game with `?debug` in the URL, for example `http://localhost:3001/?debug` after `npm run build &&

@@ -23,6 +23,9 @@ import {
   farmCharm,
   isEventActive,
   isQuestComplete,
+  masteryProgress,
+  masteryStars,
+  seedCost,
   nextExpansion,
   questProgress,
   utcDay,
@@ -39,6 +42,7 @@ import { confetti, openModal, toast } from './dom';
 import { portrait } from './villager';
 import { eventLive as liveEvent } from '../events';
 import { bus } from '../bus';
+import { CATALOG_TABS } from '../features/registry';
 
 let S: Store;
 let recenter: () => void = () => {};
@@ -202,9 +206,9 @@ export function openShop(tab: ShopTab = 'seeds'): void {
             card({
               img: iconURL(c.id),
               name: c.event ? `🎃 ${c.name}` : c.name,
-              price: c.cost,
+              price: seedCost(st, c),
               locked: levelLock(c.level),
-              meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth ${c.yield * ITEMS[c.id].sell}`],
+              meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth ${c.yield * ITEMS[c.id].sell}`, masteryLine(c.id)],
               onClick: () => {
                 setTool('seed', { seed: c.id });
                 m.close();
@@ -383,6 +387,18 @@ export function openShop(tab: ShopTab = 'seeds'): void {
   );
 }
 
+/** Mastery stars and progress for a seed card. */
+function masteryLine(crop: string): HTMLElement {
+  const stars = masteryStars(S.state, crop);
+  const next = masteryProgress(S.state, crop);
+  return h(
+    'span',
+    { class: 'mastery-line', title: next ? `${next.have} / ${next.need} harvests to mastery star ${next.star}` : 'Mastered!' },
+    h('span', { class: 'ms-stars' }, '★'.repeat(stars), h('span', { class: 'ms-off' }, '★'.repeat(3 - stars))),
+    next ? ` ${fmtNum(Math.min(next.have, next.need))}/${fmtNum(next.need)}` : ' Mastered',
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Seed picker (from clicking an empty plot)
 
@@ -395,9 +411,9 @@ export function openSeedPicker(plotId: string | null): void {
       card({
         img: iconURL(c.id),
         name: c.name,
-        price: c.cost,
+        price: seedCost(S.state, c),
         locked: levelLock(c.level),
-        meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth ${c.yield * ITEMS[c.id].sell}`],
+        meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth ${c.yield * ITEMS[c.id].sell}`, masteryLine(c.id)],
         onClick: () => {
           setTool('seed', { seed: c.id });
           if (plotId) S.dispatch({ type: 'plant', id: plotId, crop: c.id });
@@ -1169,13 +1185,15 @@ function renderRibbons(body: HTMLElement): void {
   }
 }
 
-export function openCatalog(start: 'catalog' | 'ribbons' = 'catalog'): void {
+export function openCatalog(start?: string): void {
   let cat: DecoCategory = 'flowers';
-  let view = start;
-  const tabs = tabsBar<'catalog' | 'ribbons'>(
+  // With nothing asked for, open wherever there's something to claim.
+  let view = start ?? (claimableRibbons() ? 'ribbons' : (CATALOG_TABS.find((t) => (t.badge?.() ?? 0) > 0)?.id ?? 'catalog'));
+  const tabs = tabsBar<string>(
     [
       { id: 'catalog', label: '📖 Decor Catalog' },
       { id: 'ribbons', label: '🎀 Ribbons' },
+      ...CATALOG_TABS.map((t) => ({ id: t.id, label: t.label })),
     ],
     view,
     (t) => {
@@ -1187,6 +1205,8 @@ export function openCatalog(start: 'catalog' | 'ribbons' = 'catalog'): void {
     'Collections',
     (body) => {
       if (view === 'ribbons') return renderRibbons(body);
+      const extra = CATALOG_TABS.find((t) => t.id === view);
+      if (extra) return extra.render(body, () => m.rerender());
       const total = DECORATION_LIST.length;
       const have = DECORATION_LIST.filter((d) => decoCollected(d.id)).length;
       body.append(

@@ -38,6 +38,9 @@ export const RIBBON_LIST: RibbonDef[] = [
   { id: 'flower_fairy', name: 'Flower Fairy', noun: 'flowers sprouted', stat: 'sprout', tiers: [5, 30, 120, 400] },
   { id: 'fair_star', name: 'Fair Star', noun: 'county fair blue ribbons', stat: 'blueRibbon', tiers: [1, 8, 30, 100] },
   { id: 'cat_lover', name: 'Cat Lover', noun: 'kitty visits', stat: 'kittyVisit', tiers: [10, 75, 300, 1200] },
+  { id: 'crop_master', name: 'Crop Master', noun: 'mastery stars earned', stat: 'masteryStar', tiers: [1, 8, 20, 48] },
+  { id: 'treasure_hunter', name: 'Treasure Hunter', noun: 'collections completed', stat: 'collectionTrade', tiers: [1, 5, 15, 40] },
+  { id: 'big_heart', name: 'Big Heart', noun: 'lonely animals helped', stat: 'lonely', tiers: [1, 5, 20, 60] },
   { id: 'trick_or_treat', name: 'Spooky Host', noun: 'trick-or-treaters greeted', stat: 'treat', tiers: [3, 15, 50, 150] },
 ];
 

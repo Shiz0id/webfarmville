@@ -42,3 +42,23 @@ export const HUD_PILLS: HTMLElement[] = [];
 export function addHudPill(el: HTMLElement): void {
   if (!HUD_PILLS.includes(el)) HUD_PILLS.push(el);
 }
+
+/** Extra tabs for the Collections panel (the 📖 button), e.g. crop mastery. */
+export interface CatalogTab {
+  id: string;
+  label: string;
+  render: (body: HTMLElement, rerender: () => void) => void;
+  /** Things to claim on this tab (adds to the button's badge and opens the panel here). */
+  badge?: () => number;
+}
+
+export const CATALOG_TABS: CatalogTab[] = [];
+
+export function addCatalogTab(tab: CatalogTab): void {
+  if (!CATALOG_TABS.some((t) => t.id === tab.id)) CATALOG_TABS.push(tab);
+}
+
+/** Total of every catalog tab's badge. */
+export function catalogTabBadges(): number {
+  return CATALOG_TABS.reduce((n, t) => n + (t.badge?.() ?? 0), 0);
+}

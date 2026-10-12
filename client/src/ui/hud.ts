@@ -7,7 +7,7 @@ import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
 import { openKitchen, readyDishes } from './cooking';
 import { fmtNum, h } from '../util';
-import { HUD_BUTTONS, HUD_PILLS } from '../features/registry';
+import { HUD_BUTTONS, HUD_PILLS, catalogTabBadges } from '../features/registry';
 import {
   claimableQuests,
   dailyAvailable,
@@ -98,7 +98,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const barn = roundBtn('🧺', 'Barn', openBarn);
   const orders = roundBtn('📋', 'Orders', openOrders);
   const daily = roundBtn('🏡', 'Farm', openFarmhouse);
-  const catalog = roundBtn('📖', 'Collections', () => openCatalog(claimableRibbons() ? 'ribbons' : 'catalog'));
+  const catalog = roundBtn('📖', 'Collections', () => openCatalog());
   const music = roundBtn(audioSettings.music ? '🎵' : '🔇', 'Music', () => {
     setMusic(!audioSettings.music);
     music.btn.firstChild!.textContent = audioSettings.music ? '🎵' : '🔇';
@@ -233,7 +233,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     setBadge(daily.badge, dailyAvailable() ? 1 : 0);
     setBadge(barn.badge, st.inventory.mystery_gift ?? 0);
     setBadge(orders.badge, readyOrders());
-    setBadge(catalog.badge, claimableRibbons());
+    setBadge(catalog.badge, claimableRibbons() + catalogTabBadges());
     for (const b of extraCorner) {
       setBadge(b.badge, b.def.badge?.() ?? 0);
       b.btn.classList.toggle('pulse', !!b.def.pulse?.());

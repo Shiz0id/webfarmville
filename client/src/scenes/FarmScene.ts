@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import {
+  masteryStars,
   ANIMALS,
   BUILDINGS,
   CROPS,
@@ -847,6 +848,8 @@ export class FarmScene extends Phaser.Scene {
         else lines.push(`🌱 ${Math.floor(st.progress * 100)}% · ready in ${fmtDuration(st.readyAt - now)}`);
         if (st.stage === 'ready') lines.push(`Withers in ${fmtDuration(st.witherAt - now)}`);
         if (obj.fertilized) lines.push('✨ Fertilized by a neighbor (+1 harvest)');
+        const stars = masteryStars(this.store.viewed, def.id);
+        if (stars) lines.push(`${'★'.repeat(stars)}${'☆'.repeat(3 - stars)} Mastery`);
         if (visiting && helpKind(obj, now) === 'fertilize') lines.push('Click to fertilize!');
         return { title: def.name, lines };
       }
@@ -862,7 +865,7 @@ export class FarmScene extends Phaser.Scene {
             : `${nameOf(def.product)} in ${fmtDuration(st.readyAt - now)}`,
         ];
         if (visiting && helpKind(obj, now)) lines.push(`Click to ${obj.kind === 'tree' ? 'water' : 'feed'}!`);
-        return { title: def.name, lines };
+        return { title: obj.kind === 'animal' && obj.nick ? `${obj.nick} the ${def.name} 💕` : def.name, lines };
       }
       case 'building': {
         const def = BUILDINGS[obj.def];

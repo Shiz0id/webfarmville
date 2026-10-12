@@ -7,6 +7,9 @@ import * as market from './market';
 import * as nature from './nature';
 import type { FeatureContext } from './registry';
 import * as town from './town';
+import * as mastery from './mastery';
+import * as collections from './collections';
+import * as lonely from './lonely';
 import * as weather from './weather';
 
 export function initFeatures(ctx: FeatureContext): void {
@@ -18,4 +21,7 @@ export function initFeatures(ctx: FeatureContext): void {
   town.init(ctx);
   blooms.init(ctx);
   fair.init(ctx);
+  mastery.init(ctx);
+  collections.init(ctx);
+  lonely.init(ctx);
 }

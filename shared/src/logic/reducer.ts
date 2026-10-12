@@ -30,6 +30,7 @@ import { completeQuestSet, farmCharm, isQuestComplete, refreshQuests } from './q
 import { buildingStatus, cropStatus, producerStatus } from './status';
 import { afterFeatures, featureHandler, migrateFeatures, type FeatureKit } from './features';
 import '../features';
+import { seedCost } from '../features/mastery';
 
 export interface ActionResult {
   state: FarmState;
@@ -213,7 +214,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       if (plot.crop) throw new GameError('Something is already growing here');
       if (state.level < def.level) throw new GameError(`${def.name} unlock at level ${def.level}`);
       if (def.event && !eventOn(ctx, def.event)) throw new GameError(`${def.name} only grow during ${EVENTS[def.event]?.name}`);
-      spend(state, def.cost, events, centerOf(plot));
+      spend(state, seedCost(state, def), events, centerOf(plot));
       plot.crop = def.id;
       plot.plantedAt = now;
       delete plot.fertilized;

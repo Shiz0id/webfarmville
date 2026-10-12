@@ -25,6 +25,9 @@ import {
   KITTY_LIST,
   GOODIE_LIST,
   KITTY_FOODS,
+  MASTERY_DECORATIONS,
+  KEEPSAKE_DECORATIONS,
+  COLLECTION_LIST,
 } from '@farm/shared';
 
 /** Every cat sprite frame (key `cat:<id>:<frame>`); `#1` frames animate. */
@@ -127,6 +130,10 @@ export function expectedKeys(mod: string): string[] {
     blooms: () => [...FLORIST_DECORATIONS.map((d) => `deco:${d.id}`), 'icon:blooms'],
     fair: () => [...FAIR_DECORATIONS.map((d) => `deco:${d.id}`), 'icon:fair', 'icon:ticket'],
     town: () => [...PROJECT_LIST.map((p) => `town:${p.id}`), 'icon:town'],
+    // Crop mastery: one Mastery Sign per crop (best painted by one function that takes the crop's icon/colours), and the tab icon.
+    mastery: () => [...MASTERY_DECORATIONS.map((d) => `deco:${d.id}`), 'icon:mastery'],
+    // Collections: a 40px icon per collectible (the UI shows its emoji until then) and the keepsake decorations.
+    collections: () => [...COLLECTION_LIST.flatMap((c) => c.items.map((i) => `icon:${i.id}`)), ...KEEPSAKE_DECORATIONS.map((d) => `deco:${d.id}`)],
     portraits: () => [...new Set(QUEST_LIST.map((q) => q.giver))].map((g) => `portrait:${giverKey(g)}`),
   };
   if (mod === 'all') return Object.values(byModule).flatMap((f) => f());
