@@ -468,8 +468,13 @@ export class FarmScene extends Phaser.Scene {
     return this.depthFor(Math.floor(x), Math.floor(y), 1, 1);
   }
 
-  private depthFor(x: number, y: number, w: number, h: number): number {
-    return (x + w + y + h) * 100 + (x + w) * 0.5;
+  /**
+   * Draw depth for a w×h footprint. Big things sort by their middle, not their
+   * far corner: that keeps a one-tile critter just off a barn's side in front
+   * of it, and one just behind it behind. For a single tile it's x + y + 2.
+   */
+  depthFor(x: number, y: number, w: number, h: number): number {
+    return (x + y + (w + h) / 2 + 1) * 100 + (x + w / 2 + 0.5) * 0.5;
   }
 
   private renderSpec(obj: FarmObject, now: number, visiting: boolean): RenderSpec {

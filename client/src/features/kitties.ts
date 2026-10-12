@@ -135,7 +135,7 @@ class KittyLayer {
         this.onGoodie.set(key, s);
       }
       s.img.setPosition(pos.x, pos.y + 16 - (LIFT[obj.def] ?? 2));
-      s.img.setDepth(this.scene.depthAt(obj.x + w - 1, obj.y + h - 1) + 0.6);
+      s.img.setDepth(this.scene.depthFor(obj.x, obj.y, w, h) + 0.6);
     }
     for (const [key, s] of this.onGoodie)
       if (!seen.has(key)) {

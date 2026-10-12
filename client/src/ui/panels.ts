@@ -45,6 +45,7 @@ import type { Store } from '../store';
 import { setTool } from '../tools';
 import { fmtDuration, fmtNum, h, nameOf, timeAgo } from '../util';
 import { confetti, openModal, toast } from './dom';
+import { forFingers } from './layout';
 import { portrait } from './villager';
 import { eventLive as liveEvent } from '../events';
 import { bus } from '../bus';
@@ -828,7 +829,7 @@ export function openQuests(): void {
       }
       body.append(h('div', { class: 'sub', style: { textAlign: 'center', color: 'var(--muted)', fontWeight: '800' } }, `${qs.completed.length} quests completed`));
     },
-    { narrow: false },
+    { narrow: false, icon: artURL('ui:quests') },
   );
 }
 
@@ -854,7 +855,7 @@ export async function visit(username: string): Promise<void> {
   await S.startVisit(username);
   if (S.isVisiting) {
     recenter();
-    toast(`Welcome to ${S.visit!.state.name}! Click ✨ and 💧 bubbles to help.`, 'good');
+    toast(forFingers(`Welcome to ${S.visit!.state.name}! Click ✨ and 💧 bubbles to help.`), 'good');
   }
 }
 
@@ -881,7 +882,7 @@ export function openNeighbors(): void {
     null,
     h('div', { class: 'section-title' }, '➕ Add a neighbor'),
     h('div', { class: 'inline' }, input, h('button', { class: 'btn green', onclick: add }, 'Invite')),
-    h('div', { class: 'sub', style: { fontSize: '12px', color: 'var(--muted)', fontWeight: '800', margin: '6px 0 0' } }, `Share your farmer name: ${S.username}`),
+    h('div', { class: 'sub', style: { fontSize: '12px', color: 'var(--muted)', fontWeight: '800', margin: '6px 0 12px' } }, `Share your farmer name: ${S.username}`),
   );
   void S.refreshSocial().then(() => setTimeout(() => import('../api').then(({ api }) => api.seenNotifications()), 1500));
 
@@ -978,7 +979,7 @@ export function openNeighbors(): void {
         }
       }
     },
-    { top },
+    { top, icon: artURL('ui:neighbors') },
   );
 }
 

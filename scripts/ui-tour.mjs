@@ -9,7 +9,8 @@ import { DatabaseSync } from 'node:sqlite';
 const out = process.argv[2] ?? '.';
 const [w, h] = (process.argv[3] ?? '1280x800').split('x').map(Number);
 const url = process.argv[4] ?? 'http://localhost:3001/?debug&hour=12';
-const touch = Math.min(w, h) < 900;
+// Phones and tablets (up to a 1180×820 iPad on its side) are touch screens; 1280+ is a desktop.
+const touch = Math.max(w, h) < 1250;
 const browser = await chromium.launch();
 const errors = [];
 const db = new DatabaseSync('data/farm.db');
@@ -77,6 +78,13 @@ await panel('05-orders', round('Orders'));
 await panel('06-farmhouse', round('Farm'));
 await panel('07-collections', round('Collections'));
 await panel('08-seeds', tool('Seeds'));
+// Every other corner panel (features add their own).
+const extras = await page.evaluate(() =>
+  [...document.querySelectorAll('.round-btn[aria-label]')]
+    .map((b) => b.getAttribute('aria-label'))
+    .filter((l) => !['Quests', 'Barn', 'Orders', 'Farm', 'Collections', 'Music', 'Menu', 'Zoom in', 'Zoom out'].includes(l)),
+);
+for (const label of extras) await panel(`08x-${label.toLowerCase().replace(/\W+/g, '-')}`, round(label)).catch((e) => console.log('panel', label, e.message.split('\n')[0]));
 await panel('09-cook', tool('Cook'));
 
 // A cooking mini-game and the fishing pond (full-screen scenes of their own).
@@ -106,6 +114,28 @@ await page.reload();
 await page.waitForSelector('.toolbar');
 await page.waitForTimeout(900);
 await page.keyboard.press('Escape');
+
+// Unwrap the mystery gift from the barn.
+await round('Barn')();
+await page.waitForSelector('.modal');
+await page.locator('.gift-row .btn').click({ force: true }).catch(() => {});
+await page.waitForTimeout(900);
+await shot('09f-unwrap');
+for (let i = 0; i < 3; i++) await page.keyboard.press('Escape');
+
+// Visit a neighbor (the visit banner and the gift picker).
+await round('Neighbors')();
+await page.waitForSelector('.modal');
+await page.locator('.modal .btn', { hasText: 'Visit' }).first().click({ force: true });
+await page.waitForSelector('.visit-banner', { state: 'visible' }).catch(() => {});
+await page.waitForTimeout(1500);
+await shot('09g-visit');
+await page.locator('.visit-banner .btn', { hasText: 'Gift' }).click({ force: true }).catch(() => {});
+await page.waitForTimeout(500);
+await shot('09h-gift-picker');
+await page.keyboard.press('Escape');
+await page.locator('.visit-banner .btn', { hasText: 'Go home' }).click({ force: true }).catch(() => {});
+await page.waitForTimeout(1200);
 
 // The phone's tool tray and Farm Menu.
 if (await page.locator('.more-tools').isVisible()) {

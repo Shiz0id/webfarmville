@@ -163,6 +163,26 @@ export const sfx = {
   swoosh() {
     noise(0.18, { vol: 0.12, freq: 2500, q: 0.5, slide: 0.5 });
   },
+  /** A soft wooden blip for buttons, a little higher each time in a run. */
+  tap() {
+    if (throttled('tap', 45)) return;
+    const f = 620 + Math.random() * 60;
+    tone(f, 0.05, { type: 'sine', vol: 0.09, slide: 1.25 });
+    tone(f * 1.5, 0.03, { type: 'triangle', vol: 0.025, delay: 0.005 });
+  },
+  /** A panel opening: two bright notes stepping up. */
+  open() {
+    if (throttled('open', 120)) return;
+    tone(NOTE(79), 0.09, { type: 'sine', vol: 0.11 });
+    tone(NOTE(86), 0.14, { type: 'sine', vol: 0.09, delay: 0.06 });
+    noise(0.08, { vol: 0.03, freq: 3200, q: 0.6, slide: 1.4 });
+  },
+  /** A panel closing: the same notes stepping down. */
+  close() {
+    if (throttled('close', 120)) return;
+    tone(NOTE(84), 0.08, { type: 'sine', vol: 0.08 });
+    tone(NOTE(77), 0.12, { type: 'sine', vol: 0.07, delay: 0.05 });
+  },
   /** A soft rumbly purr: filtered noise pulsing about 25 times a second. */
   purr(seconds = 1.4) {
     const a = ctx();

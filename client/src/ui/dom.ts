@@ -1,4 +1,5 @@
 import { bus, type HoverInfo } from '../bus';
+import { sfx } from '../sfx';
 import { h } from '../util';
 
 const root = () => document.getElementById('ui')!;
@@ -70,6 +71,7 @@ export function openModal(
     if (i < 0) return;
     stack.splice(i, 1);
     back.remove();
+    sfx.close();
     opts.onClose?.();
   };
   const modal = h(
@@ -92,6 +94,7 @@ export function openModal(
   });
   root().append(back);
   stack.push({ back, onClose: opts.onClose });
+  sfx.open();
   bus.emit('hover', null);
   return { el: modal, body, close, setTitle: (t) => (titleEl.textContent = t) };
 }
@@ -135,10 +138,17 @@ export function closeAllModals(): void {
   }
 }
 
+// Every button gives a soft blip (the panel sounds cover opening and closing).
+document.addEventListener('pointerdown', (e) => {
+  const b = (e.target as HTMLElement).closest?.('button, .card:not(.locked), .chip');
+  if (b && !(b as HTMLButtonElement).disabled && !b.classList.contains('close')) sfx.tap();
+});
+
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && stack.length) {
     const s = stack.pop()!;
     s.back.remove();
+    sfx.close();
     s.onClose?.();
     e.stopPropagation();
   }

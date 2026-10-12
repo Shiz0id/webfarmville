@@ -101,21 +101,53 @@ img.ico {
 }
 
 .boot-sun {
-  font-size: 64px;
-  animation: spin 6s linear infinite;
+  font-size: 68px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 0 rgba(60, 90, 30, 0.35));
+  animation: boot-bob 1.4s ease-in-out infinite;
+}
+
+@keyframes boot-bob {
+  50% {
+    transform: translateY(-8px) rotate(-8deg);
+  }
 }
 
 .boot-title {
+  margin-top: 6px;
   font-size: 34px;
   font-weight: 900;
+  letter-spacing: 0.01em;
   color: var(--cream);
-  text-shadow: 0 3px 0 var(--dark);
+  text-shadow: 0 3px 0 rgba(60, 90, 30, 0.55), 0 6px 14px rgba(40, 70, 20, 0.25);
 }
 
+/* "Planting seeds" with three little seeds bouncing after it. */
 .boot-sub {
   color: var(--cream);
   font-weight: 800;
-  margin-top: 6px;
+  margin-top: 8px;
+  padding: 5px 16px;
+  border-radius: 99px;
+  background: rgba(60, 100, 35, 0.28);
+}
+
+.boot-sub::after {
+  content: '';
+  display: inline-block;
+  width: 26px;
+  height: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+  background: radial-gradient(circle, var(--cream) 2.5px, transparent 3px) 0 0 / 9px 6px repeat-x;
+  animation: seeds 1s steps(4) infinite;
+  clip-path: inset(0 100% 0 0);
+}
+
+@keyframes seeds {
+  to {
+    clip-path: inset(0 -10% 0 0);
+  }
 }
 
 @keyframes spin {
@@ -3617,4 +3649,73 @@ span.cl-keepsake { font-size: 26px; text-align: center; }
 body:has(.pond, .kitchen) .villager-say {
   opacity: 0;
   pointer-events: none !important;
+}
+
+/* ---------- little helpers ---------- */
+
+.muted {
+  color: var(--muted);
+  font-weight: 700;
+}
+.small:not(.btn):not(.round-btn) {
+  font-size: 12px;
+}
+.center {
+  text-align: center;
+}
+/* "Coming up" style footers read as a soft note, not body text. */
+.muted.small.center {
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgba(243, 229, 189, 0.45);
+}
+
+/* On phones the little celebration pop-ups (level up, gifts) stay centred cards. */
+.layout-phone .modal-back:has(> .modal.narrow) {
+  align-items: center;
+  padding: 12px;
+}
+.layout-phone .modal.narrow {
+  width: min(400px, 100%);
+  max-height: 88dvh;
+  border-radius: 28px;
+  border-bottom: 3px solid var(--dark);
+  animation: pop 0.38s var(--spring);
+}
+.layout-phone .modal.narrow::after {
+  bottom: 5px;
+  border-radius: 23px;
+}
+.layout-phone .modal.narrow .modal-head {
+  padding-top: 12px;
+}
+.layout-phone .modal.narrow .modal-head::before {
+  display: none;
+}
+
+/* A compact visit banner on phones: one row, clear of villager chatter. */
+.layout-phone .visit-banner {
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 8px 10px;
+  width: calc(100% - 16px);
+  bottom: calc(8px + env(safe-area-inset-bottom));
+}
+.layout-phone .visit-banner > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.layout-phone .visit-banner .who {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.layout-phone .visit-banner .sub {
+  font-size: 11px;
+}
+.layout-phone .visit-banner .btn {
+  padding: 6px 10px;
+  font-size: 13px;
 }

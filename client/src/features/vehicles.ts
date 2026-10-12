@@ -121,7 +121,7 @@ function seedChoices(): typeof CROP_LIST {
 
 export function openGarage(): void {
   let timer = 0;
-  const m = openModal('Garage', { onClose: () => window.clearInterval(timer) });
+  const m = openModal('Garage', { icon: artURL('ui:garage'), onClose: () => window.clearInterval(timer) });
   const render = () => {
     const now = S.now();
     const fuel = fuelLevel(S.state, now);

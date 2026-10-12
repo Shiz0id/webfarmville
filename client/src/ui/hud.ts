@@ -39,6 +39,30 @@ function uiIcon(key: string, em: string): Node {
 }
 
 
+/** Rolls a number shown in `el` towards `to`, like a little tally counter. */
+const counters = new WeakMap<HTMLElement, { shown: number; to: number; raf: number }>();
+function countTo(el: HTMLElement, to: number): void {
+  let c = counters.get(el);
+  if (!c) {
+    counters.set(el, { shown: to, to, raf: 0 });
+    el.textContent = fmtNum(to);
+    return;
+  }
+  if (c.to === to) return;
+  c.to = to;
+  cancelAnimationFrame(c.raf);
+  const from = c.shown;
+  const start = performance.now();
+  const dur = Math.min(700, 250 + Math.abs(to - from) * 4);
+  const step = (t: number) => {
+    const k = Math.min(1, (t - start) / dur);
+    c!.shown = Math.round(from + (to - from) * (1 - (1 - k) ** 3));
+    el.textContent = fmtNum(c!.shown);
+    if (k < 1) c!.raf = requestAnimationFrame(step);
+  };
+  c.raf = requestAnimationFrame(step);
+}
+
 const TOOLS: { id: Tool | 'shop' | 'cook'; label: string; em: string; hint?: string }[] = [
   { id: 'hand', label: 'Hand', em: '✋' },
   { id: 'plow', label: 'Plow', em: '⛏️', hint: 'Click or drag over grass to plow plots (15 coins each)' },
@@ -277,7 +301,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     farmName.textContent = st.name;
     xpFill.style.width = `${Math.min(100, ((st.xp - lo) / Math.max(1, hi - lo)) * 100)}%`;
     xpText.textContent = `${fmtNum(st.xp - lo)} / ${fmtNum(hi - lo)} XP`;
-    coins.textContent = fmtNum(st.coins);
+    countTo(coins, st.coins);
     const live = new Set(activeFeatures(store.now()).map((f) => f.currency));
     for (const [cur, c] of currencyPills) {
       const n = st.inventory[cur] ?? 0;
@@ -285,7 +309,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
       c.pill.style.display = live.has(cur) ? 'flex' : 'none';
     }
     const c = farmCharm(st);
-    charm.textContent = fmtNum(c);
+    countTo(charm, c);
     const s = charmStars(c);
     stars.replaceChildren('★'.repeat(s), h('span', { style: { opacity: '0.3' } }, '★'.repeat(5 - s)));
 
