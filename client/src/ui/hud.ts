@@ -13,6 +13,7 @@ import {
   openGiftPicker,
   openNeighbors,
   openOrders,
+  openCatalog,
   readyOrders,
   openQuests,
   openSeedPicker,
@@ -73,12 +74,13 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const barn = roundBtn('🧺', 'Barn', openBarn);
   const orders = roundBtn('📋', 'Orders', openOrders);
   const daily = roundBtn('🏡', 'Farm', openFarmhouse);
+  const catalog = roundBtn('📖', 'Catalog', openCatalog);
   const music = roundBtn(audioSettings.music ? '🎵' : '🔇', 'Music', () => {
     setMusic(!audioSettings.music);
     music.btn.firstChild!.textContent = audioSettings.music ? '🎵' : '🔇';
   });
   music.btn.classList.add('small-round');
-  const corner = h('div', { class: 'corner' }, quests.btn, orders.btn, neighbors.btn, barn.btn, daily.btn, music.btn);
+  const corner = h('div', { class: 'corner' }, quests.btn, orders.btn, neighbors.btn, barn.btn, catalog.btn, daily.btn, music.btn);
 
   // Icons fly from the farm into the HUD when you earn things.
   let flying = 0;

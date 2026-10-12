@@ -1048,3 +1048,70 @@ export function showLevelUp(level: number): void {
   confetti(100);
 }
 
+
+// ---------------------------------------------------------------------------
+// Decoration catalog: an Animal Crossing style collection book.
+
+export function decoCollected(id: string): boolean {
+  const st = S.state;
+  if (st.stats[`got:${id}`] || (st.inventory[id] ?? 0) > 0) return true;
+  return Object.values(st.objects).some((o) => o.kind === 'deco' && o.def === id);
+}
+
+export function openCatalog(): void {
+  let cat: DecoCategory = 'flowers';
+  const m = liveModal(
+    'Decor Catalog',
+    (body) => {
+      const total = DECORATION_LIST.length;
+      const have = DECORATION_LIST.filter((d) => decoCollected(d.id)).length;
+      body.append(
+        h(
+          'div',
+          { class: 'row' },
+          h('div', { style: { fontSize: '34px' } }, '📖'),
+          h(
+            'div',
+            { class: 'grow' },
+            h('div', { class: 'title' }, `${have} / ${total} decorations collected`),
+            h('div', { class: 'progress' }, h('div', { style: { width: `${(have / total) * 100}%` } })),
+          ),
+        ),
+      );
+      const chips = h('div', { class: 'chips' });
+      for (const c of DECO_CATEGORIES) {
+        const list = DECORATION_LIST.filter((d) => d.category === c.id);
+        const n = list.filter((d) => decoCollected(d.id)).length;
+        chips.append(
+          h(
+            'button',
+            {
+              class: `chip${c.id === cat ? ' active' : ''}`,
+              onclick: () => {
+                cat = c.id;
+                m.rerender();
+              },
+            },
+            `${c.name} ${n}/${list.length}`,
+          ),
+        );
+      }
+      body.append(chips);
+      const grid = h('div', { class: 'grid catalog' });
+      for (const d of DECORATION_LIST.filter((x) => x.category === cat)) {
+        const got = decoCollected(d.id);
+        grid.append(
+          h(
+            'div',
+            { class: `card${got ? '' : ' unknown'}`, title: got ? d.name : 'Not collected yet' },
+            h('div', { class: 'art' }, h('img', { src: artURL(`deco:${d.id}`), loading: 'lazy' })),
+            h('div', { class: 'name' }, got ? d.name : '???'),
+            h('div', { class: 'meta' }, d.event ? `${EVENTS[d.event]?.name ?? ''}` : got ? `💗 ${d.charm}` : `Lv ${d.level}`),
+          ),
+        );
+      }
+      body.append(grid);
+    },
+    { icon: iconURL('charm') },
+  );
+}

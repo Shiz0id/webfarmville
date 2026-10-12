@@ -91,6 +91,7 @@ export function addXp(state: FarmState, xp: number, events: GameEvent[], at?: { 
 export function addItem(state: FarmState, item: string, qty: number, events?: GameEvent[], at?: { x: number; y: number }): void {
   if (qty <= 0) return;
   state.inventory[item] = (state.inventory[item] ?? 0) + qty;
+  if (DECORATIONS[item]) state.stats[`got:${item}`] = 1;
   events?.push({ type: 'gain', what: item, amount: qty, ...at });
 }
 
@@ -246,6 +247,7 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       spend(state, p.cost, events, { x: action.x + p.w / 2, y: action.y + p.h / 2 });
       placeObject(state, action.def, action.x, action.y, action.flip, now);
       if (p.kind === 'deco') {
+        state.stats[`got:${p.def}`] = 1;
         bumpStat(state, 'place:deco');
         if (p.event) bumpStat(state, 'place:seasonal');
       }

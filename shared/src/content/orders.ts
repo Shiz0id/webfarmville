@@ -70,7 +70,8 @@ export function generateOrder(state: FarmState): Order {
     if (items[id]) continue;
     const sell = ITEMS[id]?.sell ?? 10;
     // Cheap things are asked for in bigger batches.
-    const qty = Math.max(1, Math.round((2 + nextRandom(state) * 4) * Math.min(3, 30 / sell)));
+    const cap = 3 + state.level * 2;
+    const qty = Math.max(1, Math.min(cap, Math.round((2 + nextRandom(state) * 3) * Math.min(2, 24 / sell))));
     items[id] = qty;
     value += sell * qty;
   }

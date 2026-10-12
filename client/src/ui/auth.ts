@@ -1,5 +1,37 @@
 import { api, setToken, type MePayload } from '../api';
+import { artURL, hasArt } from '../art';
 import { h } from '../util';
+
+/** Cute farm friends wandering across the title screen. */
+function titleScenery(): HTMLElement[] {
+  const out: HTMLElement[] = [];
+  const parade = h('div', { class: 'parade' });
+  const walkers = ['animal:chicken', 'animal:sheep', 'animal:cow', 'animal:pig', 'animal:rabbit', 'animal:duck', 'animal:goat'];
+  walkers.forEach((key, i) => {
+    if (!hasArt(key)) return;
+    // The walker moves right; the animal inside is mirrored to face that way.
+    const walker = h('span', { class: 'walker' }, h('img', { src: artURL(key), alt: '' }));
+    walker.style.animationDuration = `${26 + (i % 3) * 4}s`;
+    walker.style.animationDelay = `${-i * 4.2}s`;
+    parade.append(walker);
+  });
+  out.push(parade);
+  const decos: [string, string, string, string][] = [
+    ['deco:cherry_blossom', '4%', '8%', '150px'],
+    ['building:mill', '78%', '4%', '170px'],
+    ['deco:sunflower_row', '8%', '62%', '120px'],
+    ['deco:hot_air_balloon', '72%', '52%', '120px'],
+    ['tree:apple_tree:ready', '86%', '60%', '110px'],
+    ['deco:scarecrow', '16%', '40%', '90px'],
+  ];
+  decos.forEach(([key, left, top, size], i) => {
+    if (!hasArt(key)) return;
+    const img = h('img', { class: 'title-deco', src: artURL(key), alt: '' });
+    Object.assign(img.style, { left, top, width: size, animationDelay: `${-i * 0.7}s` });
+    out.push(img);
+  });
+  return out;
+}
 
 /** Shows the login/register screen and resolves once the player is signed in. */
 export function showAuth(): Promise<MePayload> {
@@ -57,7 +89,7 @@ export function showAuth(): Promise<MePayload> {
       }
     });
 
-    const screen = h('div', { class: 'auth' }, form);
+    const screen = h('div', { class: 'auth' }, ...titleScenery(), form);
     document.body.append(screen);
     user.focus();
   });

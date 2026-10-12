@@ -1216,6 +1216,7 @@ img.ico {
 
 .say-bubble {
   position: relative;
+  width: min(300px, calc(100vw - 110px));
   background: var(--cream);
   border: 2px solid var(--dark);
   border-radius: 18px 18px 18px 6px;
@@ -1348,4 +1349,68 @@ img.ico {
   90% {
     transform: rotate(-6deg);
   }
+}
+
+.catalog .card {
+  cursor: default;
+}
+
+.catalog .card.unknown .art img {
+  filter: brightness(0) opacity(0.18);
+}
+
+.catalog .card.unknown .name {
+  color: var(--muted);
+}
+
+/* ---------- title screen parade ---------- */
+
+.parade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4vh;
+  height: 90px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.parade .walker {
+  position: absolute;
+  bottom: 0;
+  animation: parade linear infinite;
+}
+
+.parade img {
+  height: 76px;
+  transform: scaleX(-1);
+  animation: waddle 0.6s ease-in-out infinite;
+  filter: drop-shadow(0 4px 2px rgba(40, 60, 20, 0.25));
+}
+
+@keyframes parade {
+  from {
+    transform: translateX(-120px);
+  }
+  to {
+    transform: translateX(calc(100vw + 120px));
+  }
+}
+
+@keyframes waddle {
+  50% {
+    transform: scaleX(-1) translateY(-5px) rotate(4deg);
+  }
+}
+
+.title-deco {
+  position: absolute;
+  pointer-events: none;
+  animation: bob 3s ease-in-out infinite;
+  filter: drop-shadow(0 4px 2px rgba(40, 60, 20, 0.2));
+}
+
+.auth-card {
+  position: relative;
+  z-index: 2;
 }

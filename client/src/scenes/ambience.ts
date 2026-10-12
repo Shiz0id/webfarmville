@@ -5,7 +5,8 @@ import Phaser from 'phaser';
 export type DayPhase = 'dawn' | 'day' | 'dusk' | 'night';
 
 export function dayPhase(date = new Date()): DayPhase {
-  const h = date.getHours() + date.getMinutes() / 60;
+  const forced = new URLSearchParams(location.search).get('hour');
+  const h = forced !== null ? Number(forced) : date.getHours() + date.getMinutes() / 60;
   if (h >= 5.5 && h < 7.5) return 'dawn';
   if (h >= 7.5 && h < 17.5) return 'day';
   if (h >= 17.5 && h < 20) return 'dusk';
