@@ -454,12 +454,12 @@ function witchCottage(p: Pen): void {
   p.line([p.iso(0.25, 1.75, 30), p.iso(1.75, 1.75, 30)], BEAM, 1.6);
   p.line([p.iso(1.75, 0.25, 30), p.iso(1.75, 1.75, 30)], BEAM, 1.6);
   // the witch hat: a tall pointed roof with a brim
-  p.hipRoof(0.25, 0.25, 1.5, 1.5, z, 52, PURPLE, o);
+  p.hipRoof(0.25, 0.25, 1.5, 1.5, z, 62, PURPLE, o);
   const l = p.iso(0.25 - o, 1.75 + o, z);
   const btm = p.iso(1.75 + o, 1.75 + o, z);
   const r = p.iso(1.75 + o, 0.25 - o, z);
-  const peak = p.iso(1, 1, z + 52);
-  for (const t of [0.2, 0.4, 0.6, 0.8]) {
+  const peak = p.iso(1, 1, z + 62);
+  for (const t of [0.25, 0.5, 0.75]) {
     p.line([peak, lerp(l, btm, t)], shade(PURPLE, -0.3), 0.8);
     p.line([peak, lerp(btm, r, t)], shade(PURPLE, -0.3), 0.8);
   }
@@ -600,27 +600,27 @@ function cobwebFence(p: Pen): void {
     }
     p.poly(ring, null, '#ffffff', 0.7);
   }
-  // spider hanging on its thread
-  const sp = { x: web.x + 0.5, y: web.y + 12 };
-  p.line([web, { x: sp.x, y: sp.y - 3.4 }], '#ffffff', 0.6);
+  // spider hanging on its thread, with big kawaii eyes
+  const sp = { x: web.x + 0.5, y: web.y + 15 };
+  p.line([web, { x: sp.x, y: sp.y - 4.5 }], '#ffffff', 0.7);
   for (const dir of [-1, 1]) {
     for (const k of [-1, 0, 1]) {
       p.curve(
-        { x: sp.x + dir * 2.4, y: sp.y + k * 1.2 },
-        { x: sp.x + dir * 4.6, y: sp.y + k * 1.2 - 0.5 },
-        { x: sp.x + dir * 5.6, y: sp.y + k * 1.8 + 1 },
+        { x: sp.x + dir * 3, y: sp.y + k * 1.6 },
+        { x: sp.x + dir * 6, y: sp.y + k * 1.6 - 0.8 },
+        { x: sp.x + dir * 7.4, y: sp.y + k * 2.4 + 1.2 },
         INK,
-        0.7,
+        1,
       );
     }
   }
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * TAU;
-    p.circle(sp.x + Math.cos(a) * 3, sp.y + Math.sin(a) * 2.6, 1.1, INK, null);
+    p.circle(sp.x + Math.cos(a) * 3.6, sp.y + Math.sin(a) * 3.1, 1.3, INK, null);
   }
-  p.circle(sp.x, sp.y, 3.1, INK);
-  dotEyes(p, sp.x, sp.y - 0.4, 1.4, 1.15);
-  smileAt(p, sp.x, sp.y + 1.2, 0.8, '#ffffff');
+  p.circle(sp.x, sp.y, 3.8, INK);
+  dotEyes(p, sp.x, sp.y - 0.6, 1.7, 1.5);
+  smileAt(p, sp.x, sp.y + 1.6, 1, '#ffffff');
 }
 
 /** Rounded lilac gravestone that says BOO, a comedic ghost popping out, and flowers. */
@@ -925,18 +925,20 @@ function batTopiary(p: Pen): void {
     hgrad(p, x - 8.5, x + 8.5, shade(POT, 0.15), shade(POT, -0.2)),
   );
   // hedge silhouette: body, head, ears and scalloped wings
+  // wings sweep wide with scalloped trailing edges; the body stays small
   const left: [number, number, number][] = [
-    [-9, -29, 4.2],
-    [-14, -33, 3.8],
-    [-17, -28, 3.6],
-    [-14, -23, 3.4],
-    [-9, -20, 3.4],
+    [-7, -30, 3.6],
+    [-13, -36, 4],
+    [-20, -35, 3.8],
+    [-22, -29, 3.4],
+    [-18, -23, 3.2],
+    [-12, -20, 3.2],
   ];
   const blobs: [number, number, number][] = [
-    [0, -24, 7],
-    [0, -34, 5.2],
-    [-3.6, -40, 2.4],
-    [3.6, -40, 2.4],
+    [0, -26, 6],
+    [0, -35, 4.8],
+    [-3.2, -41, 2.6],
+    [3.2, -41, 2.6],
     [0, -16, 4],
     ...left,
     ...left.map(([dx, dy, r]): [number, number, number] => [-dx, dy, r]),
@@ -951,8 +953,8 @@ function batTopiary(p: Pen): void {
     const q = pts[Math.floor(rand() * pts.length)];
     p.circle(q.x + (rand() - 0.5) * q.r, q.y + (rand() - 0.5) * q.r, 0.6, rgba('#2f7432', 0.5), null);
   }
-  dotEyes(p, x, y - 34, 2.6, 1.5);
-  blushes(p, x, y - 30.5, 4.2, 1.1);
+  dotEyes(p, x, y - 30, 2.4, 1.5);
+  blushes(p, x, y - 26.5, 4, 1.1);
   p.roundRect(x - 10, y - 15, 20, 4.5, 1.5, shade(POT, 0.1));
 }
 
@@ -1274,14 +1276,14 @@ function pumpkinWagon(p: Pen): void {
   });
   // the heap of pumpkins
   const heap: [number, number, number, number, string][] = [
-    [0.6, 0.45, zb + hb, 6.8, ORANGE],
-    [1.0, 0.4, zb + hb, 7, '#f7f3ea'],
-    [1.4, 0.5, zb + hb, 6.8, ORANGE],
-    [0.8, 0.6, zb + hb, 6.6, '#f7a447'],
-    [1.2, 0.65, zb + hb, 6.6, '#f0ece0'],
-    [0.95, 0.5, zb + hb + 6, 6.6, ORANGE],
-    [1.2, 0.45, zb + hb + 6, 6.4, '#f7a447'],
-    [1.05, 0.55, zb + hb + 13, 6, '#f7f3ea'],
+    [0.6, 0.45, zb + hb, 8, ORANGE],
+    [1.0, 0.4, zb + hb, 8.2, '#f7f3ea'],
+    [1.4, 0.5, zb + hb, 8, ORANGE],
+    [0.8, 0.6, zb + hb, 7.8, '#f7a447'],
+    [1.22, 0.62, zb + hb, 7.6, '#f0ece0'],
+    [0.95, 0.5, zb + hb + 6, 7.6, ORANGE],
+    [1.25, 0.45, zb + hb + 6, 7.2, '#f7a447'],
+    [1.08, 0.55, zb + hb + 13, 6.8, '#f7f3ea'],
   ];
   const placed = heap
     .map(([u, v, z, r, col]) => ({ pt: p.iso(u, v, z + r * 0.8), r, col }))
