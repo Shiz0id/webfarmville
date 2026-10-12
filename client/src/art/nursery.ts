@@ -46,7 +46,7 @@ interface Face {
 /** The front-left wall: v is fixed and s runs along u (left to right on screen). */
 const faceL = (p: Pen, v: number): Face => ({ pt: (s, z) => p.iso(s, v, z), dim: 0 });
 /** The gable wall (faces bottom-right): u is fixed and s runs along v. */
-const faceR = (p: Pen, u: number): Face => ({ pt: (s, z) => p.iso(u, s, z), dim: -0.18 });
+const faceR = (p: Pen, u: number): Face => ({ pt: (s, z) => p.iso(u, s, z), dim: -0.1 });
 
 const tint = (f: Face, col: string): string => shade(col, f.dim);
 
@@ -200,7 +200,7 @@ function nurseryBarn(p: Pen): void {
   // walls, with cream corner boards
   const c = p.center;
   p.shadow(c.x, c.y + 2, 84, 38, 0.26);
-  p.box(ua, v0, ub - ua, v1 - v0, ZW, { top: shade(WALL, 0.14), left: WALL, right: shade(WALL, -0.2) });
+  p.box(ua, v0, ub - ua, v1 - v0, ZW, { top: shade(WALL, 0.14), left: WALL, right: shade(WALL, -0.1) });
   for (const z of [12, 26, 40]) {
     p.line([L.pt(ua + 0.08, z), L.pt(ub - 0.08, z)], WALL_LINE, 0.8);
     p.line([R.pt(v0 + 0.08, z), R.pt(v1 - 0.08, z)], tint(R, WALL_LINE), 0.8);
@@ -232,7 +232,7 @@ function nurseryBarn(p: Pen): void {
 
   // gable end, with a rounded top and a little heart window
   const gable = [P(ub, v0, ZW), P(ub, 1.0, ZB), P(ub, 1.5, ZR), P(ub, 2.0, ZB), P(ub, v1, ZW)];
-  p.poly(gable, shade(WALL, -0.2));
+  p.poly(gable, shade(WALL, -0.08));
   thick(p, gable, TRIM, 2.2);
   p.line([P(ub, v0, ZW), P(ub, v1, ZW)], TRIM, 1.6);
   const hw = P(ub, 1.5, 78);
@@ -255,13 +255,13 @@ function nurseryBarn(p: Pen): void {
   }
   // the two door leaves, swung open towards the viewer
   const leaf = (hinge: number, free: number) => {
-    const o = (v: number, z: number) => p.iso(ub + 0.46, v, z);
+    const o = (v: number, z: number) => p.iso(ub + 0.3, v, z);
     p.poly([R.pt(hinge, 0), R.pt(hinge, DOOR), o(free, DOOR), o(free, 0)], shade(PINK, -0.02));
-    const mid = p.iso(ub + 0.23, (hinge + free) / 2, 26);
+    const mid = p.iso(ub + 0.15, (hinge + free) / 2, 26);
     p.heart(mid.x, mid.y, 2.6, TRIM, null);
   };
-  leaf(dv0, 0.62);
-  leaf(dv1, 2.38);
+  leaf(dv0, 0.72);
+  leaf(dv1, 2.56);
 
   // a star mobile hanging over the door
   const MZ = 64;
