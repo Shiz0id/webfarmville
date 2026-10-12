@@ -403,8 +403,8 @@ function dangoStand(p: Pen): void {
     for (let i = 0; i < n; i++) {
       wallQuad(p, lerpUV(a, b, i / n), lerpUV(a, b, (i + 1) / n), 38, 44, i % 2 ? CREAM : RED);
     }
-    wallQuad(p, a, b, 27, 38, CREAM);
-    wallQuad(p, a, b, 27, 30, RED);
+    wallQuad(p, a, b, 24, 38, CREAM);
+    wallQuad(p, a, b, 24, 26.5, RED);
   }
   // dango emblem on the noren
   const e = p.iso(0.5, 0.94, 35);
@@ -555,14 +555,14 @@ function wishBamboo(p: Pen): void {
   for (let k = 0; k < 6; k++) {
     const sx = -12 + k * 5;
     const by = y - 52 - sx * 0.375;
-    const len = 9 + (k % 3) * 2;
+    const len = 10 + (k % 3) * 2;
     p.line([{ x: x + sx, y: by }, { x: x + sx, y: by + 1 }], O, 0.5);
     p.poly(
       [
-        { x: x + sx - 1.6, y: by + 1 },
-        { x: x + sx + 1.6, y: by + 1 },
-        { x: x + sx + 1.6, y: by + len },
-        { x: x + sx - 1.6, y: by + len },
+        { x: x + sx - 1.9, y: by + 1 },
+        { x: x + sx + 1.9, y: by + 1 },
+        { x: x + sx + 1.9, y: by + len },
+        { x: x + sx - 1.9, y: by + len },
       ],
       colors[k],
       O,
@@ -618,9 +618,9 @@ function paperCranes(p: Pen): void {
   p.cylinder(x, y, 9, 3, WOOD_DK);
   thick(p, [{ x, y: y - 2 }, { x, y: bar }], 3, WOOD);
   p.circle(x, bar - 5, 2.2, null, GOLD);
-  thick(p, [{ x: x - 18, y: bar }, { x: x + 18, y: bar }], 2.4, WOOD_LT);
-  p.ball(x - 18, bar, 1.8, WOOD);
-  p.ball(x + 18, bar, 1.8, WOOD);
+  thick(p, [{ x: x - 21, y: bar }, { x: x + 21, y: bar }], 2.4, WOOD_LT);
+  p.ball(x - 21, bar, 1.8, WOOD);
+  p.ball(x + 21, bar, 1.8, WOOD);
   const crane = (cx: number, cy: number, rot: number, col: string): void => {
     withXform(
       p,
@@ -674,18 +674,18 @@ function paperCranes(p: Pen): void {
         );
         p.circle(6.6, -8, 0.42, DARK, null);
       },
-      1.25,
+      1.5,
     );
   };
   for (const [dx, len, col, rot] of [
-    [-14, 14, '#ffb3c8', -0.12],
-    [-4, 22, '#ffe066', 0.1],
-    [6, 12, '#8fd0ff', -0.18],
-    [15, 18, '#a8e6a0', 0.16],
+    [-16, 12, '#ffb3c8', -0.12],
+    [-6, 21, '#ffe066', 0.1],
+    [5, 11, '#8fd0ff', -0.18],
+    [16, 17, '#a8e6a0', 0.16],
   ] as const) {
     const rx = x + dx;
     p.line([{ x: rx, y: bar }, { x: rx, y: bar + len }], '#7a6a5a', 0.6);
-    crane(rx, bar + len + 3, rot, col);
+    crane(rx, bar + len + 4, rot, col);
   }
 }
 
@@ -757,9 +757,17 @@ function mooncakeTable(p: Pen): void {
   }
   // moon-white teapot with a face
   const t = p.iso(0.74, 0.6, z);
-  thickCurve(p, { x: t.x - 5, y: t.y - 7 }, { x: t.x - 10, y: t.y - 7 }, { x: t.x - 7, y: t.y - 1 }, 1.6, '#fff3d6');
+  p.circle(t.x - 5.4, t.y - 6, 2.2, null, O);
   p.ball(t.x, t.y - 6.5, 5.6, '#fff8e6');
-  thickCurve(p, { x: t.x + 4.8, y: t.y - 6.5 }, { x: t.x + 9, y: t.y - 5 }, { x: t.x + 10, y: t.y - 11 }, 1.8, '#fff3d6');
+  p.poly(
+    [
+      { x: t.x + 4.6, y: t.y - 5.5 },
+      { x: t.x + 9.5, y: t.y - 10 },
+      { x: t.x + 10.6, y: t.y - 8.4 },
+      { x: t.x + 5.6, y: t.y - 3.6 },
+    ],
+    '#fff8e6',
+  );
   p.ellipse(t.x, t.y - 12, 2.4, 0.9, '#f4c24a');
   p.circle(t.x, t.y - 13, 0.9, '#f4c24a', null);
   face(p, t.x, t.y - 6, 0.6);
@@ -769,8 +777,11 @@ function moonGate(p: Pen): void {
   const c = p.center;
   const o = p.iso(0, 0.5, 0);
   p.shadow(c.x, c.y + 3, 38, 12, 0.18);
+  // pale stone path the gate stands on
+  p.diamond(0.1, 0.3, 1.8, 0.62, '#ece4d0', shade('#ece4d0', -0.25), 0);
+  p.diamond(0.2, 0.42, 1.6, 0.4, null, rgba('#ffffff', 0.7), 0);
   // full moon glowing above the gate, with a face
-  const my = p.height - 34;
+  const my = p.height - 47;
   p.glow(c.x, my, 36, '#fff3b0', 0.6);
   p.circle(c.x, my, 14, radial(p, c.x, my, 16, '#fffbe6', '#ffe27a'), '#d9a93a');
   p.circle(c.x - 6, my - 6, 2.2, rgba('#e0b84a', 0.45), null);
@@ -783,14 +794,16 @@ function moonGate(p: Pen): void {
     p.rect(-1.5, -3.5, 67, 3.5, '#c9b8a0', O);
     p.circle(32, -20, 17.5, '#e9dfcf', O);
     p.circle(32, -20, 14.5, radial(p, 32, -20, 15, '#fffbe0', '#bfe3b0'), O);
-    const A: Pt = { x: -8, y: -40 };
-    const C: Pt = { x: 32, y: -62 };
-    const B: Pt = { x: 72, y: -40 };
+    // tiled roof with upturned eaves
+    const A: Pt = { x: -10, y: -44 };
+    const C: Pt = { x: 32, y: -68 };
+    const B: Pt = { x: 74, y: -44 };
+    const eave = -34;
     ctx.beginPath();
     ctx.moveTo(A.x, A.y);
     ctx.quadraticCurveTo(C.x, C.y, B.x, B.y);
-    ctx.lineTo(68, -36);
-    ctx.lineTo(-4, -36);
+    ctx.lineTo(70, eave);
+    ctx.lineTo(-6, eave);
     ctx.closePath();
     ctx.fillStyle = '#5d6073';
     ctx.fill();
@@ -800,17 +813,18 @@ function moonGate(p: Pen): void {
     const ridge: Pt[] = [];
     for (let i = 0; i <= 12; i++) {
       const q = qpt(A, C, B, i / 12);
-      ridge.push({ x: q.x, y: q.y + 1.8 });
+      ridge.push({ x: q.x, y: q.y + 2 });
     }
-    p.line(ridge, '#9a9db3', 1.1);
-    for (const k of [0.34, 0.68]) {
+    p.line(ridge, '#9a9db3', 1.2);
+    for (const k of [0.36, 0.7]) {
       const row: Pt[] = [];
       for (let i = 0; i <= 12; i++) {
         const q = qpt(A, C, B, i / 12);
-        row.push({ x: q.x, y: q.y + (-36 - q.y) * k });
+        row.push({ x: q.x, y: q.y + (eave - q.y) * k });
       }
       p.line(row, rgba('#2a2d3e', 0.7), 0.8);
     }
+    p.line([{ x: -6, y: eave + 0.5 }, { x: 70, y: eave + 0.5 }], '#343748', 1.2);
   });
   // stepping stones in front
   for (const [u, v, r] of [
@@ -1000,7 +1014,7 @@ const SPECS: Record<string, { height: number; paint: Painter }> = {
   paper_cranes: { height: 60, paint: paperCranes },
   rabbit_lantern: { height: 56, paint: rabbitLantern },
   mooncake_table: { height: 44, paint: mooncakeTable },
-  moon_gate: { height: 60, paint: moonGate },
+  moon_gate: { height: 64, paint: moonGate },
   osmanthus_tree: { height: 56, paint: osmanthusTree },
   turkey_statue: { height: 52, paint: turkeyStatue },
   feast_table: { height: 40, paint: feastTable },

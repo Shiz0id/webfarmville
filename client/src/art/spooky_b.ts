@@ -62,11 +62,12 @@ function thickCurve(p: Pen, a: Pt, c: Pt, b: Pt, w: number, color: string): void
   p.curve(a, c, b, color, w);
 }
 
-function withXform(p: Pen, x: number, y: number, rot: number, fn: () => void): void {
+function withXform(p: Pen, x: number, y: number, rot: number, fn: () => void, s = 1): void {
   const c = p.ctx;
   c.save();
   c.translate(x, y);
   c.rotate(rot);
+  c.scale(s, s);
   fn();
   c.restore();
 }
@@ -144,8 +145,13 @@ function bat(p: Pen, x: number, y: number, s: number, body = '#3b2f4a'): void {
   p.circle(x + s * 0.22, y - s * 0.1, s * 0.16, '#fff6d8', null);
 }
 
-function wrappedCandy(p: Pen, x: number, y: number, color: string, ang: number): void {
-  withXform(p, x, y, ang, () => {
+function wrappedCandy(p: Pen, x: number, y: number, color: string, ang: number, s = 1): void {
+  withXform(
+    p,
+    x,
+    y,
+    ang,
+    () => {
     p.poly(
       [
         { x: -2.2, y: 0 },
@@ -164,7 +170,9 @@ function wrappedCandy(p: Pen, x: number, y: number, color: string, ang: number):
     );
     p.ellipse(0, 0, 2.8, 2.1, color);
     p.ellipse(-0.8, -0.7, 0.9, 0.5, rgba(WHITE, 0.7), null);
-  });
+    },
+    s,
+  );
 }
 
 function candyCorn(p: Pen, x: number, y: number, ang: number): void {
@@ -427,14 +435,14 @@ function pumpkinTower(p: Pen): void {
   const { x, y } = p.center;
   p.shadow(x, y + 1, 17, 7);
   const tiers = [
-    { cx: x, cy: y - 12, r: 13, color: PUMPKIN, expr: 0 },
-    { cx: x + 1.2, cy: y - 31, r: 9.5, color: '#ff9a3c', expr: 1 },
-    { cx: x - 0.8, cy: y - 46, r: 7.2, color: '#ffb35c', expr: 2 },
+    { cx: x, cy: y - 14, r: 15, color: PUMPKIN, expr: 0 },
+    { cx: x + 1.2, cy: y - 37, r: 11, color: '#ff9a3c', expr: 1 },
+    { cx: x - 0.8, cy: y - 54.5, r: 8.4, color: '#ffb35c', expr: 2 },
   ];
   for (const t of tiers) pumpkinGlow(p, t.cx, t.cy, t.r);
   for (const t of tiers) jackPumpkin(p, t.cx, t.cy, t.r, t.color, t.expr);
-  sparkle(p, x - 19, y - 30, 2.6);
-  sparkle(p, x + 19, y - 44, 2.2);
+  sparkle(p, x - 21, y - 40, 2.6);
+  sparkle(p, x + 21, y - 58, 2.2);
 }
 
 function jackStringLights(p: Pen): void {
@@ -452,13 +460,13 @@ function jackStringLights(p: Pen): void {
   p.curve(ta, ctrl, tb, '#3d3550', 0.9);
   const lights: Pt[] = [];
   for (let i = 0; i < 7; i++) lights.push(qpt(ta, ctrl, tb, 0.14 + i * 0.12));
-  for (const q of lights) p.glow(q.x, q.y + 6, 9, '#ffd45c', 0.5);
+  for (const q of lights) p.glow(q.x, q.y + 7, 11, '#ffd45c', 0.5);
   for (const q of lights) {
     p.line([q, { x: q.x, y: q.y + 2.5 }], '#3d3550', 0.7);
-    const cy = q.y + 6;
-    pumpkinBody(p, q.x, cy, 3.4, PUMPKIN);
-    pumpkinStem(p, q.x, cy - 2.9, 0.3);
-    miniGlow(p, q.x, cy, 3.4);
+    const cy = q.y + 7;
+    pumpkinBody(p, q.x, cy, 4.2, PUMPKIN);
+    pumpkinStem(p, q.x, cy - 3.6, 0.35);
+    miniGlow(p, q.x, cy, 4.2);
   }
 }
 
@@ -466,33 +474,33 @@ function treatBags(p: Pen): void {
   const { x, y } = p.center;
   p.shadow(x, y + 1, 22, 9);
   // ghost sack, back left
-  const sx = x - 11;
-  sack(p, sx, y - 1, 18, 22, '#e7ddff');
-  ghostPath(p, sx, y - 12, 3.8);
-  fs(p, radial(p, sx, y - 12, 4, WHITE, '#ddd3f5'), GHOST_EDGE, 0.6);
-  p.circle(sx - 1.3, y - 12.4, 0.7, INK, null);
-  p.circle(sx + 1.3, y - 12.4, 0.7, INK, null);
-  p.ellipse(sx - 2.2, y - 10.6, 0.7, 0.4, rgba(BLUSH, 0.8), null);
-  p.ellipse(sx + 2.2, y - 10.6, 0.7, 0.4, rgba(BLUSH, 0.8), null);
-  p.glow(x + 10, y - 9, 10, '#ffb347', 0.2);
+  const sx = x - 12;
+  sack(p, sx, y - 1, 22, 27, '#e7ddff');
+  ghostPath(p, sx, y - 14, 4.6);
+  fs(p, radial(p, sx, y - 14, 5, WHITE, '#ddd3f5'), GHOST_EDGE, 0.6);
+  p.circle(sx - 1.6, y - 14.6, 0.9, INK, null);
+  p.circle(sx + 1.6, y - 14.6, 0.9, INK, null);
+  p.ellipse(sx - 2.8, y - 12.6, 0.9, 0.5, rgba(BLUSH, 0.8), null);
+  p.ellipse(sx + 2.8, y - 12.6, 0.9, 0.5, rgba(BLUSH, 0.8), null);
+  p.glow(x + 10, y - 9, 12, '#ffb347', 0.2);
   // pumpkin pail, right, with its wire handle behind
-  thickCurve(p, { x: x + 3.5, y: y - 13 }, { x: x + 10, y: y - 26 }, { x: x + 16.5, y: y - 13 }, 1.5, INK);
-  pumpkinGlow(p, x + 10, y - 8, 7.6);
-  jackPumpkin(p, x + 10, y - 8, 7.6, PUMPKIN, 1);
+  thickCurve(p, { x: x + 3, y: y - 16 }, { x: x + 10, y: y - 31 }, { x: x + 17, y: y - 16 }, 1.6, INK);
+  pumpkinGlow(p, x + 10, y - 9, 9);
+  jackPumpkin(p, x + 10, y - 9, 9, PUMPKIN, 1);
   // candy spilling out in front
-  wrappedCandy(p, x - 6, y + 2, '#ff6b8a', 0.3);
-  wrappedCandy(p, x + 4, y + 5, PURPLE, -0.2);
-  wrappedCandy(p, x - 15, y + 5, LIME, 0.5);
-  candyCorn(p, x + 15, y + 3.5, 0.4);
+  wrappedCandy(p, x - 7, y + 2, '#ff6b8a', 0.3, 1.4);
+  wrappedCandy(p, x + 5, y + 5, PURPLE, -0.2, 1.4);
+  wrappedCandy(p, x - 17, y + 4, LIME, 0.5, 1.4);
+  candyCorn(p, x + 17, y + 3.5, 0.4);
   candyCorn(p, x - 1, y + 6, -0.7);
-  lollipopHead(p, x + 0.5, y + 1, 2.8, '#ff8c42', WHITE);
+  lollipopHead(p, x + 0.5, y + 1, 3.2, '#ff8c42', WHITE);
   p.line(
     [
-      { x: x + 0.5, y: y + 3.8 },
-      { x: x + 2.4, y: y + 8 },
+      { x: x + 0.5, y: y + 4.2 },
+      { x: x + 2.6, y: y + 9 },
     ],
     WHITE,
-    1,
+    1.2,
   );
 }
 
@@ -516,22 +524,22 @@ function hauntedTree(p: Pen): void {
   thickCurve(p, { x: x - 1, y: y - 60 }, { x: x - 6, y: y - 66 }, { x: x - 6, y: y - 74 }, 2, bark);
   thickCurve(p, { x: x + 1, y: y - 64 }, { x: x + 5, y: y - 70 }, { x: x + 10, y: y - 71 }, 1.4, bark);
   // trunk and its upper stretch
-  thickCurve(p, base, c1, b1, 12, bark);
-  thickCurve(p, b1, { x: x - 2, y: y - 58 }, { x: x + 1, y: y - 66 }, 5, bark);
+  thickCurve(p, base, c1, b1, 15, bark);
+  thickCurve(p, b1, { x: x - 2, y: y - 58 }, { x: x + 1, y: y - 66 }, 7, bark);
   // the friendly face, carved into a lighter bark patch
   const f = qpt(base, c1, b1, 0.5);
-  p.glow(f.x, f.y, 10, '#c8ff7a', 0.2);
-  p.ellipse(f.x, f.y, 4.8, 5.4, '#8f6e92', O);
+  p.glow(f.x, f.y, 12, '#c8ff7a', 0.22);
+  p.ellipse(f.x, f.y, 6, 7, '#9a7698', O);
   for (const s of [-1, 1]) {
-    p.circle(f.x + s * 1.9, f.y - 1.3, 1.6, INK, null);
-    p.circle(f.x + s * 1.9 - 0.5, f.y - 1.8, 0.55, WHITE, null);
-    p.ellipse(f.x + s * 3, f.y + 1.3, 0.9, 0.55, rgba(BLUSH, 0.8), null);
+    p.circle(f.x + s * 2.6, f.y - 1.6, 2.2, INK, null);
+    p.circle(f.x + s * 2.6 - 0.7, f.y - 2.3, 0.7, WHITE, null);
+    p.ellipse(f.x + s * 3.9, f.y + 1.8, 1.2, 0.7, rgba(BLUSH, 0.85), null);
   }
   const c = p.ctx;
   c.beginPath();
-  c.moveTo(f.x - 2.1, f.y + 1.8);
-  c.quadraticCurveTo(f.x, f.y + 5, f.x + 2.1, f.y + 1.8);
-  c.quadraticCurveTo(f.x, f.y + 3.1, f.x - 2.1, f.y + 1.8);
+  c.moveTo(f.x - 2.8, f.y + 2.2);
+  c.quadraticCurveTo(f.x, f.y + 6.2, f.x + 2.8, f.y + 2.2);
+  c.quadraticCurveTo(f.x, f.y + 3.9, f.x - 2.8, f.y + 2.2);
   c.closePath();
   fs(p, INK, null);
   // hanging lantern
@@ -549,8 +557,8 @@ function hauntedTree(p: Pen): void {
   p.roundRect(lx - 3.4, ly - 4.5, 6.8, 9.5, 2.2, radial(p, lx, ly, 6, '#fff3a0', '#ff9a2e'));
   p.rect(lx - 2.4, ly - 6, 4.8, 1.6, '#3d3550');
   p.rect(lx - 2.4, ly + 4.4, 4.8, 1.6, '#3d3550');
-  bat(p, x - 21, y - 68, 3);
-  bat(p, x + 22, y - 76, 2.6);
+  bat(p, x - 21, y - 68, 3.6);
+  bat(p, x + 22, y - 76, 3.1);
 }
 
 /** A small mushroom: stem, underside rim, shaded dome and white spots. (mx, my) is the stem base. */
@@ -586,16 +594,16 @@ function mushroom(p: Pen, mx: number, my: number, s: number, cap: string): void 
 function glowMushrooms(p: Pen): void {
   const { x, y } = p.center;
   p.shadow(x, y + 1, 19, 8, 0.18);
-  p.ellipse(x, y + 0.5, 18, 7.5, rgba('#6a4c9e', 0.4), null);
+  p.ellipse(x, y + 0.5, 21, 8.5, rgba('#6a4c9e', 0.4), null);
   p.glow(x, y - 9, 22, '#b98aff', 0.42);
   p.glow(x, y - 5, 12, '#7ff0e0', 0.25);
   const caps = ['#9b6bff', '#4fe0d0', '#e879f9', '#7ef0a0', '#b98aff', '#5fd4ff'];
   const specs: { x: number; y: number; s: number; cap: string }[] = [];
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * TAU + 0.3;
-    specs.push({ x: x + Math.cos(a) * 13, y: y + 2 + Math.sin(a) * 6, s: i % 2 ? 0.92 : 1.08, cap: caps[i] });
+    specs.push({ x: x + Math.cos(a) * 15, y: y + 2 + Math.sin(a) * 7, s: i % 2 ? 1.15 : 1.32, cap: caps[i] });
   }
-  specs.push({ x, y: y + 1, s: 0.78, cap: '#ffb0f0' });
+  specs.push({ x, y: y + 1, s: 0.9, cap: '#ffb0f0' });
   specs.sort((a, b) => a.y - b.y);
   for (const m of specs) mushroom(p, m.x, m.y, m.s, m.cap);
   sparkle(p, x - 20, y - 24, 2.4, '#e9fff9');
@@ -738,43 +746,44 @@ function ghostSwing(p: Pen): void {
   const { x, y } = p.center;
   p.shadow(x, y + 1, 20, 8);
   const bark = '#7d5a45';
+  const rope = '#5b4a3a';
   // tree: trunk, then a branch that reaches over the swing, then the foliage
-  thickCurve(p, { x: x - 11, y }, { x: x - 11, y: y - 16 }, { x: x - 9, y: y - 30 }, 6, bark);
-  thickCurve(p, { x: x - 10, y: y - 30 }, { x: x - 2, y: y - 35 }, { x: x + 12, y: y - 34 }, 2.6, bark);
-  p.foliage(x - 9, y - 42, 15, '#8dc85a', 'swing', 7);
+  thickCurve(p, { x: x - 11, y }, { x: x - 11, y: y - 16 }, { x: x - 9, y: y - 30 }, 6.5, bark);
+  thickCurve(p, { x: x - 10, y: y - 30 }, { x: x - 2, y: y - 35 }, { x: x + 12, y: y - 34 }, 3, bark);
+  p.foliage(x - 9, y - 44, 17, '#8dc85a', 'swing', 7);
   // ropes and the seat
   p.line(
     [
       { x: x + 1, y: y - 34 },
-      { x: x + 0.5, y: y - 17 },
+      { x: x - 0.5, y: y - 17 },
     ],
-    '#e8d3a8',
-    0.9,
+    rope,
+    1.1,
   );
   p.line(
     [
       { x: x + 11, y: y - 34 },
-      { x: x + 11.5, y: y - 17 },
+      { x: x + 12.5, y: y - 17 },
     ],
-    '#e8d3a8',
-    0.9,
+    rope,
+    1.1,
   );
-  // the happy ghost, riding the swing (hem hovers just above the seat)
+  p.roundRect(x - 1.5, y - 17, 15.5, 4, 1.6, hgrad(p, x, x + 14, shade(WOOD, 0.15), shade(WOOD, -0.18)));
+  // the happy ghost, riding the swing (its hem hovers just above the seat)
   const cx = x + 6;
-  const r = 7;
-  const cy = y - 26;
-  p.glow(cx, cy, 15, '#ffffff', 0.28);
-  p.roundRect(x, y - 17, 13, 3.4, 1.4, hgrad(p, x, x + 13, shade(WOOD, 0.15), shade(WOOD, -0.18)));
-  p.ellipse(cx - 8.5, cy - 3, 3, 1.6, '#f4f0ff', O, -0.9);
-  p.ellipse(cx + 8.5, cy - 3, 3, 1.6, '#f4f0ff', O, 0.9);
+  const r = 8.5;
+  const cy = y - 27.5;
+  p.glow(cx, cy, 16, '#ffffff', 0.3);
+  p.ellipse(cx - 9.5, cy - 4, 3.2, 1.8, '#f4f0ff', O, -0.9);
+  p.ellipse(cx + 9.5, cy - 4, 3.2, 1.8, '#f4f0ff', O, 0.9);
   ghostPath(p, cx, cy, r);
   fs(p, radial(p, cx - 2, cy - 2, r * 1.3, WHITE, '#d9d0f2'));
-  happyEyes(p, cx, cy - 0.5, 1.1, 2.6);
-  for (const s of [-1, 1]) p.ellipse(cx + s * 4.4, cy + 1.8, 1, 0.6, rgba(BLUSH, 0.85), null);
-  p.ellipse(cx, cy + 3.4, 1, 1.2, INK, null);
+  happyEyes(p, cx, cy - 0.8, 1.3, 3);
+  for (const s of [-1, 1]) p.ellipse(cx + s * 5, cy + 2, 1.2, 0.7, rgba(BLUSH, 0.85), null);
+  p.ellipse(cx, cy + 3.8, 1.1, 1.4, INK, null);
   // a little pumpkin at the roots
-  pumpkinBody(p, x - 22, y - 4, 4.4, PUMPKIN);
-  pumpkinStem(p, x - 22, y - 4 - 0.86 * 4.4, 0.4);
+  pumpkinBody(p, x - 22, y - 4, 4.6, PUMPKIN);
+  pumpkinStem(p, x - 22, y - 4 - 0.86 * 4.6, 0.4);
 }
 
 function moonPhotoBooth(p: Pen): void {
@@ -1114,7 +1123,7 @@ function caramelApple(p: Pen, x: number, y: number, r: number): void {
   p.line(
     [
       { x, y: y - r * 0.4 },
-      { x: x + 0.4, y: y - r - 8 },
+      { x: x + 0.4, y: y - r - 4.5 },
     ],
     '#f3e3c0',
     1.3,
@@ -1139,31 +1148,31 @@ function caramelAppleStand(p: Pen): void {
   const { x, y } = p.center;
   p.shadow(x, y + 1, 22, 8);
   const posts = '#8a5a3e';
-  post(p, x - 20, y, 46, posts, 3.5);
-  post(p, x + 20, y, 46, posts, 3.5);
+  post(p, x - 20, y, 50, posts, 3.5);
+  post(p, x + 20, y, 50, posts, 3.5);
   // counter with a plank top
   p.roundRect(x - 21, y - 16, 42, 16, 2, hgrad(p, x - 21, x + 21, shade(PURPLE, 0.12), shade(PURPLE, -0.2)));
   p.roundRect(x - 23, y - 19, 46, 4.5, 2, shade(PURPLE, 0.3));
   // apples on sticks, middle one behind
-  caramelApple(p, x, y - 24, 6);
-  caramelApple(p, x - 12, y - 22, 6);
-  caramelApple(p, x + 12, y - 22, 6);
+  caramelApple(p, x, y - 22, 7.5);
+  caramelApple(p, x - 13, y - 20, 7.5);
+  caramelApple(p, x + 13, y - 20, 7.5);
   // striped awning with a scalloped hem
   const stripeW = 44 / 6;
   for (let i = 0; i < 6; i++) {
     const col = i % 2 ? '#fff3dc' : '#ff8c42';
     const sx = x - 22 + i * stripeW;
-    p.rect(sx, y - 46, stripeW, 8, col, null);
-    p.circle(sx + stripeW / 2, y - 38, stripeW / 2, col, null);
+    p.rect(sx, y - 50, stripeW, 8, col, null);
+    p.circle(sx + stripeW / 2, y - 42, stripeW / 2, col, null);
   }
   const c = p.ctx;
   for (let i = 0; i < 6; i++) {
     const sx = x - 22 + i * stripeW;
     c.beginPath();
-    c.arc(sx + stripeW / 2, y - 38, stripeW / 2, 0, Math.PI);
+    c.arc(sx + stripeW / 2, y - 42, stripeW / 2, 0, Math.PI);
     fs(p, null, O, 0.7);
   }
-  p.rect(x - 22, y - 46, 44, 8, null, O);
+  p.rect(x - 22, y - 50, 44, 8, null, O);
 }
 
 function ghostKitty(p: Pen): void {
@@ -1173,10 +1182,10 @@ function ghostKitty(p: Pen): void {
   const hy = y - 42;
   const hemY = y - 7;
   // curly tail with a little curl at the tip
-  p.curve({ x: x + 6, y: y - 18 }, { x: x + 17, y: y - 16 }, { x: x + 15, y: y - 30 }, GHOST_EDGE, 4.6);
-  p.curve({ x: x + 6, y: y - 18 }, { x: x + 17, y: y - 16 }, { x: x + 15, y: y - 30 }, '#f6f3ff', 3);
-  p.curve({ x: x + 15, y: y - 30 }, { x: x + 17, y: y - 37 }, { x: x + 10.5, y: y - 35 }, GHOST_EDGE, 2.6);
-  p.curve({ x: x + 15, y: y - 30 }, { x: x + 17, y: y - 37 }, { x: x + 10.5, y: y - 35 }, '#f6f3ff', 1.4);
+  p.curve({ x: x + 7, y: y - 13 }, { x: x + 20, y: y - 14 }, { x: x + 18, y: y - 28 }, GHOST_EDGE, 3.6);
+  p.curve({ x: x + 7, y: y - 13 }, { x: x + 20, y: y - 14 }, { x: x + 18, y: y - 28 }, '#f6f3ff', 1.8);
+  p.curve({ x: x + 18, y: y - 28 }, { x: x + 16, y: y - 38 }, { x: x + 10, y: y - 36 }, GHOST_EDGE, 3);
+  p.curve({ x: x + 18, y: y - 28 }, { x: x + 16, y: y - 38 }, { x: x + 10, y: y - 36 }, '#f6f3ff', 1.2);
   // ears
   p.poly(
     [
@@ -1330,12 +1339,12 @@ function fallback(p: Pen): void {
 }
 
 const ART: Record<string, { height: number; paint: (p: Pen) => void }> = {
-  pumpkin_tower: { height: 62, paint: pumpkinTower },
+  pumpkin_tower: { height: 70, paint: pumpkinTower },
   jack_string_lights: { height: 52, paint: jackStringLights },
   haunted_tree: { height: 80, paint: hauntedTree },
-  glow_mushrooms: { height: 30, paint: glowMushrooms },
+  glow_mushrooms: { height: 36, paint: glowMushrooms },
   owl_perch: { height: 70, paint: owlPerch },
-  treat_bags: { height: 40, paint: treatBags },
+  treat_bags: { height: 44, paint: treatBags },
   witch_hat_planter: { height: 62, paint: witchHatPlanter },
   ghost_swing: { height: 66, paint: ghostSwing },
   moon_photo_booth: { height: 72, paint: moonPhotoBooth },
@@ -1343,7 +1352,7 @@ const ART: Record<string, { height: number; paint: (p: Pen) => void }> = {
   cat_fence_post: { height: 70, paint: catFencePost },
   pumpkin_patch_sign: { height: 50, paint: pumpkinPatchSign },
   candy_corn_statue: { height: 72, paint: candyCornStatue },
-  caramel_apple_stand: { height: 50, paint: caramelAppleStand },
+  caramel_apple_stand: { height: 52, paint: caramelAppleStand },
   ghost_kitty: { height: 60, paint: ghostKitty },
   golden_pumpkin: { height: 70, paint: goldenPumpkin },
   lollipop_tree: { height: 80, paint: lollipopTree },

@@ -204,16 +204,23 @@ function kernel(p: Pen, x: number, y: number, w: number, h: number, rot = 0): vo
   ctx.restore();
 }
 
-/** Kawaii face: dot eyes with glints, pink cheeks and a small smile. */
 /**
  * A glowing ghost pumpkin: three soft lobes in pale lilac-white, faint ribs,
  * a little stalk and a kawaii face. (x, y) is its centre.
  */
+function ghostSphere(p: Pen, x: number, y: number, r: number): CanvasGradient {
+  const g = p.ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r * 1.2);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(0.6, '#f7f3ff');
+  g.addColorStop(1, '#e0d6f5');
+  return g;
+}
+
 function ghostPumpkin(p: Pen, x: number, y: number, rw: number, rh: number, faceK: number): void {
-  p.glow(x, y, rw * 2.1, '#e6ffc0', 0.35);
-  p.ellipse(x - rw * 0.42, y, rw * 0.58, rh, sphere(p, x - rw * 0.5, y, rw * 0.6, shade(GHOST, -0.1)));
-  p.ellipse(x + rw * 0.42, y, rw * 0.58, rh, sphere(p, x + rw * 0.3, y, rw * 0.6, shade(GHOST, -0.18)));
-  p.ellipse(x, y, rw * 0.5, rh * 1.02, sphere(p, x - rw * 0.15, y, rw * 0.6, GHOST));
+  p.glow(x, y, rw * 2.2, '#e6ffc0', 0.4);
+  p.ellipse(x - rw * 0.42, y, rw * 0.58, rh, ghostSphere(p, x - rw * 0.5, y, rw * 0.6));
+  p.ellipse(x + rw * 0.42, y, rw * 0.58, rh, ghostSphere(p, x + rw * 0.3, y, rw * 0.6));
+  p.ellipse(x, y, rw * 0.5, rh * 1.02, ghostSphere(p, x - rw * 0.15, y, rw * 0.6));
   p.curve({ x: x - rw * 0.22, y: y - rh * 0.9 }, { x: x - rw * 0.6, y }, { x: x - rw * 0.22, y: y + rh * 0.9 }, shade(GHOST, -0.3), 0.6);
   p.curve({ x: x + rw * 0.24, y: y - rh * 0.9 }, { x: x + rw * 0.62, y }, { x: x + rw * 0.24, y: y + rh * 0.9 }, shade(GHOST, -0.3), 0.6);
   p.rect(x - 0.9, y - rh - 2.2, 1.8, 3.2, LEAF_DK);
@@ -266,12 +273,12 @@ function candyCornBearing(p: Pen): void {
     kernel(p, mid.x, mid.y + 0.6, 4.6, 6, -1.05);
     const bx = top.x;
     const by = top.y + 1.2;
-    const w = front ? 7.4 : 6.4;
-    const h = front ? 10 : 8.6;
+    const w = front ? 8.4 : 6.6;
+    const h = front ? 11.2 : 8.8;
     kernel(p, bx, by, w - 1.6, h - 1.2, -0.5);
     kernel(p, bx, by, w - 1.6, h - 1.2, 0.5);
     kernel(p, bx, by, w, h, 0);
-    if (front || idx === 1) face(p, bx, by - h * 0.58, front ? 1.35 : 1.15);
+    if (front || idx === 1) face(p, bx, by - h * 0.58, front ? 1.5 : 1.2);
     if (idx % 2 === 0) sparkle(p, bx + 6.2, by - h - 2, 1.5);
     if (idx === 3) sparkle(p, s.x - 7, s.y - 16, 1.2);
   });
@@ -320,9 +327,9 @@ function ghostLeafy(p: Pen): void {
 /** Ghost pumpkin stage 2: three glowing white ghost pumpkins, each with a face. */
 function ghostBearing(p: Pen): void {
   for (const [u, v, rw, k] of [
-    [0.32, 0.56, 9.2, 2.0],
-    [0.64, 0.3, 8.4, 1.9],
-    [0.7, 0.72, 9.6, 2.2],
+    [0.32, 0.56, 9.2, 2.5],
+    [0.64, 0.3, 8.4, 2.3],
+    [0.7, 0.72, 9.6, 2.7],
   ] as const) {
     const pt = p.iso(u, v);
     const y = pt.y - rw * 0.66;
@@ -718,7 +725,7 @@ function iconCandyCorn(p: Pen): void {
 
 function iconGhostPumpkin(p: Pen): void {
   p.shadow(20, 35, 13, 3, 0.25);
-  ghostPumpkin(p, 20, 23, 12.6, 10.4, 4.1);
+  ghostPumpkin(p, 20, 23, 12.6, 10.4, 4.8);
   leaf(p, 23, 13.4, 6, -1.0, 2.4, LEAF);
   sparkle(p, 6, 10, 2, '#f4ffe0');
   sparkle(p, 34, 30, 1.5, '#f4ffe0');
