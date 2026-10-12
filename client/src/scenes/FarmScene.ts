@@ -23,6 +23,7 @@ import { RES, artMeta, registerTextures, texture } from '../art';
 import { rng } from '../art/kit';
 import { Ambience } from './ambience';
 import { Pet } from './pets';
+import { TrickOrTreater, costumeFor, halloweenOn, spawnBats } from './halloween';
 import { sfx } from '../sfx';
 import { bus } from '../bus';
 import type { Store } from '../store';
@@ -54,6 +55,7 @@ interface ObjSprite {
   ready: boolean;
   smoke?: { x: number; y: number };
   glow?: Phaser.GameObjects.Image;
+  costume?: Phaser.GameObjects.Image;
   main: Phaser.GameObjects.Image;
   overlay?: Phaser.GameObjects.Image;
   bubble?: Bubble;
@@ -96,6 +98,7 @@ export class FarmScene extends Phaser.Scene {
   private settled = false;
   private emitters = new Map<string, Phaser.GameObjects.Particles.ParticleEmitter>();
   private pets: Pet[] = [];
+  private treater: TrickOrTreater | null = null;
 
   private drag: {
     mode: 'none' | 'pending' | 'pan' | 'paint' | 'harvest' | 'pinch';
@@ -164,6 +167,34 @@ export class FarmScene extends Phaser.Scene {
       hidden: () => this.store.isVisiting,
     };
     this.pets = [new Pet(this, 'dog', petOpts), new Pet(this, 'cat', petOpts)];
+
+    if (this.halloween) {
+      spawnBats(this, DEPTH_UI - 190);
+      this.time.addEvent({ delay: 8000, loop: true, callback: () => this.maybeTrickOrTreat() });
+    }
+  }
+
+  private get halloween(): boolean {
+    return halloweenOn(this.store.now(), this.store.allEvents);
+  }
+
+  /** Send a trick-or-treater over if there are treats left today. */
+  private maybeTrickOrTreat(): void {
+    if (this.treater || this.store.isVisiting || !this.halloween) return;
+    const t = this.store.state.treats;
+    const today = new Date(this.store.now()).toISOString().slice(0, 10);
+    if (t && t.day === today && t.count >= 6) return;
+    if (Math.random() < 0.55) return;
+    this.treater = new TrickOrTreater(
+      this,
+      {
+        isoX,
+        isoY,
+        depthFor: (x, y) => this.depthFor(x, y, 1, 1),
+        state: () => this.store.state,
+      },
+      () => (this.treater = null),
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -233,8 +264,18 @@ export class FarmScene extends Phaser.Scene {
     for (const a of animals) {
       if (Math.random() > 0.35) continue;
       const m = a.main;
-      if (Math.random() < 0.3) m.setFlipX(!m.flipX);
-      this.tweens.add({ targets: m, y: m.y - 5, duration: 130, yoyo: true, repeat: Math.random() < 0.3 ? 1 : 0, ease: 'Quad.easeOut' });
+      if (Math.random() < 0.3) {
+        m.setFlipX(!m.flipX);
+        if (a.costume) {
+          // Mirror the hat to the other side of the head.
+          const cx = m.x + m.displayWidth / 2;
+          a.costume.x = cx - (a.costume.x - cx);
+          a.costume.setFlipX(m.flipX);
+        }
+      }
+      const targets = a.costume ? [m, a.costume] : [m];
+      for (const t of targets)
+        this.tweens.add({ targets: t, y: t.y - 5, duration: 130, yoyo: true, repeat: 0, ease: 'Quad.easeOut' });
     }
   }
 
@@ -484,6 +525,13 @@ export class FarmScene extends Phaser.Scene {
       entry.overlay = ov;
     }
 
+    if (obj.kind === 'animal' && !moving && this.halloween && !this.store.isVisiting) {
+      const c = costumeFor(obj.id, obj.def);
+      entry.costume = this.add
+        .image(main.x + main.displayWidth / 2 + c.dx, main.y - 16 + c.dy, texture(this, c.key))
+        .setScale(1 / RES)
+        .setDepth(main.depth + 0.05);
+    }
     if (obj.kind === 'animal' && !moving) {
       // Gentle breathing.
       this.tweens.add({
@@ -580,6 +628,10 @@ export class FarmScene extends Phaser.Scene {
     if (s.glow) {
       this.tweens.killTweensOf(s.glow);
       s.glow.destroy();
+    }
+    if (s.costume) {
+      this.tweens.killTweensOf(s.costume);
+      s.costume.destroy();
     }
     this.sprites.delete(id);
   }
@@ -941,6 +993,16 @@ export class FarmScene extends Phaser.Scene {
       return;
     }
 
+    if (this.treater?.at(tile.x, tile.y) && tools.tool === 'hand') {
+      const kid = this.treater;
+      if (store.dispatch({ type: 'treat' })) {
+        kid.happy();
+        sfx.quest();
+        this.emitter('fx:heart', 'burst').explode(5, kid.img.x, kid.img.y - 30);
+        bus.emit('toast', 'Happy Halloween! The trick-or-treater shared their candy haul 🍬', 'good');
+      } else kid.leave();
+      return;
+    }
     const pet = tools.tool === 'hand' ? this.pets.find((p) => p.at(tile.x, tile.y)) : undefined;
     if (pet) {
       pet.pet();

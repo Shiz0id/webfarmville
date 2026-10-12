@@ -162,28 +162,63 @@ function mound(p: Pen, x: number, y: number, r: number, color: string, seed: num
 }
 
 // ---------------------------------------------------------------------------
-// Stage 0: a generic sprout patch, tinted per crop
+// Kawaii helpers: faces, glossy streaks and the fresher palette for young plants
+
+const EYE = '#2b1b12';
+
+/**
+ * A tiny kawaii face centred on (x, y): two dark dot eyes with a glint, pink
+ * blush and a small smile. `k` is half the gap between the eyes in px. `sad`
+ * swaps the smile for a little frown and drops the blush.
+ */
+function face(p: Pen, x: number, y: number, k: number, sad = false): void {
+  for (const sx of [-1, 1]) {
+    const ex = x + sx * k;
+    const ey = y - k * 0.2;
+    p.ellipse(ex, ey, k * 0.36, k * 0.5, EYE, null);
+    if (!sad && k >= 1.6) p.circle(ex - k * 0.14, ey - k * 0.22, k * 0.14, '#ffffff', null);
+    if (!sad) p.ellipse(x + sx * k * 1.6, y + k * 0.45, k * 0.42, k * 0.26, 'rgba(255,110,140,0.75)', null);
+  }
+  const lw = Math.max(0.45, k * 0.22);
+  if (sad) p.curve({ x: x - k * 0.55, y: y + k }, { x, y: y + k * 0.1 }, { x: x + k * 0.55, y: y + k }, EYE, lw);
+  else p.curve({ x: x - k * 0.55, y: y + k * 0.5 }, { x, y: y + k * 1.2 }, { x: x + k * 0.55, y: y + k * 0.5 }, EYE, lw);
+}
+
+/** A soft glossy streak on a round body (x, y = centre, r = radius). */
+function gloss(p: Pen, x: number, y: number, r: number): void {
+  p.ellipse(x - r * 0.4, y - r * 0.45, r * 0.3, r * 0.17, 'rgba(255,255,255,0.8)', null, -0.7);
+}
+
+/** A slightly lighter, fresher palette for growing plants. */
+function young(c: CropDef): CropDef {
+  return { ...c, colors: [shade(c.colors[0], 0.12), c.colors[1], c.colors[2]] };
+}
+
+// ---------------------------------------------------------------------------
+// Stage 0: a sprout patch of plump round seed-leaves, tinted per crop
 
 function sprout(p: Pen, c: CropDef): void {
-  thin(p, 0.7, () => sproutInner(p, c));
+  thin(p, 0.6, () => sproutInner(p, c));
 }
 
 function sproutInner(p: Pen, c: CropDef): void {
-  const grassy = ['wheat', 'rice', 'corn'].includes(c.id);
-  const col = shade(c.colors[0], 0.15);
-  for (const s of spots(p, grid(3, 0.24, 0.76))) {
-    groundShadow(p, s, 4);
-    p.ellipse(s.x, s.y, 2.4, 1.1, '#6b4a32', null);
-    if (grassy) {
-      leaf(p, s.x - 0.5, s.y, 6, UP - 0.45, 2.4, shade(col, -0.05));
-      leaf(p, s.x + 0.5, s.y, 6, UP + 0.4, 2.4, shade(col, -0.05));
-      leaf(p, s.x, s.y, 8, UP + 0.05, 2.6, col);
-    } else {
-      stem(p, s, up(s.x, s.y, 2), up(s.x, s.y, 4), shade(col, -0.1), 0.9);
-      leaf(p, s.x, s.y - 4, 4.5, UP - 1.0, 3.6, col);
-      leaf(p, s.x, s.y - 4, 4.5, UP + 1.0, 3.6, shade(col, 0.1));
+  const leafCol = mix(c.colors[0], '#c4f08a', 0.5);
+  const stemCol = shade(c.colors[0], -0.1);
+  spots(p, grid(3, 0.24, 0.76)).forEach((s, k) => {
+    groundShadow(p, s, 3.6);
+    p.line([{ x: s.x, y: s.y }, { x: s.x, y: s.y - 3 }], stemCol, 0.8);
+    for (const sx of [-1, 1]) {
+      const cx = s.x + sx * 2;
+      const cy = s.y - 4;
+      p.ellipse(cx, cy, 2.5, 2, leafCol, p.outline, sx * 0.35);
+      p.circle(cx - 0.7, cy - 0.7, 0.6, shade(leafCol, 0.5), null);
     }
-  }
+    if (k % 3 === 0) {
+      // a tiny dew sparkle
+      p.circle(s.x + 3.4, s.y - 6.4, 1.5, 'rgba(255,255,255,0.35)', null);
+      p.circle(s.x + 3.4, s.y - 6.4, 0.6, '#ffffff', null);
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -193,9 +228,11 @@ type Painter = (p: Pen, stage: 1 | 2, c: CropDef) => void;
 
 const strawberry: Painter = (p, stage, c) => {
   const [plant, fruit, accent] = c.colors;
-  for (const s of spots(p, QUINCUNX)) {
-    const r = stage === 1 ? 4.5 : 6;
-    const ls = stage === 1 ? 1.6 : 1.9;
+  const pts = spots(p, QUINCUNX);
+  for (const s of pts) {
+    const front = s.i === pts.length - 1;
+    const r = stage === 1 ? 5 : 6;
+    const ls = stage === 1 ? 1.7 : 1.9;
     groundShadow(p, s, r + 2.5);
     const leaves: [number, number][] = [
       [-0.55, -1.1],
@@ -215,24 +252,29 @@ const strawberry: Painter = (p, stage, c) => {
       blossom(p, s.x + 2, s.y - r * 0.9, 2.2, '#ffffff', accent);
     } else {
       blossom(p, s.x - 1, s.y - r * 1.25, 2, '#ffffff', accent);
-      const berries: [number, number][] = [
-        [-4, 1],
-        [3.8, 1.2],
-        [0, 2.8],
+      const berries: [number, number, number][] = [
+        [-4, 1, 2.7],
+        [3.8, 1.2, 2.7],
+        [0, 3, 3.4],
       ];
-      for (const [dx, dy] of berries) {
+      berries.forEach(([dx, dy, br], bi) => {
         const bx = s.x + dx;
         const by = s.y + dy;
-        berryShape(p, bx, by, 2.3, radial(p, bx, by, 2.6, fruit));
-        p.circle(bx - 0.7, by, 0.35, accent, null);
-        p.circle(bx + 0.8, by + 0.6, 0.35, accent, null);
-        p.circle(bx, by + 1.6, 0.35, accent, null);
-        p.circle(bx - 0.6, by - 0.6, 0.6, 'rgba(255,255,255,0.6)', null);
+        berryShape(p, bx, by, br, radial(p, bx, by, br * 1.15, fruit));
+        if (front && bi === 2) {
+          // the hero berry on the front plant smiles
+          face(p, bx, by + 0.4, 1.2);
+        } else {
+          p.circle(bx - 0.6, by, 0.35, accent, null);
+          p.circle(bx + 0.7, by + 0.6, 0.35, accent, null);
+          p.circle(bx, by + 1.5, 0.35, accent, null);
+        }
+        gloss(p, bx, by - 0.3, br);
         thin(p, 0.6, () => {
           leaf(p, bx, by - 1.5, 2.2, UP - 1.0, 1.6, plant);
           leaf(p, bx, by - 1.5, 2.2, UP + 1.0, 1.6, plant);
         });
-      }
+      });
     }
   }
 };
@@ -274,7 +316,7 @@ const wheat: Painter = (p, stage, c) => {
         const h = 15 + rand() * 4 - Math.abs(k - 1) * 2;
         const top = up(s.x + (k - 1), s.y, h, lean);
         stem(p, { x: s.x + (k - 1) * 0.6, y: s.y }, up(s.x, s.y, h * 0.5, lean * 0.3), top, stalk, 0.8);
-        grainHead(p, top.x, top.y, UP + lean * 0.06, 7, grain, accent);
+        grainHead(p, top.x, top.y, UP + lean * 0.06, 8, grain, accent);
       }
     }
   }
@@ -283,15 +325,18 @@ const wheat: Painter = (p, stage, c) => {
 const carrot: Painter = (p, stage, c) => {
   const [plant, root, deep] = c.colors;
   const frond = shade(plant, 0.12);
-  for (const s of spots(p, grid(3, 0.22, 0.78))) {
+  const pts = spots(p, grid(3, 0.22, 0.78));
+  for (const s of pts) {
+    const front = s.i === pts.length - 1;
     groundShadow(p, s, 4.5);
     const len = stage === 1 ? 7 : 9;
     if (stage === 2) {
       // fat orange shoulders poking out of the soil
-      p.ellipse(s.x, s.y - 1, 3.6, 2.8, radial(p, s.x, s.y - 1.5, 3.4, root));
+      const rx = front ? 4.4 : 3.8;
+      p.ellipse(s.x, s.y - 1, rx, rx * 0.78, radial(p, s.x, s.y - 1.5, rx, root));
       p.line([{ x: s.x - 2.4, y: s.y - 0.2 }, { x: s.x - 0.9, y: s.y + 0.3 }], shade(root, -0.3), 0.6);
       p.line([{ x: s.x + 0.9, y: s.y - 0.6 }, { x: s.x + 2.4, y: s.y - 0.4 }], shade(root, -0.3), 0.6);
-      p.circle(s.x - 1.3, s.y - 2.3, 0.7, shade(root, 0.5), null);
+      p.ellipse(s.x - 1.5, s.y - 2.2, 1.2, 0.45, 'rgba(255,255,255,0.7)', null, -0.3);
     }
     const base = { x: s.x, y: s.y - (stage === 2 ? 3 : 0) };
     const angs = stage === 1 ? [-0.45, 0.05, 0.5] : [-0.6, -0.2, 0.2, 0.6];
@@ -311,39 +356,46 @@ const carrot: Painter = (p, stage, c) => {
         p.ellipse(tip.x, tip.y, 1.2, 1.8, shade(frond, 0.08), p.outline, a + Math.PI / 2);
       }),
     );
+    // the visible carrot top gets a face, drawn over the fronds
+    if (stage === 2 && front) face(p, s.x, s.y - 1.1, 1.3);
   }
 };
 
 const tomato: Painter = (p, stage, c) => {
   const [plant, fruit, accent] = c.colors;
-  for (const s of spots(p, grid(2, 0.3, 0.7))) {
+  const pts = spots(p, grid(2, 0.3, 0.7));
+  for (const s of pts) {
+    const front = s.i === pts.length - 1;
     groundShadow(p, s, 8);
     const stakeH = stage === 1 ? 18 : 26;
     p.rect(s.x + 3.5, s.y - stakeH, 1.8, stakeH + 1, '#b9875a');
     stem(p, s, up(s.x, s.y, 6, -1), up(s.x, s.y, stage === 1 ? 10 : 18), shade(plant, -0.1), 1.2);
     if (stage === 1) {
-      p.foliage(s.x, s.y - 10, 6, plant, s.i + 3, 6);
+      p.foliage(s.x, s.y - 10, 6.8, plant, s.i + 3, 6);
       blossom(p, s.x - 3, s.y - 12, 2.2, accent, '#e08a20');
       blossom(p, s.x + 2.5, s.y - 7, 2, accent, '#e08a20');
-      p.ball(s.x - 1, s.y - 5, 1.6, '#8cc152');
+      p.ball(s.x - 1, s.y - 5, 1.8, '#8cc152');
     } else {
-      p.foliage(s.x + 0.5, s.y - 19, 5.5, shade(plant, 0.05), s.i + 11, 6);
-      p.foliage(s.x, s.y - 9, 7.5, plant, s.i + 3, 7);
+      p.foliage(s.x + 0.5, s.y - 19, 5.8, shade(plant, 0.05), s.i + 11, 6);
+      p.foliage(s.x, s.y - 9, 7.8, plant, s.i + 3, 7);
       p.line([{ x: s.x + 2.5, y: s.y - 15 }, { x: s.x + 5.5, y: s.y - 14 }], '#f2e3c4', 0.8);
       const tomatoes: [number, number, number][] = [
-        [-4, -6, 2.8],
-        [3, -10, 2.6],
-        [-1.5, -14, 2.4],
-        [4, -3.5, 2.6],
-        [-3, -20, 2.2],
-        [0.5, -5, 2.5],
+        [-4, -6, 3.1],
+        [3, -10, 2.9],
+        [-1.5, -14, 2.7],
+        [4, -3.5, 2.9],
+        [-3, -20, 2.5],
+        [0.5, -5, 3.3],
       ];
-      for (const [dx, dy, r] of tomatoes) {
+      tomatoes.forEach(([dx, dy, r], ti) => {
         const tx = s.x + dx;
         const ty = s.y + dy;
         p.ball(tx, ty, r, fruit);
-        p.star(tx, ty - r * 0.75, 1.3, shade(plant, -0.05), null);
-      }
+        gloss(p, tx, ty, r);
+        p.star(tx, ty - r * 0.75, 1.4, shade(plant, -0.05), null);
+        // the front plant's big centre tomato is the smiling one
+        if (front && ti === 5) face(p, tx, ty + 0.4, 1.2);
+      });
     }
   }
 };
@@ -362,40 +414,57 @@ function leafyMound(p: Pen, x: number, y: number, r: number, color: string, seed
 
 const potato: Painter = (p, stage, c) => {
   const [plant, tuber, flower] = c.colors;
-  for (const s of spots(p, QUINCUNX)) {
+  const pts = spots(p, QUINCUNX);
+  for (const s of pts) {
+    const front = s.i === pts.length - 1;
     groundShadow(p, s, 7);
     if (stage === 1) {
-      leafyMound(p, s.x, s.y - 4, 5, plant, s.i + 1);
+      leafyMound(p, s.x, s.y - 4, 5.4, plant, s.i + 1);
     } else {
       // tubers peeking out at the base
       for (const [dx, dy, rx] of [
-        [-4.5, 0.5, 3],
-        [3.5, 1.5, 2.7],
+        [-4.5, 0.5, 3.2],
+        [3.5, 1.5, 2.9],
       ]) {
         p.ellipse(s.x + dx, s.y + dy, rx, rx * 0.72, radial(p, s.x + dx, s.y + dy, rx, tuber));
         p.circle(s.x + dx - 0.8, s.y + dy - 0.2, 0.35, shade(tuber, -0.45), null);
         p.circle(s.x + dx + 0.9, s.y + dy + 0.4, 0.35, shade(tuber, -0.45), null);
       }
-      leafyMound(p, s.x, s.y - 6, 6.5, plant, s.i + 1);
+      leafyMound(p, s.x, s.y - 6, 6.8, plant, s.i + 1);
       for (const [dx, dy] of [
         [-3, -11],
         [2.5, -12.5],
         [4.5, -7.5],
       ])
         blossom(p, s.x + dx, s.y + dy, 2.2, flower, '#f2c94c');
-      // one tuber rolled out in front
-      p.ellipse(s.x + 0.5, s.y + 2.5, 2.6, 1.9, radial(p, s.x + 0.5, s.y + 2.5, 2.6, tuber));
-      p.circle(s.x - 0.3, s.y + 1.9, 0.6, shade(tuber, 0.4), null);
+      // one tuber rolled out in front; the front plant's one smiles
+      const tx = s.x + 0.5;
+      const ty = s.y + 2.6;
+      const trx = front ? 3.6 : 2.6;
+      p.ellipse(tx, ty, trx, trx * 0.72, radial(p, tx, ty, trx, tuber));
+      p.ellipse(tx - trx * 0.45, ty - trx * 0.3, trx * 0.35, trx * 0.14, 'rgba(255,255,255,0.7)', null, -0.3);
+      if (front) face(p, tx, ty + 0.2, 1.0);
     }
   }
 };
 
 function cornEar(p: Pen, x: number, y: number, ang: number, kernel: string, husk: string): void {
-  const len = 11;
+  const len = 12.5;
   const cx = x + Math.cos(ang) * len * 0.55;
   const cy = y + Math.sin(ang) * len * 0.55;
   leaf(p, x, y, 9, ang + 0.45, 3.5, shade(husk, -0.1));
-  p.ellipse(cx, cy, 2.9, len / 2, radial(p, cx, cy, 4.5, kernel), p.outline, ang + Math.PI / 2);
+  p.ellipse(cx, cy, 3.2, len / 2, radial(p, cx, cy, 4.5, kernel), p.outline, ang + Math.PI / 2);
+  // glossy streak down the cob, on the lit side
+  const nx = Math.sin(ang) * 1.5;
+  const ny = -Math.cos(ang) * 1.5;
+  p.line(
+    [
+      { x: cx - Math.cos(ang) * 4 + nx, y: cy - Math.sin(ang) * 4 + ny },
+      { x: cx + Math.cos(ang) * 2.5 + nx, y: cy + Math.sin(ang) * 2.5 + ny },
+    ],
+    'rgba(255,255,255,0.6)',
+    0.9,
+  );
   for (let k = 1; k < 5; k++) {
     const mx = x + Math.cos(ang) * len * (0.2 + k * 0.17);
     const my = y + Math.sin(ang) * len * (0.2 + k * 0.17);
@@ -443,9 +512,11 @@ const corn: Painter = (p, stage, c) => {
 
 const blueberry: Painter = (p, stage, c) => {
   const [plant, berry, accent] = c.colors;
-  for (const s of spots(p, QUINCUNX)) {
+  const pts = spots(p, QUINCUNX);
+  for (const s of pts) {
+    const front = s.i === pts.length - 1;
     groundShadow(p, s, 8);
-    const r = stage === 1 ? 5.5 : 7.5;
+    const r = stage === 1 ? 6.2 : 7.6;
     stem(p, s, up(s.x, s.y, 2), up(s.x, s.y, 4), '#7a5a3a', 1.2);
     p.foliage(s.x, s.y - r - 1, r, stage === 1 ? shade(plant, 0.1) : plant, s.i + 21, 7);
     if (stage === 1) {
@@ -456,7 +527,15 @@ const blueberry: Painter = (p, stage, c) => {
       for (let k = 0; k < 8; k++) {
         const a = rand() * Math.PI * 2;
         const d = r * (0.25 + rand() * 0.55);
-        bead(p, s.x + Math.cos(a) * d, s.y - r - 1 + Math.sin(a) * d * 0.8 + 1, 1.6, k % 3 === 0 ? shade(berry, -0.15) : berry, accent);
+        bead(p, s.x + Math.cos(a) * d, s.y - r - 1 + Math.sin(a) * d * 0.8 + 1, 2, k % 3 === 0 ? shade(berry, -0.15) : berry, accent);
+      }
+      if (front) {
+        // one big glossy berry in front of the front bush, with a face
+        const hx = s.x + 0.5;
+        const hy = s.y - 3.2;
+        p.circle(hx, hy, 4.4, radial(p, hx, hy, 4.4, berry));
+        gloss(p, hx, hy, 4.4);
+        face(p, hx, hy + 0.5, 1.2);
       }
     }
   }
@@ -508,7 +587,7 @@ function pumpkinShape(p: Pen, x: number, y: number, rw: number, rh: number, col:
 }
 
 const pumpkin: Painter = (p, stage, c) => {
-  const [plant, fruit, deep] = c.colors;
+  const [plant, fruit] = c.colors;
   vines(p, plant, 'pumpkin', stage === 1 ? '#ffd23f' : null);
   if (stage === 1) {
     const s = p.iso(0.55, 0.45);
@@ -516,15 +595,17 @@ const pumpkin: Painter = (p, stage, c) => {
     return;
   }
   for (const [u, v, rw] of [
-    [0.64, 0.3, 8],
-    [0.32, 0.56, 9],
-    [0.7, 0.7, 7.5],
+    [0.64, 0.3, 8.5],
+    [0.32, 0.56, 9.5],
+    [0.7, 0.7, 9.5],
   ] as const) {
     const pt = p.iso(u, v);
-    pumpkinShape(p, pt.x, pt.y - rw * 0.65, rw, rw * 0.72, fruit, '#6b8a2a');
+    const cy = pt.y - rw * 0.65;
+    pumpkinShape(p, pt.x, cy, rw, rw * 0.72, fruit, '#6b8a2a');
+    // the front pumpkin is the hero
+    if (u === 0.7) face(p, pt.x, cy + 1.2, rw * 0.26);
     p.curve({ x: pt.x + 1, y: pt.y - rw * 1.35 }, { x: pt.x + 4, y: pt.y - rw * 1.6 }, { x: pt.x + 3, y: pt.y - rw * 1.1 }, shade(plant, -0.1), 0.7);
   }
-  void deep;
 };
 
 function sunflowerHead(p: Pen, x: number, y: number, r: number, petal: string, center: string): void {
@@ -601,7 +682,7 @@ const cotton: Painter = (p, stage, c) => {
           [1.3, 0.3],
           [0, -1],
         ])
-          p.circle(bx + ox, by + oy, 1.7, boll, '#9a8f84');
+          p.circle(bx + ox, by + oy, 2, boll, '#9a8f84');
         p.circle(bx - 0.6, by - 1.3, 0.6, '#ffffff', null);
       }
     }
@@ -611,7 +692,7 @@ const cotton: Painter = (p, stage, c) => {
 function grapeBunch(p: Pen, x: number, y: number, col: string, hi: string): void {
   const rows = [4, 3, 2, 1];
   rows.forEach((n, ri) => {
-    for (let k = 0; k < n; k++) bead(p, x + (k - (n - 1) / 2) * 2.2, y + ri * 2, 1.4, (k + ri) % 2 ? col : shade(col, -0.12), hi);
+    for (let k = 0; k < n; k++) bead(p, x + (k - (n - 1) / 2) * 2.2, y + ri * 2, 1.6, (k + ri) % 2 ? col : shade(col, -0.12), hi);
   });
 }
 
@@ -643,6 +724,15 @@ const grape: Painter = (p, stage, c) => {
       for (const u of [0.25, 0.5, 0.75]) {
         const q = p.iso(u, v, 17);
         grapeBunch(p, q.x, q.y, fruit, accent);
+      }
+      if (v === 0.74) {
+        // the front bunch's centre grape is a big glossy one with a face
+        const q = p.iso(0.5, v, 17);
+        const hx = q.x;
+        const hy = q.y + 2.4;
+        p.circle(hx, hy, 3.4, radial(p, hx, hy, 3.4, fruit));
+        gloss(p, hx, hy, 3.4);
+        face(p, hx, hy + 0.4, 0.95);
       }
     }
     p.rect(b.x - 1.1, b.y - 24, 2.2, 24, shade(wood, -0.1));
@@ -696,8 +786,8 @@ const coffee: Painter = (p, stage, c) => {
       if (stage === 2 && k < levels - 1) {
         for (const d of [-1, 1]) {
           const bx = s.x + d * 2.6;
-          bead(p, bx, s.y - z + 0.5, 1.3, cherry);
-          bead(p, bx + d * 1.6, s.y - z + 1.3, 1.2, k % 2 ? shade(cherry, -0.1) : '#e2442c');
+          bead(p, bx, s.y - z + 0.5, 1.6, cherry);
+          bead(p, bx + d * 1.6, s.y - z + 1.3, 1.45, k % 2 ? shade(cherry, -0.1) : '#e2442c');
         }
       }
     }
@@ -759,11 +849,14 @@ const watermelon: Painter = (p, stage, c) => {
     return;
   }
   for (const [u, v, rw, rot] of [
-    [0.62, 0.3, 9, 0.35],
-    [0.35, 0.62, 10, -0.3],
+    [0.62, 0.3, 10, 0.35],
+    [0.35, 0.62, 11.5, -0.3],
   ] as const) {
     const pt = p.iso(u, v);
-    melon(p, pt.x, pt.y - 4.5, rw, rw * 0.62, rind, rot);
+    const cy = pt.y - 4.5;
+    melon(p, pt.x, cy, rw, rw * 0.62, rind, rot);
+    // the front melon is the hero
+    if (u === 0.35) face(p, pt.x, cy + 1.2, 2.6);
   }
   const t = p.iso(0.8, 0.75);
   lobedLeaf(p, t.x, t.y - 2, 3.6, shade(plant, 0.08));
@@ -771,14 +864,24 @@ const watermelon: Painter = (p, stage, c) => {
 
 const cranberry: Painter = (p, stage, c) => {
   const [plant, berry, deep] = c.colors;
-  for (const s of spots(p, grid(4, 0.17, 0.83))) {
-    mound(p, s.x, s.y - 1.5, stage === 1 ? 3.4 : 4, s.i % 2 ? plant : shade(plant, 0.1), s.i + 70);
+  const pts = spots(p, grid(4, 0.17, 0.83));
+  for (const s of pts) {
+    const front = s.i === pts.length - 1;
+    mound(p, s.x, s.y - 1.5, stage === 1 ? 3.8 : 4.2, s.i % 2 ? plant : shade(plant, 0.1), s.i + 70);
     if (stage === 1) {
       if (s.i % 3 === 0) p.circle(s.x + 1, s.y - 3.2, 0.9, '#f6b3c4', null);
     } else {
       const rand = rng(s.i + 90);
       for (let k = 0; k < 3; k++) {
-        bead(p, s.x + (rand() - 0.5) * 6, s.y - 2.5 + (rand() - 0.5) * 3, 1.3, k % 2 ? deep : berry, '#ff9fb0');
+        bead(p, s.x + (rand() - 0.5) * 6, s.y - 2.5 + (rand() - 0.5) * 3, 1.5, k % 2 ? deep : berry, '#ff9fb0');
+      }
+      if (front) {
+        // one plump glossy berry on the front mound, with a face
+        const hx = s.x;
+        const hy = s.y - 3.4;
+        p.circle(hx, hy, 3.6, radial(p, hx, hy, 3.6, berry));
+        gloss(p, hx, hy, 3.6);
+        face(p, hx, hy + 0.5, 0.95);
       }
     }
   }
@@ -835,6 +938,14 @@ function withered(p: Pen): void {
     leaf(p, s.x + side * 0.7, s.y - h * 0.45, 5, side > 0 ? 0.3 : Math.PI - 0.3, 3, leafCols[s.i % 3], 3);
     leaf(p, top.x, top.y, 3.5, side > 0 ? 1.1 : Math.PI - 1.1, 2.5, leafCols[(s.i + 1) % 3], 1);
     leaf(p, s.x, s.y - 1, 4, side > 0 ? Math.PI - 0.15 : 0.15, 2.6, leafCols[(s.i + 2) % 3], 1);
+    // one sad little face on the front plant's drooping leaf
+    if (s.i === 8) {
+      // a pale, drooping leaf carries the sad face so it reads at tile size
+      const fx = s.x + side * 3.4;
+      const fy = s.y - h * 0.45 + 0.6;
+      thin(p, 0.6, () => p.ellipse(fx, fy, 3, 2.5, '#d9c596'));
+      face(p, fx, fy, 1.3, true);
+    }
   }
   // a couple of fallen leaves
   for (const [u, v] of [
@@ -861,23 +972,18 @@ const ICONS: Record<string, IconPainter> = {
     const [plant, fruit, seed] = c.colors;
     iconShadow(p);
     berryShape(p, 20, 20, 9.5, radial(p, 20, 20, 12, fruit));
+    // seeds ring the lower body, leaving room for the face
     const seeds: [number, number][] = [
-      [-4, -3],
-      [0, -2],
-      [4, -3],
-      [-5, 2],
-      [-1.5, 3],
-      [2.5, 2],
-      [6, 1],
-      [-2, 8],
-      [1.5, 8],
-      [0, 12],
+      [-6, 2.5],
+      [6, 2.5],
+      [-3.4, 6.4],
+      [3.4, 6.4],
+      [0, 10],
     ];
     for (const [dx, dy] of seeds) p.ellipse(20 + dx, 20 + dy, 0.7, 1, seed, shade(seed, -0.4));
     for (const a of [Math.PI + 0.35, -0.35]) leaf(p, 20, 12.5, 7, a, 4, plant, 1);
     for (const a of [2.5, 1.6, 0.65]) leaf(p, 20, 12.5, 6, a, 3.6, shade(plant, 0.1));
     p.line([{ x: 20, y: 12.5 }, { x: 21, y: 7 }], shade(plant, -0.2), 1.6);
-    p.ellipse(15.5, 17, 2, 3.2, 'rgba(255,255,255,0.45)', null, 0.5);
   },
   wheat: (p, c) => {
     const [, grain, accent] = c.colors;
@@ -1134,11 +1240,10 @@ const ICONS: Record<string, IconPainter> = {
     finish(p, p.vgrad(cy, cy + 9, shade(flesh, 0.1), shade(flesh, -0.08)), null);
     p.line([{ x: cx - 11, y: cy }, { x: cx + 11, y: cy }], p.outline, 1);
     for (const [dx, dy] of [
-      [-4, 3],
-      [0, 5],
-      [4, 3],
-      [-2, 2],
-      [2.5, 6.5],
+      [-6, 1.5],
+      [6, 1.5],
+      [-1.8, 8],
+      [2.2, 8],
     ])
       p.ellipse(cx + dx, cy + dy, 0.7, 1.1, '#3a2a20', null);
   },
@@ -1185,17 +1290,50 @@ export const sprites: SpriteSpec[] = [
     const painter = PAINTERS[c.id] ?? genericPlant;
     return [
       { key: `crop:${c.id}:0`, fw: 1, fh: 1, height, paint: (p: Pen) => sprout(p, c) },
-      { key: `crop:${c.id}:1`, fw: 1, fh: 1, height, paint: (p: Pen) => painter(p, 1, c) },
+      {
+        key: `crop:${c.id}:1`,
+        fw: 1,
+        fh: 1,
+        height,
+        paint: (p: Pen) => {
+          p.lineWidth = 0.8; // growing plants have softer outlines
+          painter(p, 1, young(c));
+        },
+      },
       { key: `crop:${c.id}:2`, fw: 1, fh: 1, height, paint: (p: Pen) => painter(p, 2, c) },
     ];
   }),
   { key: 'crop:withered', fw: 1, fh: 1, height: 20, paint: withered },
 ];
 
+/** Where each icon's face sits, as [x, y, k] (k = half the eye gap in px). */
+const ICON_FACE: Record<string, [number, number, number]> = {
+  strawberry: [20, 18, 3.2],
+  wheat: [20, 16, 2.6],
+  carrot: [19, 21, 2.6],
+  tomato: [20, 22, 3.6],
+  potato: [19, 20, 3],
+  corn: [20, 19, 2.4],
+  blueberry: [20.5, 28.5, 2.5],
+  pumpkin: [20, 24, 4],
+  sunflower: [20, 18.5, 2.6],
+  cotton: [20, 21.5, 2.6],
+  grape: [20, 22.4, 1.5],
+  rice: [20, 16.5, 2.8],
+  coffee: [20, 28.5, 2.2],
+  lavender: [20, 17, 2.4],
+  watermelon: [15, 27.5, 2.6],
+  cranberry: [20, 18.5, 2.1],
+};
+
 export const icons: IconSpec[] = CROP_LIST.map((c) => ({
   key: `icon:${c.id}`,
   paint: (p: Pen) => {
     p.outline = OUTLINE;
     (ICONS[c.id] ?? genericIcon)(p, c);
+    // every icon gets a face; unlisted (new) crops use the generic body's centre
+    const [x, y, k] = ICON_FACE[c.id] ?? [20, 20, 3.2];
+    p.glow(x - k, y - k * 1.2, k * 2.4, '#ffffff', 0.3); // soft highlight on the body
+    face(p, x, y, k);
   },
 }));

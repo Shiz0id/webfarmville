@@ -376,6 +376,7 @@ const CAT_LABEL: Record<ItemCategory, string> = {
   fruit: '🍎 Fruit',
   animal: '🥚 Animal goods',
   good: '🧺 Crafted goods',
+  special: '🍬 Special',
 };
 
 export function openBarn(): void {
