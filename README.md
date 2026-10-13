@@ -160,6 +160,24 @@ npm run build        # builds client/dist
 npm start            # serves the API and the built client on http://localhost:3001
 ```
 
+### GitHub Pages (no server)
+
+The game also ships as a browser-only build that needs no server. The farm is saved on the player's device
+(localStorage), and the shared rules and the villagers' farms run in the page. Neighbors are the villagers: you can
+visit, help and send gifts to them. The Farmhouse has **💾 Back up** and **📂 Restore** buttons that move a farm
+between devices as a file.
+
+```bash
+npm run dev:local -w client   # play the browser-only build at http://localhost:5173
+npm run build:pages           # builds client/dist-pages (relative paths, so any static host works)
+```
+
+`.github/workflows/pages.yml` tests, builds and deploys this build on every push to `main`. It can also be run
+by hand from the Actions tab. You only need to set it up once: in the repository, go to **Settings → Pages →
+Build and deployment** and set **Source** to **GitHub Actions**. `node scripts/pages-check.mjs <screenshot-dir>
+[url] [WxH]` play-tests a built copy. By default it expects the copy to be served at
+`http://localhost:8099/webfarmville/`.
+
 Environment variables:
 
 | Variable          | Default        | Purpose                                                       |

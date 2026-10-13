@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { EVENTS, MAMA, MAMA_BRAGS, QUESTS, RIBBONS, RIBBON_COLORS } from '@farm/shared';
+import { EVENTS, EVENT_QUESTS_AFTER, MAMA, MAMA_BRAGS, QUESTS, RIBBONS, RIBBON_COLORS } from '@farm/shared';
 import { nameOf } from './util';
 import { initCooking } from './ui/cooking';
 import './style.css';
@@ -192,7 +192,8 @@ async function start(): Promise<void> {
   } catch {
     /* ignore */
   }
-  if (feature && !seen && store.state.stats.harvest !== undefined) {
+  // The festival greeting waits until its quests have arrived (after the opening steps).
+  if (feature && !seen && store.state.quests.completed.includes(EVENT_QUESTS_AFTER)) {
     try {
       localStorage.setItem(introSeen, '1');
     } catch {

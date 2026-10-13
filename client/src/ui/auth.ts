@@ -1,4 +1,5 @@
-import { api, setToken, type MePayload } from '../api';
+import { LOCAL, api, setToken, type MePayload } from '../api';
+import { pickBackup } from './backup';
 import { DECORATION_LIST } from '@farm/shared';
 import { artURL, hasArt, iconURL } from '../art';
 import { featuredEvent } from '../events';
@@ -75,17 +76,32 @@ export function showAuth(): Promise<MePayload> {
     tabReg.onclick = () => setMode('register');
     tabLogin.onclick = () => setMode('login');
 
+    // The browser-only build keeps the farm on this device: just a name, no password.
+    const restore = h(
+      'button',
+      {
+        class: 'btn ghost small',
+        type: 'button',
+        onclick: () =>
+          pickBackup()
+            .then(() => location.reload())
+            .catch((err) => (error.textContent = (err as Error).message)),
+      },
+      '📂 I have a backup',
+    );
+    if (LOCAL) user.placeholder = 'Your name';
     const form = h(
       'form',
       { class: 'auth-card' },
       h('img', { class: 'auth-logo', src: iconURL('sunflower'), alt: '' }),
       h('h1', null, 'Meadowbrook Farm'),
-      h('p', null, 'Grow crops, raise animals, decorate, and visit your neighbors.'),
-      h('div', { class: 'auth-tabs' }, tabReg, tabLogin),
+      h('p', null, LOCAL ? 'Grow crops, raise animals, decorate, and visit the villagers. Your farm is saved on this device.' : 'Grow crops, raise animals, decorate, and visit your neighbors.'),
+      LOCAL ? null : h('div', { class: 'auth-tabs' }, tabReg, tabLogin),
       user,
-      pass,
+      LOCAL ? null : pass,
       error,
       submit,
+      LOCAL ? restore : null,
     );
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

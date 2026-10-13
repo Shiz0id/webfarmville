@@ -1,4 +1,8 @@
 import type { FarmState, GameEvent, HelpKind, TimedAction } from '@farm/shared';
+import { hasLocalFarm, localApi } from './local';
+
+/** The browser-only build (GitHub Pages): the farm is saved on this device, with no server. */
+export const LOCAL = import.meta.env.VITE_LOCAL === '1';
 
 const TOKEN_KEY = 'farm.token';
 
@@ -12,6 +16,7 @@ export class ApiError extends Error {
 }
 
 export function getToken(): string | null {
+  if (LOCAL) return hasLocalFarm() ? 'local' : null;
   try {
     return localStorage.getItem(TOKEN_KEY);
   } catch {
@@ -20,6 +25,7 @@ export function getToken(): string | null {
 }
 
 export function setToken(token: string | null): void {
+  if (LOCAL) return;
   try {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
@@ -105,7 +111,7 @@ export interface HelpPayload {
   serverTime: number;
 }
 
-export const api = {
+const serverApi = {
   register: (username: string, password: string) =>
     request<MePayload & { token: string }>('/api/auth/register', { username, password }),
   login: (username: string, password: string) =>
@@ -126,3 +132,5 @@ export const api = {
     request<{ ok: true; myState: FarmState; myRev: number }>('/api/gifts/send', { username, gift }),
   claimGift: (id: number) => request<{ ok: true; state: FarmState; rev: number }>('/api/gifts/claim', { id }),
 };
+
+export const api: typeof serverApi = LOCAL ? localApi : serverApi;

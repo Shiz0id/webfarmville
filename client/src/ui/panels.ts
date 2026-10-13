@@ -49,6 +49,8 @@ import { setTool } from '../tools';
 import { fmtDuration, fmtNum, h, nameOf, timeAgo } from '../util';
 import { confetti, openModal, toast } from './dom';
 import { forFingers } from './layout';
+import { downloadBackup, pickBackup } from './backup';
+import { LOCAL } from '../api';
 import { portrait } from './villager';
 import { eventLive as liveEvent } from '../events';
 import { bus } from '../bus';
@@ -566,7 +568,9 @@ export function openBarn(): void {
 }
 
 function closeTop(): void {
-  document.querySelector<HTMLButtonElement>('.modal-back:last-child .close')?.click();
+  // The newest panel (toasts and tooltips may sit after it in the DOM).
+  const backs = document.querySelectorAll('.modal-back');
+  backs[backs.length - 1]?.querySelector<HTMLButtonElement>('.close')?.click();
 }
 
 // ---------------------------------------------------------------------------
@@ -883,7 +887,9 @@ export function openNeighbors(): void {
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') void add();
   });
-  const top = h(
+  const top = LOCAL
+    ? h('div', { class: 'muted small center', style: { margin: '0 0 12px' } }, 'The villagers are your neighbors: drop by, lend a hand and swap gifts every day.')
+    : h(
     'div',
     null,
     h('div', { class: 'section-title' }, '➕ Add a neighbor'),
@@ -1141,7 +1147,24 @@ export function openFarmhouse(): void {
             },
             '📸 Save a postcard',
           ),
-          h('button', { class: 'btn small', onclick: () => S.logout() }, 'Log out'),
+          ...(LOCAL
+            ? [
+                h('button', { class: 'btn small', onclick: () => downloadBackup(st.name) }, '💾 Back up'),
+                h(
+                  'button',
+                  {
+                    class: 'btn small',
+                    onclick: () => {
+                      if (!confirm('Restore a backup? The farm on this device will be replaced by the one in the file.')) return;
+                      pickBackup()
+                        .then(() => location.reload())
+                        .catch((err) => toast((err as Error).message, 'error'));
+                    },
+                  },
+                  '📂 Restore',
+                ),
+              ]
+            : [h('button', { class: 'btn small', onclick: () => S.logout() }, 'Log out')]),
         ),
       );
     },

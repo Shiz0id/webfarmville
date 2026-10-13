@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "vite --mode pages",
     "build": "vite build",
-    "preview": "vite preview"
+    "build:pages": "vite build --mode pages --base ./ --outDir dist-pages",
+    "preview": "vite preview",
+    "preview:pages": "vite preview --outDir dist-pages --base ./"
   },
   "dependencies": {
     "@farm/shared": "*",
