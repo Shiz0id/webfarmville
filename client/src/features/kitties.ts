@@ -24,7 +24,7 @@ import { RES, artURL, hasArt, iconURL, texture } from '../art';
 import { sfx } from '../sfx';
 import { tools } from '../tools';
 import { confetti, openModal, toast } from '../ui/dom';
-import { openShop } from '../ui/panels';
+import { openDecor } from '../ui/decor';
 import { fmtDuration, h, nameOf } from '../util';
 import type { FarmScene } from '../scenes/FarmScene';
 import type { Store } from '../store';
@@ -300,8 +300,8 @@ function openKittyCorner(): void {
     if (!hasBowl(st)) {
       foodRow.append(
         h('img', { class: 'ico big', src: artURL('deco:kitty_bowl') }),
-        h('div', { class: 'grow' }, h('div', { class: 'title' }, 'Put out a Kitty Food Bowl'), h('div', { class: 'sub' }, 'Cats only visit farms with food. Find bowls and goodies in Market › Decor › Kitty Corner.')),
-        h('button', { class: 'btn green', onclick: () => (m.close(), openShop('decor')) }, 'Shop 🛒'),
+        h('div', { class: 'grow' }, h('div', { class: 'title' }, 'Put out a Kitty Food Bowl'), h('div', { class: 'sub' }, 'Cats only visit farms with food. Find bowls and goodies on the Decor page, in Kitty Corner.')),
+        h('button', { class: 'btn green', onclick: () => (m.close(), openDecor({ cat: 'kitty' })) }, 'Decor 🌷'),
       );
     } else {
       foodRow.append(

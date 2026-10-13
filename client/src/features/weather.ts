@@ -6,6 +6,7 @@ import Phaser from 'phaser';
 import { WEATHER, forecast, thirstyPlots, weatherAt, type Weather } from '@farm/shared';
 import { dayPhase } from '../scenes/ambience';
 import { setAmbient, thunder } from '../sfx';
+import { setMusicMood } from '../music/engine';
 import { openModal, toast } from '../ui/dom';
 import { h } from '../util';
 import type { FarmScene } from '../scenes/FarmScene';
@@ -27,6 +28,13 @@ const shown = (): Weather => forced() ?? weatherAt(S.now());
 
 export function init(ctx: FeatureContext): void {
   S = ctx.store;
+  // The farm's own songs follow the sky and the clock.
+  setMusicMood(() => {
+    const w = shown();
+    if (w === 'snow') return 'snow';
+    if (w === 'rain' || w === 'storm') return 'rain';
+    return ({ dawn: 'morning', day: 'day', dusk: 'evening', night: 'night' } as const)[dayPhase()];
+  });
   const em = h('span', { class: 'wx-em' });
   const label = h('span', { class: 'wx-label' });
   const pill = h('div', { class: 'pill wx-pill', title: 'Weather', onclick: openForecast }, em, label);

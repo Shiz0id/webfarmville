@@ -154,9 +154,11 @@ export function expectedKeys(mod: string): string[] {
     // UI icons: the HUD toolbar and corner buttons (drawn as their emoji until painted).
     ui_icons: () => [
       'ui:hand',
+      'ui:harvest',
       'ui:plow',
       'ui:water',
       'ui:market',
+      'ui:decor',
       'ui:cook',
       'ui:fish',
       'ui:garage',

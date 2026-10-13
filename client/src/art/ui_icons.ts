@@ -293,6 +293,45 @@ function uiMarket(p: Pen): void {
   glint(p, 9, 7.6, 6, 0.5, 0, 0.6);
 }
 
+/** A glowing garden lantern on a stone plinth, with a pink bow on its post and a little pink flower beside it. */
+function uiDecor(p: Pen): void {
+  p.lineWidth = 1.1;
+  ground(p, 20, 12.5);
+  // a warm halo, drawn first so it sits behind the lantern
+  p.glow(20, 21, 14, BUTTER, 0.6);
+  // the squat stone plinth the lantern stands on
+  p.roundRect(9.6, 30.8, 20.8, 5.2, 2.2, p.vgrad(30.8, 36, '#f6e3cc', '#d9b596'));
+  // the wide wooden collar, which sits on the plinth
+  p.roundRect(13.6, 27.6, 12.8, 3.6, 1.4, WOOD_L);
+  // the chunky lantern body: a wide tapered box of butter glass, lit from within
+  p.poly(
+    [pt(13.4, 14.4), pt(26.6, 14.4), pt(28, 28.4), pt(12, 28.4)],
+    p.vgrad(14.4, 28.4, BUTTER_L, '#ffd66e'),
+  );
+  p.ellipse(20, 21.2, 3.6, 4.8, CREAM_W, null);
+  glint(p, 15.2, 20.8, 1.1, 4.4, 0.1, 0.8);
+  // the wide pink peaked cap, with a butter finial
+  p.poly([pt(8.4, 15), pt(31.6, 15), pt(20, 7.2)], p.vgrad(7.2, 15, '#ffd0e0', PINK));
+  p.circle(20, 5.8, 1.5, BUTTER);
+  glint(p, 15.6, 11.4, 1.1, 0.55, -0.55, 0.8);
+  // a small pink bow tied on the collar: two loops and a knot
+  p.poly([pt(20, 29.4), pt(16.2, 26.6), pt(16.4, 32.2)], PINK);
+  p.poly([pt(20, 29.4), pt(23.8, 26.6), pt(23.6, 32.2)], PINK);
+  p.circle(20, 29.4, 1.5, PINK_DD);
+  // a bigger flower tucked close beside the plinth: a stalk, a leaf, five petals
+  stalk(p, pt(33.2, 36.2), pt(32.8, 33.4), pt(33.8, 30.8), 1.4);
+  leaf(p, 33, 34.2, -0.5, 4.2);
+  const fx = 33.8;
+  const fy = 28.2;
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+    p.circle(fx + Math.cos(a) * 2.6, fy + Math.sin(a) * 2.6, 2.6, PINK, O);
+  }
+  p.circle(fx, fy, 1.6, BUTTER, O);
+  // one small sparkle in the top right
+  sparkle(p, 34.4, 9.6, 2.4);
+}
+
 /** A frying pan with a sunny-side egg and a wisp of steam. */
 function uiCook(p: Pen): void {
   p.lineWidth = 1.1;
@@ -460,6 +499,99 @@ function uiSell(p: Pen): void {
   p.circle(30.5, 31.6, 5.4, p.vgrad(26, 37, GOLD_L, GOLD_D));
   p.circle(30.5, 31.6, 3.4, null, shade(GOLD, -0.3));
   glint(p, 28.4, 29.4, 1.2, 2, 0.4, 0.8);
+}
+
+/** A wicker basket with a handle, one big strawberry in front and a carrot tucked behind, with two light swoosh arcs on the left for a quick swipe. */
+function uiHarvest(p: Pen): void {
+  p.lineWidth = 1.1;
+  const c = p.ctx;
+  ground(p, 20, 12.5, 36.6);
+  // the handle: a thin clean arch behind everything, its ends hidden under the rim
+  arcBar(p, 20, 21.5, 8.6, Math.PI, Math.PI * 2, 1.8, WOOD);
+  // the carrot, tucked behind the strawberry with its leafy top poking out
+  const top = pt(28.4, 14.6);
+  const tipPt = pt(31.2, 23.4);
+  const dx = tipPt.x - top.x;
+  const dy = tipPt.y - top.y;
+  const len = Math.hypot(dx, dy);
+  const ux = dx / len;
+  const uy = dy / len;
+  const at = (t: number, s: number): Pt => pt(top.x + ux * len * t - uy * s, top.y + uy * len * t + ux * s);
+  p.poly([at(0, -2.2), at(0.25, -2.5), at(0.9, -0.9), at(1, 0), at(0.9, 0.9), at(0.25, 2.5), at(0, 2.2)], ORANGE);
+  leaf(p, top.x, top.y, -2.3, 3.6, LEAF_D);
+  leaf(p, top.x, top.y, -1, 3.8);
+  // the basket body: a tapered wicker bowl, light and warm, outlined at its edges
+  const body = (): void => {
+    c.beginPath();
+    c.moveTo(8.6, 23);
+    c.lineTo(31.4, 23);
+    c.lineTo(29.6, 33.4);
+    c.quadraticCurveTo(29.2, 35.2, 27.2, 35.2);
+    c.lineTo(12.8, 35.2);
+    c.quadraticCurveTo(10.8, 35.2, 10.4, 33.4);
+    c.closePath();
+  };
+  body();
+  c.fillStyle = p.vgrad(23, 35.2, WOOD_L, WOOD);
+  c.fill();
+  c.strokeStyle = O;
+  c.lineWidth = 1.1;
+  c.stroke();
+  // two soft horizontal weave bands, with a few short vertical ticks between them
+  c.save();
+  body();
+  c.clip();
+  for (const y of [27.2, 31.4]) p.line([pt(7, y), pt(33, y)], 'rgba(74,52,38,0.22)', 1);
+  for (const x of [14.6, 20, 25.4]) p.line([pt(x, 28.4), pt(x, 30.2)], 'rgba(74,52,38,0.26)', 0.9);
+  c.restore();
+  // the rim
+  p.roundRect(7, 21.4, 26, 4.2, 2.1, WOOD_L);
+  // the big strawberry, front and centre, overlapping the rim
+  c.beginPath();
+  c.moveTo(20, 25.8);
+  c.bezierCurveTo(16.4, 23.8, 14.2, 20.6, 14.2, 17.8);
+  c.bezierCurveTo(14.2, 16.6, 17, 16.2, 20, 16.6);
+  c.bezierCurveTo(23, 16.2, 25.8, 16.6, 25.8, 17.8);
+  c.bezierCurveTo(25.8, 20.6, 23.6, 23.8, 20, 25.8);
+  c.closePath();
+  c.fillStyle = p.vgrad(16.2, 25.8, '#ff97a5', RED_D);
+  c.fill();
+  c.strokeStyle = O;
+  c.lineWidth = 1.1;
+  c.stroke();
+  for (const [x, y] of [
+    [18.8, 19.6],
+    [23.2, 19.6],
+    [17.4, 22.6],
+    [22.6, 22.6],
+  ] as [number, number][]) {
+    p.circle(x, y, 0.8, CREAM_W, null);
+  }
+  glint(p, 16.2, 19.4, 0.9, 2.2, 0.35, 0.8);
+  // a clear green leafy cap: two spreading leaves and a stubby one up top
+  leaf(p, 20, 17.2, 2.9, 5, LEAF_D);
+  leaf(p, 20, 17.2, 0.24, 5, LEAF_D);
+  leaf(p, 20, 17.2, -1.57, 3.2, LEAF);
+  // two soft motion arcs on the left: quadratic curves whose width swells then tapers, cream with a thin outline
+  const swoosh = (P0: Pt, P1: Pt, P2: Pt, maxW: number): void => {
+    const N = 10;
+    const at = (t: number): Pt =>
+      pt(
+        (1 - t) * (1 - t) * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x,
+        (1 - t) * (1 - t) * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y,
+      );
+    const segs: [Pt, Pt, number][] = [];
+    for (let i = 0; i < N; i++) {
+      segs.push([at(i / N), at((i + 1) / N), 1 + (maxW - 1) * Math.sin((Math.PI * (i + 0.5)) / N)]);
+    }
+    c.lineCap = 'round';
+    // the outline underlay first, so the cream strokes don't show seams
+    for (const [a, b, w] of segs) p.line([a, b], O, w + 1.1);
+    for (const [a, b, w] of segs) p.line([a, b], CREAM_W, w);
+    c.lineCap = 'butt';
+  };
+  swoosh(pt(11.5, 8.8), pt(4.2, 14.6), pt(8.2, 19.2), 2.6);
+  swoosh(pt(5.6, 24.6), pt(1.6, 27.8), pt(4.6, 33.4), 2.2);
 }
 
 // ---------------------------------------------------------------------------
@@ -875,9 +1007,11 @@ function uiMail(p: Pen): void {
 export const icons: IconSpec[] = [
   // Toolbar
   { key: 'ui:hand', paint: uiHand },
+  { key: 'ui:harvest', paint: uiHarvest },
   { key: 'ui:plow', paint: uiPlow },
   { key: 'ui:water', paint: uiWater },
   { key: 'ui:market', paint: uiMarket },
+  { key: 'ui:decor', paint: uiDecor },
   { key: 'ui:cook', paint: uiCook },
   { key: 'ui:fish', paint: uiFish },
   { key: 'ui:garage', paint: uiGarage },

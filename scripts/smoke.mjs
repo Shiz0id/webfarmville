@@ -92,7 +92,7 @@ await page.waitForTimeout(200);
 await page.click('.modal-tabs button:has-text("Decor")');
 await page.waitForTimeout(500);
 await shot('04-shop-seasonal');
-await page.click('.chip:has-text("Flowers")');
+await page.click('.decor-cat:has-text("Flowers")');
 await page.waitForTimeout(300);
 await shot('05-shop-flowers');
 await page.click('.card:has-text("Daisy Patch")');

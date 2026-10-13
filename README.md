@@ -1,7 +1,7 @@
 # 🌻 Meadowbrook Farm
 
 A cozy isometric farming game for the browser, in the spirit of classic social farm games and Animal Crossing.
-Plow and plant, raise animals, grow an orchard, craft goods in workshops, decorate with 150+ wholesome
+Plow and plant, raise animals, grow an orchard, craft goods in workshops, decorate with 400+ wholesome
 decorations (including seasonal holiday sets), and visit your neighbors to help out and send gifts.
 
 All of the art is drawn in code at startup, so there are no image assets to download or license.
@@ -92,7 +92,7 @@ All of the art is drawn in code at startup, so there are no image assets to down
   head start, once per crop. The can holds 10 splashes and slowly trickles back by itself, or tap a Wishing Well or
   Water Pump to fill it to the brim (each well refills every two hours). On rainy days the sky does the watering.
 - **Mystery gifts**: surprise presents that drop while you farm and unwrap into decorations.
-- **About 320 decorations** in six collections:
+- **Over 400 decorations** in six collections:
   - *core*: flowers, plants, fences, paths, furniture, lights, water and whimsy
   - *holiday lifestyle*
   - *Gardening Mama-style horticulture*
@@ -102,6 +102,15 @@ All of the art is drawn in code at startup, so there are no image assets to down
 
   Windmills spin, flames flicker, fountains splash, ghosts float and trees sway. A **Decor Catalog** tracks
   everything you've collected.
+- **The Decor page** (the pink Decor button next to the Market, or the lantern in the corner on phones) holds
+  every decoration:
+  - It has a category rail, search (by name, category or festival), sorting, and *Can afford* and *New to me*
+    filters.
+  - The Seasonal shelf includes each festival's token shop.
+  - A Rewards shelf shows the decorations you earn rather than buy, and how to earn each one.
+  - A Storage tab holds everything the Store tool has tucked away.
+  - The page remembers where you were, so you can place something and pop straight back.
+  - `node scripts/decor-check.mjs <screenshot-dir>` tests it.
 - **15 seasonal events**: Lunar New Year, Valentine's Day, St. Patrick's Day, Cherry Blossom Viewing, the
   Spring Egg Hunt, Earth Day, the Summer Festival, the Star Festival, the Mid-Autumn Moon Festival, the Harvest
   Festival, Halloween, the Festival of Lights, Thanksgiving, the Winter Holidays and New Year. Each one has:
@@ -109,12 +118,19 @@ All of the art is drawn in code at startup, so there are no image assets to down
   - an event crop and costumed **visitors** (trick-or-treaters, carolers, lion dancers, egg hunters and more)
   - animals in **costumes**
   - a quest chain
-  - its own music-box tune, particles, lighting and title screen
+  - a playlist of **three or four songs**, holiday touches on the UI sounds (sleigh bells, firecrackers, a
+    bubbling cauldron, birdsong, a gobble...), particles, lighting and a title screen
 - **Villagers**: Mayor Maple, Henrietta, Penny, Rosie, Grandma Fern and Mama Marigold, each with a painted
   portrait, quests and a themed farm you can visit and help.
 - **Ribbons**: FarmVille-style yellow, white, red and blue ribbons for lifetime milestones.
 - **Coziness**:
-  - A procedural music box and synthesized sound effects (no audio files).
+  - A **music box of 66 songs**, all synthesized (no audio files). Outside festivals the farm's own songs follow
+    the clock and the sky: morning, day, evening, night, rain and snow. Every festival has its own playlist,
+    with public-domain tunes arranged for their holidays (Jingle Bells, Deck the Halls, Greensleeves, Sakura,
+    Auld Lang Syne...) next to new ones. Instruments include a music box, koto, erhu, tin whistle, sitar, steel
+    pan and theremin, with drums to match: taiko, bodhrán, tabla and sleigh bells. Songs are written in
+    `client/src/music/tracks.ts` and composed and arranged by `client/src/music/compose.ts`. Each song plays a
+    few times through, arranged a bit differently each time, then rests and gives way to another.
   - Day/night lighting from your local clock, with glowing lamps and fireflies.
   - Seasonal weather and grass, drifting clouds and butterflies, and a puppy and kitten who wander your farm.
   - Coins that fly to your HUD, and farm postcards you can save.
@@ -201,7 +217,7 @@ npm test             # game-rule and API tests (vitest)
 npm run typecheck    # TypeScript across all packages
 ```
 
-There are also two helper scripts:
+There are also some helper scripts:
 
 - `node scripts/art-sheet.mjs <module|all> out.png` renders a contact sheet of the generated art. Modules are
   `crops`, `trees`, `animals`, `buildings`, `goods`, `ground`, `decorations`, `seasonal`, `lifestyle`,
@@ -209,6 +225,8 @@ There are also two helper scripts:
   `events_a` through `events_e`, `cooking`, `portraits`, `pets`, `fx` and the newer feature modules (`mastery`,
   `collections`, `nursery`, ...). You can also view
   it live at http://localhost:5173/art-preview.html?mod=all.
+- `node scripts/swipe-check.mjs <screenshot-dir> [url]` checks touch farming on the browser-only build with real
+  multi-touch swipes: harvest and seed strokes, two-finger panning and the hand.
 - `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Companion
   scripts check other features (`scripts/blooms-check.mjs` and `scripts/collections-check.mjs` run with `npx tsx`;
   `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs`, `scripts/water-check.mjs`, `scripts/nursery-check.mjs`, `scripts/feedmill-check.mjs`, `scripts/vehicles-check.mjs`, `scripts/helpers-check.mjs` and `scripts/workshops-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
@@ -219,13 +237,18 @@ There are also two helper scripts:
 
 ## Controls
 
-- **Click** things to harvest, collect or open them. **Drag** across crops to harvest a whole field.
-- Use the **toolbar** to switch between Hand, Plow, Seeds, Water, Market, Move, Store and Sell, or open the Garage
-  to drive a vehicle.
-- **Drag** empty ground (or right-drag) to pan the camera. **Scroll** or pinch to zoom. **WASD** or the arrow
-  keys also pan.
+- The **Hand** taps things to harvest, collect or open them, and drags to look around.
+- The **🧺 Harvest** basket is for sweeping: swipe or drag anywhere across the farm and everything ripe along the way
+  is gathered (crops, animals, trees, finished crafts and withered plots). The **Seeds** bag works the same way
+  for planting. A stroke never moves the camera, fast swipes are traced tile by tile so nothing is skipped, and
+  the pops climb a little scale as you go. The seed bag only plows new ground when a stroke starts on grass, so
+  swiping across a field never plows the lawn around it.
+- Use the **toolbar** to switch between Hand, Harvest, Plow, Seeds, Water, Market, Move, Store and Sell, or open
+  the Garage to drive a vehicle. When things are ready, tap the "✨ N ready" hint to pick up the basket.
+- On touch screens, **two fingers** move the camera with any tool, and pinching zooms. With a mouse, right-drag
+  pans with any tool. **Scroll** zooms, and **WASD** or the arrow keys also pan.
 - **R** flips a decoration while placing or moving it. **Esc** or right-click cancels.
-- **Phones** get their own layout: a dock with Hand, Plow, Seeds, Water and Market (the other tools wait behind
+- **Phones** get their own layout: a dock with Hand, Harvest, Seeds, Water and Market (the other tools wait behind
   **More**), Quests, Orders and Barn on the side with everything else in the **Farm Menu**, and panels that slide
   up as sheets (swipe one down to close it). While a tool is busy, the hint above the dock has **Flip** and
   **Done** buttons in place of R and Esc. **Tablets** keep the full toolbar with bigger, labelled buttons.
@@ -233,7 +256,9 @@ There are also two helper scripts:
   the how-to on iPhones). A service worker keeps the game files on the device. The app icons are painted from the
   game's own art by `node scripts/app-icons.mjs`.
 - Add `?hour=22` to the URL to preview night time (or any hour of the day), and `?event=winter` (or any event id)
-  to preview an event's look, music and visitors any time of year.
+  to preview an event's look, music and visitors any time of year (`?event=none` turns festivals off). `?music=`
+  pins a playlist or a song by id (`?music=rain`, `?music=jingle_bells`). `node scripts/music-check.mjs
+  <screenshot-dir>` renders every song offline to check the mix, then checks which playlist plays when.
 
 ## Adding content
 

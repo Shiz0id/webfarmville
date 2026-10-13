@@ -1,6 +1,6 @@
 import { bus } from './bus';
 
-export type Tool = 'hand' | 'plow' | 'seed' | 'water' | 'move' | 'store' | 'sell' | 'place' | 'vehicle';
+export type Tool = 'hand' | 'harvest' | 'plow' | 'seed' | 'water' | 'move' | 'store' | 'sell' | 'place' | 'vehicle';
 
 export interface PlaceMode {
   def: string;

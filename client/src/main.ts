@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { EVENTS, EVENT_QUESTS_AFTER, MAMA, MAMA_BRAGS, QUESTS, RIBBONS, RIBBON_COLORS } from '@farm/shared';
 import { nameOf } from './util';
 import { initCooking } from './ui/cooking';
+import { initDecor } from './ui/decor';
+import { initCards } from './ui/cards';
 import './style.css';
 import { ApiError, api, getToken, setToken, type MePayload } from './api';
 import { buildArt } from './art';
@@ -11,7 +13,9 @@ import { Store } from './store';
 import { openInvite, readInvite } from './share';
 import type { FarmSnapshot } from '@farm/shared';
 import { featuredEvent } from './events';
-import { setMusicStyle, sfx, unlockAudioOnGesture } from './sfx';
+import { setSfxFlavor, sfx, unlockAudioOnGesture } from './sfx';
+import { nowPlaying, renderTrack, setPlaylist } from './music/engine';
+import { PLAYLISTS } from './music/tracks';
 import { setTool } from './tools';
 import { showAuth } from './ui/auth';
 import { closeAllModals, setupTooltip, toast } from './ui/dom';
@@ -56,7 +60,8 @@ async function start(): Promise<void> {
 
   const store = new Store(me);
   const feature = featuredEvent(store.now(), store.allEvents);
-  setMusicStyle(feature?.music ?? 'default');
+  setPlaylist(feature?.event ?? null);
+  setSfxFlavor(feature?.event ?? null);
   if (feature) {
     document.body.classList.add('festive', `event-${feature.event}`);
     document.body.style.setProperty('--event', EVENTS[feature.event].color);
@@ -77,6 +82,8 @@ async function start(): Promise<void> {
 
   const recenter = () => scene().centerCamera();
   initPanels(store, recenter);
+  initDecor(store);
+  initCards(store);
   initCooking(store);
   const sceneWaiters: ((s: FarmScene) => void)[] = [];
   let sceneReady = false;
@@ -194,7 +201,7 @@ async function start(): Promise<void> {
   window.addEventListener('hashchange', () => {
     void readInvite().then((snap) => snap && openInvite(store, snap).then(recenter));
   });
-  if (import.meta.env.DEV || location.search.includes('debug')) Object.assign(window, { __farm: { store, scene } });
+  if (import.meta.env.DEV || location.search.includes('debug')) Object.assign(window, { __farm: { store, scene, music: { renderTrack, PLAYLISTS, nowPlaying } } });
   const greet = () => greetings(store, feature, openQuests);
   if (invite) {
     // Straight to the friend's farm; the usual hellos wait until you're home.
