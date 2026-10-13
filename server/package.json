@@ -1,0 +1,19 @@
+{
+  "name": "@farm/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@farm/shared": "*",
+    "express": "^5.1.0",
+    "tsx": "^4.20.6"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.18.0"
+  }
+}

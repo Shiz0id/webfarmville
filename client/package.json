@@ -1,0 +1,21 @@
+{
+  "name": "@farm/client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:local": "vite --mode pages",
+    "build": "vite build",
+    "build:pages": "vite build --mode pages --base ./ --outDir dist-pages",
+    "preview": "vite preview",
+    "preview:pages": "vite preview --outDir dist-pages --base ./"
+  },
+  "dependencies": {
+    "@farm/shared": "*",
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^7.3.7"
+  }
+}

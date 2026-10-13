@@ -1,0 +1,137 @@
+// Every stackable thing that can sit in a player's barn: harvested produce,
+// animal products and crafted goods. Decorations held in storage use their
+// decoration id instead and are looked up in DECORATIONS.
+
+import { DISH_LIST } from './cooking';
+import { FEED_ITEMS } from './feedmill';
+import { HELPER_ITEMS } from './helpers';
+import { CRITTER_LIST } from './nature';
+import { table } from './table';
+
+export type ItemCategory = 'crop' | 'fruit' | 'animal' | 'good' | 'dish' | 'fish' | 'bug' | 'special';
+
+export interface ItemDef {
+  id: string;
+  name: string;
+  category: ItemCategory;
+  /** Coins received when sold at the market. */
+  sell: number;
+}
+
+const item = (id: string, name: string, category: ItemCategory, sell: number): ItemDef => ({
+  id,
+  name,
+  category,
+  sell,
+});
+
+export const ITEM_LIST: ItemDef[] = [
+  // Crops
+  item('strawberry', 'Strawberry', 'crop', 8),
+  item('wheat', 'Wheat', 'crop', 5),
+  item('carrot', 'Carrot', 'crop', 14),
+  item('tomato', 'Tomato', 'crop', 15),
+  item('potato', 'Potato', 'crop', 18),
+  item('corn', 'Corn', 'crop', 22),
+  item('blueberry', 'Blueberry', 'crop', 20),
+  item('pumpkin', 'Pumpkin', 'crop', 55),
+  item('sunflower', 'Sunflower', 'crop', 38),
+  item('cotton', 'Cotton', 'crop', 45),
+  item('grape', 'Grapes', 'crop', 45),
+  item('rice', 'Rice', 'crop', 36),
+  item('coffee', 'Coffee Beans', 'crop', 95),
+  item('lavender', 'Lavender', 'crop', 70),
+  item('watermelon', 'Watermelon', 'crop', 190),
+  item('cranberry', 'Cranberry', 'crop', 85),
+  item('candy_corn', 'Candy Corn', 'crop', 25),
+  item('ghost_pumpkin', 'Ghost Pumpkin', 'crop', 70),
+  // Event crops
+  item('peppermint', 'Peppermint', 'crop', 30),
+  item('golden_grape', 'Golden Grapes', 'crop', 60),
+  item('bok_choy', 'Bok Choy', 'crop', 28),
+  item('sweetheart_rose', 'Sweetheart Rose', 'crop', 40),
+  item('four_leaf_clover', 'Four-Leaf Clover', 'crop', 35),
+  item('star_melon', 'Star Melon', 'crop', 70),
+  item('sweet_potato', 'Sweet Potato', 'crop', 32),
+  item('marigold', 'Marigold', 'crop', 30),
+  item('taro', 'Taro', 'crop', 34),
+  item('matcha', 'Matcha Leaves', 'crop', 45),
+  item('heirloom_tomato', 'Heirloom Tomato', 'crop', 30),
+  item('rainbow_radish', 'Rainbow Radish', 'crop', 30),
+  item('pineapple', 'Pineapple', 'crop', 60),
+  item('butternut', 'Butternut Squash', 'crop', 40),
+  // Event currencies, spent in each event's token shop.
+  item('candy', 'Candy', 'special', 0),
+  item('snowflake', 'Snowflakes', 'special', 0),
+  item('confetti', 'Confetti', 'special', 0),
+  item('red_envelope', 'Red Envelopes', 'special', 0),
+  item('love_letter', 'Love Letters', 'special', 0),
+  item('lucky_clover', 'Lucky Clovers', 'special', 0),
+  item('wish_star', 'Wishing Stars', 'special', 0),
+  item('pie_slice', 'Pie Slices', 'special', 0),
+  item('diya', 'Diyas', 'special', 0),
+  item('mooncake', 'Mooncakes', 'special', 0),
+  item('sakura_charm', 'Sakura Charms', 'special', 0),
+  item('seed_token', 'Seed Tokens', 'special', 0),
+  item('painted_egg', 'Painted Eggs', 'special', 0),
+  item('seashell', 'Seashells', 'special', 0),
+  item('acorn', 'Acorns', 'special', 0),
+  // Fruit
+  item('apple', 'Apple', 'fruit', 20),
+  item('cherry', 'Cherries', 'fruit', 22),
+  item('orange', 'Orange', 'fruit', 35),
+  item('lemon', 'Lemon', 'fruit', 40),
+  item('peach', 'Peach', 'fruit', 55),
+  item('banana', 'Banana', 'fruit', 70),
+  item('coconut', 'Coconut', 'fruit', 95),
+  item('maple_syrup', 'Maple Syrup', 'fruit', 120),
+  // Animal products
+  item('egg', 'Egg', 'animal', 12),
+  item('milk', 'Milk', 'animal', 30),
+  item('wool', 'Wool', 'animal', 45),
+  item('honey', 'Honey', 'animal', 50),
+  item('truffle', 'Truffle', 'animal', 120),
+  item('feather', 'Feather', 'animal', 25),
+  item('goat_milk', 'Goat Milk', 'animal', 75),
+  item('angora', 'Angora Fluff', 'animal', 85),
+  // Crafted goods
+  item('flour', 'Flour', 'good', 20),
+  item('cornmeal', 'Cornmeal', 'good', 55),
+  item('rice_flour', 'Rice Flour', 'good', 120),
+  item('bread', 'Bread', 'good', 75),
+  item('blueberry_muffin', 'Blueberry Muffin', 'good', 120),
+  item('cornbread', 'Cornbread', 'good', 150),
+  item('pumpkin_pie', 'Pumpkin Pie', 'good', 140),
+  item('butter', 'Butter', 'good', 80),
+  item('cheese', 'Cheese', 'good', 125),
+  item('ice_cream', 'Strawberry Ice Cream', 'good', 115),
+  item('goat_cheese', 'Goat Cheese', 'good', 210),
+  item('strawberry_jam', 'Strawberry Jam', 'good', 50),
+  item('apple_jam', 'Apple Jam', 'good', 85),
+  item('cherry_jam', 'Cherry Jam', 'good', 95),
+  item('marmalade', 'Marmalade', 'good', 160),
+  item('cranberry_sauce', 'Cranberry Sauce', 'good', 340),
+  item('yarn', 'Yarn', 'good', 130),
+  item('sweater', 'Cozy Sweater', 'good', 360),
+  item('cotton_cloth', 'Cotton Cloth', 'good', 180),
+  item('quilt', 'Patchwork Quilt', 'good', 720),
+  item('lemonade', 'Lemonade', 'good', 115),
+  item('veggie_juice', 'Veggie Juice', 'good', 110),
+  item('grape_juice', 'Grape Juice', 'good', 240),
+  item('smoothie', 'Peach Smoothie', 'good', 200),
+  item('latte', 'Latte', 'good', 290),
+  item('pancakes', 'Maple Pancakes', 'good', 330),
+  item('truffle_pasta', 'Truffle Pasta', 'good', 420),
+  item('lavender_tea', 'Lavender Honey Tea', 'good', 240),
+];
+
+// Animal feed from the Feed Mill.
+ITEM_LIST.push(...FEED_ITEMS);
+// Helpers (Farmhand, Arborist, Unwither Charm): handed out like items, kept in the tool shed.
+ITEM_LIST.push(...HELPER_ITEMS);
+// Home-cooked dishes from the kitchen mini-games.
+for (const d of DISH_LIST) ITEM_LIST.push(item(d.id, d.name, 'dish', d.sell));
+// Fish and critters from the Nature Journal.
+for (const c of CRITTER_LIST) ITEM_LIST.push(item(c.id, c.name, c.kind, c.sell));
+
+export const ITEMS: Record<string, ItemDef> = table(ITEM_LIST);
