@@ -130,6 +130,7 @@ async function start(): Promise<void> {
       case 'store':
         return sfx.place();
       case 'sellItem':
+      case 'sellItems':
       case 'sellObject':
         return sfx.coin();
       case 'claimQuest':
@@ -193,7 +194,15 @@ async function start(): Promise<void> {
   bus.on('questReady', (id) => {
     const q = QUESTS[id];
     if (!q) return;
-    villagerSay(q.giver, `You finished “${q.title}”! Come collect your reward, dear.`, { label: 'Claim reward', onClick: openQuests });
+    const hush = villagerSay(q.giver, `You finished “${q.title}”! Come collect your reward, dear.`, { label: 'Claim reward', onClick: openQuests });
+    // Claimed from the quest board instead: nothing left to collect.
+    const off = store.onChange(() => {
+      if (!store.state.quests.active.includes(id)) {
+        hush();
+        off();
+      }
+    });
+    setTimeout(off, 10_000);
   });
 
   void store.refreshSocial();

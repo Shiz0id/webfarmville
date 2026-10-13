@@ -317,6 +317,12 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     const t = e.target as Node;
     if (tray.classList.contains('open') && !tray.contains(t) && !moreTools.contains(t)) closeTray();
   });
+  // Tablets with keyboards: Esc puts the menu sheet and tool tray away too.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    closeTray();
+    closeDrawer();
+  });
 
   ui.append(hud, corner, toolbar, tray, hint, zoomBox, banner, drawerBack);
   // A tap shouldn't leave a keyboard focus ring behind once Esc is pressed.
@@ -337,11 +343,13 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     xpFill.style.width = `${Math.min(100, ((st.xp - lo) / Math.max(1, hi - lo)) * 100)}%`;
     xpText.textContent = `${fmtNum(st.xp - lo)} / ${fmtNum(hi - lo)} XP`;
     countTo(coins, st.coins);
-    const live = new Set(activeFeatures(store.now()).map((f) => f.currency));
+    // The headline festival's currency always shows; overlapping ones once you have some.
+    const running = activeFeatures(store.now());
+    const live = new Set(running.map((f) => f.currency));
     for (const [cur, c] of currencyPills) {
       const n = st.inventory[cur] ?? 0;
       c.count.textContent = fmtNum(n);
-      c.pill.style.display = live.has(cur) ? 'flex' : 'none';
+      c.pill.style.display = live.has(cur) && (n > 0 || running[0]?.currency === cur) ? 'flex' : 'none';
     }
     const c = farmCharm(st);
     countTo(charm, c);

@@ -21,7 +21,8 @@ export function portrait(name: string, size = 48): HTMLElement {
 let current: HTMLElement | null = null;
 let timer = 0;
 
-export function villagerSay(name: string, text: string, action?: { label: string; onClick: () => void }): void {
+/** Shows a villager's line; returns a function that puts it away early. */
+export function villagerSay(name: string, text: string, action?: { label: string; onClick: () => void }): () => void {
   current?.remove();
   clearTimeout(timer);
   const textEl = h('div', { class: 'say-text' });
@@ -51,6 +52,7 @@ export function villagerSay(name: string, text: string, action?: { label: string
     ),
   );
   const close = () => {
+    if (!el.isConnected || el.classList.contains('leaving')) return;
     el.classList.add('leaving');
     setTimeout(() => el.remove(), 250);
     if (current === el) current = null;
@@ -68,4 +70,5 @@ export function villagerSay(name: string, text: string, action?: { label: string
   };
   type();
   timer = window.setTimeout(close, 9000);
+  return close;
 }

@@ -89,6 +89,13 @@ export function openModal(
     body,
   );
   back.append(modal);
+  // Tabs that run off a phone's edge fade out there, so you know to swipe.
+  const tabs = opts.tabs;
+  if (tabs) {
+    const edge = () => tabs.classList.toggle('more-right', tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 4);
+    tabs.addEventListener('scroll', edge, { passive: true });
+    requestAnimationFrame(edge);
+  }
   swipeToClose(modal, modal.querySelector('.modal-head') as HTMLElement, close);
   back.addEventListener('pointerdown', (e) => {
     if (e.target === back) close();

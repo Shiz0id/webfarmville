@@ -3875,9 +3875,10 @@ body:has(.pond, .kitchen) .villager-say {
 }
 .layout-phone .now-playing {
   left: auto;
-  right: 10px;
+  /* Beside the corner buttons, below the stats. */
+  right: 84px;
   bottom: auto;
-  top: calc(190px + env(safe-area-inset-top));
+  top: calc(150px + env(safe-area-inset-top));
   font-size: 12px;
 }
 .layout-phone.orient-landscape .now-playing {
@@ -4223,4 +4224,23 @@ body:has(.modal-back) .now-playing {
 }
 .layout-phone .decor-cat.hot .decor-cat-name::after {
   content: none;
+}
+.layout-phone .modal-tabs.more-right {
+  -webkit-mask-image: linear-gradient(90deg, #000 78%, transparent);
+  mask-image: linear-gradient(90deg, #000 78%, transparent);
+}
+/* Phones: the rosettes sit above the ribbon's name so the words get the width. */
+.layout-phone .ribbon-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  align-items: center;
+}
+.layout-phone .ribbon-row .rosettes {
+  grid-column: 1 / -1;
+}
+.layout-phone .ribbon-row .rosettes img {
+  width: 24px;
+  height: 24px;
 }

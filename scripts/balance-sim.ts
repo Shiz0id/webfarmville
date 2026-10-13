@@ -4,6 +4,8 @@
 // workshops, orders, quests, land and a few decorations), so cooking, fishing,
 // friends and the other side activities would make a real player a bit faster.
 // Usage: npx tsx scripts/balance-sim.ts [days=30] [profile=casual|keen|both]
+// With SAVE=<path> it also writes each farmer's farm as a browser save
+// (<path>-<profile>.json) to load into the Pages build for playtests.
 
 import {
   ANIMAL_LIST,
@@ -32,6 +34,8 @@ import {
   type ProducerObject,
   witherAfterSec,
 } from '@farm/shared';
+
+import { writeFileSync } from 'node:fs';
 
 const DAYS = Number(process.argv[2] ?? 30);
 const WHICH = process.argv[3] ?? 'both';
@@ -282,6 +286,10 @@ function run(profile: string) {
   console.log(`  withered: ${withered}, actions: ${actions}`);
   console.log('  top sales: ' + Object.entries(sales).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => `${k} ${v}`).join(', '));
   console.log('  stuck quests: ' + st.quests.active.map((id) => `${id}(${questProgress(st, id).map((g) => `${g.label} ${g.have}/${g.need}`).join('; ')})`).join(', '));
+  if (process.env.SAVE) {
+    const save = { v: 1, username: `Sim ${profile}`, state: st, rev: 1, helps: { day: '', used: {} }, giftsSent: {}, inbox: [], notifications: [], nextId: 1 };
+    writeFileSync(`${process.env.SAVE}-${profile}.json`, JSON.stringify(save));
+  }
   return { levelAt, st };
 }
 

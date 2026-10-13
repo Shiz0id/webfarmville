@@ -325,12 +325,62 @@ const CAT_LABEL: Record<ItemCategory, string> = {
   special: '🎟️ Event tokens',
 };
 
+/** How many of each crop or good "Sell extras" leaves in the barn. */
+const KEEP_SPARE = 10;
+
+/** Everything "Sell extras" would sell: farm produce beyond the spare stock and what orders still need. */
+function extras(): Record<string, number> {
+  const inv = S.state.inventory;
+  const keep: Record<string, number> = {};
+  for (const o of S.state.orders) for (const [id, n] of Object.entries(o.items)) keep[id] = (keep[id] ?? 0) + n;
+  const out: Record<string, number> = {};
+  for (const it of ITEM_LIST) {
+    if (!['crop', 'fruit', 'animal', 'good'].includes(it.category)) continue;
+    const n = (inv[it.id] ?? 0) - Math.max(KEEP_SPARE, keep[it.id] ?? 0);
+    if (n > 0) out[it.id] = n;
+  }
+  return out;
+}
+
 export function openBarn(): void {
   liveModal(
     'Barn & Market',
     (body) => {
       const inv = S.state.inventory;
       let any = false;
+      const extra = extras();
+      const extraCoins = Object.entries(extra).reduce((t, [id, n]) => t + n * ITEMS[id].sell, 0);
+      if (extraCoins > 0) {
+        let armed = false;
+        const btn = h('button', { class: 'btn gold' }, `Sell · ${fmtNum(extraCoins)}`);
+        // Selling can't be undone, so the first tap only asks.
+        btn.onclick = () => {
+          if (!armed) {
+            armed = true;
+            btn.textContent = 'Tap again to sell';
+            setTimeout(() => {
+              armed = false;
+              if (btn.isConnected) btn.textContent = `Sell · ${fmtNum(extraCoins)}`;
+            }, 3000);
+            return;
+          }
+          S.dispatch({ type: 'sellItems', items: extra });
+        };
+        body.append(
+          h(
+            'div',
+            { class: 'row item-row sell-extras' },
+            h('img', { src: iconURL('wheat'), alt: '' }),
+            h(
+              'div',
+              { class: 'grow' },
+              h('div', { class: 'title' }, 'Sell extras'),
+              h('div', { class: 'sub' }, `Keeps ${KEEP_SPARE} of each for crafting and cooking, or more if an order needs it.`),
+            ),
+            btn,
+          ),
+        );
+      }
       for (const cat of ['crop', 'fruit', 'animal', 'good', 'dish', 'special'] as ItemCategory[]) {
         const items = ITEM_LIST.filter((i) => i.category === cat && (inv[i.id] ?? 0) > 0);
         if (!items.length) continue;

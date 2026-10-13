@@ -141,6 +141,8 @@ export type Action =
   | { type: 'craft'; id: string; recipe: string }
   | { type: 'collectCrafts'; id: string }
   | { type: 'sellItem'; item: string; qty: number }
+  /** Sell several stacks at once (the barn's "Sell extras"). */
+  | { type: 'sellItems'; items: Record<string, number> }
   | { type: 'expand' }
   | { type: 'claimQuest'; quest: string }
   | { type: 'claimDaily' }

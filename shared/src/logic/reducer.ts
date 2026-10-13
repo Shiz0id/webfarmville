@@ -106,6 +106,18 @@ export function addItem(state: FarmState, item: string, qty: number, events?: Ga
   events?.push({ type: 'gain', what: item, amount: qty, ...at });
 }
 
+function sellItem(state: FarmState, id: string, qty: number, events: GameEvent[]): void {
+  if (!Number.isInteger(qty) || qty <= 0) throw new GameError('Invalid amount');
+  const item = ITEMS[id];
+  const deco = DECORATIONS[id];
+  if (!item && !deco) throw new GameError('Unknown item');
+  if (item?.category === 'special') throw new GameError("That can't be sold");
+  takeItem(state, id, qty);
+  const price = item ? item.sell : Math.floor(deco.cost * SELL_BACK);
+  earn(state, price * qty, events);
+  bumpStat(state, 'sell', qty);
+}
+
 function takeItem(state: FarmState, item: string, qty: number): void {
   const have = state.inventory[item] ?? 0;
   if (have < qty) throw new GameError(`Not enough ${ITEMS[item]?.name ?? DECORATIONS[item]?.name ?? item}`);
@@ -382,17 +394,14 @@ export function applyAction(prev: FarmState, action: Action, ctx: ActionContext)
       break;
     }
 
-    case 'sellItem': {
-      const qty = action.qty;
-      if (!Number.isInteger(qty) || qty <= 0) throw new GameError('Invalid amount');
-      const item = ITEMS[action.item];
-      const deco = DECORATIONS[action.item];
-      if (!item && !deco) throw new GameError('Unknown item');
-      if (item?.category === 'special') throw new GameError("That can't be sold");
-      takeItem(state, action.item, qty);
-      const price = item ? item.sell : Math.floor(deco.cost * SELL_BACK);
-      earn(state, price * qty, events);
-      bumpStat(state, 'sell', qty);
+    case 'sellItem':
+      sellItem(state, action.item, action.qty, events);
+      break;
+
+    case 'sellItems': {
+      const list = Object.entries(action.items ?? {});
+      if (!list.length || list.length > 200) throw new GameError('Nothing to sell');
+      for (const [item, qty] of list) sellItem(state, item, qty, events);
       break;
     }
 
