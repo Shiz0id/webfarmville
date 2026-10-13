@@ -46,6 +46,17 @@ All of the art is drawn in code at startup, so there are no image assets to down
   double.
 - **Town Projects**: chip in goods and coins to improve Meadowbrook: the pond bridge, a market square, a kitty
   shelter, an orchard, a community kitchen and a bandstand. Each finished project gives your farm a lasting perk.
+- **Grand Projects** (the late game, from level 15): four landmarks you raise on your own farm in four funded
+  stages each, paid in coins and goods. The first stage hands you a building site to place; every stage after
+  that, the landmark rises a little further out of its scaffolding. A finished landmark works its perk while it
+  stands on your farm:
+  - the Grand Greenhouse gives a 1-in-4 chance of a bonus crop at harvest;
+  - the Lighthouse Windmill makes workshops craft 25% faster;
+  - the Hot-Air Balloon Dock's balloon drops off a gift basket every day;
+  - the Botanical Conservatory adds 10% to sales and orders.
+
+  The Decor page's **Grand** shelf sells gold, pearl and crystal decorations for 100k to 1.5M coins, and a quest
+  chain from level 15 to 30 walks you through it all.
 - **Flower breeding**: tulips and roses planted next to their own kind sprout new flowers beside them, four times
   a day. Tap a flower with the hand to water it (rain waters them all) and it is far more likely to breed. The
   right colour pairs bloom into nine rare hybrids, from orange tulips to golden roses that only open in the rain.
@@ -238,7 +249,7 @@ There are also some helper scripts:
   multi-touch swipes: harvest and seed strokes, two-finger panning and the hand.
 - `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Companion
   scripts check other features (`scripts/blooms-check.mjs` and `scripts/collections-check.mjs` run with `npx tsx`;
-  `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs`, `scripts/water-check.mjs`, `scripts/nursery-check.mjs`, `scripts/feedmill-check.mjs`, `scripts/vehicles-check.mjs`, `scripts/helpers-check.mjs` and `scripts/workshops-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
+  `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs`, `scripts/water-check.mjs`, `scripts/nursery-check.mjs`, `scripts/feedmill-check.mjs`, `scripts/vehicles-check.mjs`, `scripts/helpers-check.mjs` and `scripts/workshops-check.mjs` run with plain `node`, as does `scripts/grand-check.mjs <save.json> <dir>` for Grand Projects; `scripts/fair-check.mjs` needs the server started with
   `FARM_ALL_EVENTS=1` on weekdays): `scripts/halloween-check.mjs` covers seasonal visitors and the token shop
   (try `?debug&event=winter`), and `scripts/cooking-check.mjs` covers the kitchen mini-games. Point it at a
   running game with `?debug` in the URL, for example `http://localhost:3001/?debug` after `npm run build &&

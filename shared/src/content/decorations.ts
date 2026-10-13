@@ -12,6 +12,7 @@ import { FAIR_DECORATIONS } from './fair';
 import { MASTERY_DECORATIONS } from './mastery';
 import { KEEPSAKE_DECORATIONS } from './collections';
 import { NURSERY_DECORATIONS } from './nursery';
+import { GRAND_DECORATIONS } from './grand';
 import { table } from './table';
 
 export type DecoCategory =
@@ -28,7 +29,8 @@ export type DecoCategory =
   | 'country'
   | 'party'
   | 'kitty'
-  | 'seasonal';
+  | 'seasonal'
+  | 'grand';
 
 export interface DecoDef {
   id: string;
@@ -44,7 +46,7 @@ export interface DecoDef {
   /** Only purchasable while this seasonal event is running. */
   event?: string;
   /** Later decoration collections (painted in their own art module). */
-  set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals' | 'nature' | 'kitty' | 'friends' | 'market' | 'blooms' | 'fair' | 'mastery' | 'collections' | 'nursery';
+  set?: 'lifestyle' | 'horticulture' | 'spooky' | 'country' | 'festivals' | 'nature' | 'kitty' | 'friends' | 'market' | 'blooms' | 'fair' | 'mastery' | 'collections' | 'nursery' | 'grand';
   /** Earned, never sold: how to get it (e.g. "Discover 10 kinds of fish"). */
   reward?: string;
   /** Bought with the event's currency (e.g. Halloween candy) instead of coins. */
@@ -265,12 +267,14 @@ export const DECORATION_LIST: DecoDef[] = [
   ...MASTERY_DECORATIONS,
   ...KEEPSAKE_DECORATIONS,
   ...NURSERY_DECORATIONS,
+  ...GRAND_DECORATIONS,
 ];
 
 export const DECORATIONS: Record<string, DecoDef> = table(DECORATION_LIST);
 
 export const DECO_CATEGORIES: { id: DecoCategory; name: string }[] = [
   { id: 'seasonal', name: 'Seasonal' },
+  { id: 'grand', name: 'Grand' },
   { id: 'horticulture', name: 'Gardening' },
   { id: 'country', name: 'Countryside' },
   { id: 'party', name: 'Party' },

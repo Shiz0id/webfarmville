@@ -17,6 +17,7 @@ import * as vehicles from './vehicles';
 import * as helpers from './helpers';
 import * as workshops from './workshops';
 import * as weather from './weather';
+import * as grand from './grand';
 
 export function initFeatures(ctx: FeatureContext): void {
   nature.init(ctx);
@@ -36,4 +37,5 @@ export function initFeatures(ctx: FeatureContext): void {
   vehicles.init(ctx);
   helpers.init(ctx);
   workshops.init(ctx);
+  grand.init(ctx);
 }

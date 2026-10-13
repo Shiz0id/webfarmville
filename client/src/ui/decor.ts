@@ -4,6 +4,7 @@
 // placing something and coming back drops you on the same shelf.
 
 import {
+  LANDMARKS,
   DECORATIONS,
   DECORATION_LIST,
   DECO_CATEGORIES,
@@ -21,6 +22,7 @@ import { fmtNum, h } from '../util';
 import { openModal, toast } from './dom';
 import { forFingers, isTouch } from './layout';
 import { card, eventReturn, levelLock, startPlacing } from './cards';
+import { openGrand } from '../features/grand';
 
 let S: Store;
 
@@ -82,6 +84,7 @@ const CAT_ART: Partial<Record<Cat, string>> = {
   country: 'chicken_coop',
   party: 'birthday_cake',
   kitty: 'cat_bed',
+  grand: 'pearl_carousel',
 };
 
 function catArt(c: Cat): string {
@@ -366,7 +369,12 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
         owned: n,
         cls: n ? 'earned' : 'unearned',
         meta: [n ? (inBox ? forFingers('In storage · click to place') : '✓ Earned') : `🏆 ${d.reward}`],
-        onClick: () => (inBox ? startPlacing(d.id, d.name, 'inventory', m.close) : toast(n ? `${d.name} is already on your farm.` : `🏆 ${d.reward}`, 'info')),
+        onClick: () =>
+          inBox
+            ? startPlacing(d.id, d.name, 'inventory', m.close)
+            : LANDMARKS[d.id] && !n
+              ? (m.close(), openGrand(d.id))
+              : toast(n ? `${d.name} is already on your farm.` : `🏆 ${d.reward}`, 'info'),
       });
     }
     const ev = d.event ? EVENTS[d.event] : null;
@@ -436,6 +444,15 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
       lazySections(sections);
       return;
     }
+    if (cat === 'grand' && !view.q)
+      results.append(
+        h(
+          'div',
+          { class: 'decor-tidy' },
+          h('span', null, '🏰 The biggest landmarks of all are built stage by stage in Grand Projects.'),
+          h('button', { class: 'btn small gold', onclick: () => (m.close(), openGrand()) }, 'Grand Projects'),
+        ),
+      );
     if (cat === 'rewards' && !view.q)
       results.append(h('div', { class: 'nu-hint' }, '🏆 Rewards are never sold: earn them from collections, mastery, the County Fair and friends.'));
     lazyGrid(items, (d) => shopCard(d, owned), results);
