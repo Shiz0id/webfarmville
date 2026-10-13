@@ -302,6 +302,9 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
     }
   }
 
+  /** "More…" watchers on the shelf on screen, dropped whenever it's redrawn. */
+  const watchers: IntersectionObserver[] = [];
+
   /** Draws cards a batch at a time as the shelf scrolls into view. */
   function lazyGrid(defs: DecoDef[], make: (d: DecoDef) => HTMLElement, into: HTMLElement) {
     const grid = h('div', { class: 'grid' });
@@ -314,7 +317,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
       if (shown < defs.length) {
         const sentinel = h('div', { class: 'decor-more' }, 'More…');
         grid.after(sentinel);
-        const io = new IntersectionObserver(
+        const io: IntersectionObserver = new IntersectionObserver(
           (es) => {
             if (!es.some((e) => e.isIntersecting)) return;
             io.disconnect();
@@ -324,6 +327,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
           { root: results, rootMargin: '400px' },
         );
         io.observe(sentinel);
+        watchers.push(io);
       }
     };
     more(depth);
@@ -343,7 +347,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
       if (next < sections.length) {
         const sentinel = h('div', { class: 'decor-more' }, 'More…');
         results.append(sentinel);
-        const io = new IntersectionObserver(
+        const io: IntersectionObserver = new IntersectionObserver(
           (es) => {
             if (!es.some((e) => e.isIntersecting)) return;
             io.disconnect();
@@ -353,6 +357,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
           { root: results, rootMargin: '400px' },
         );
         io.observe(sentinel);
+        watchers.push(io);
       }
     };
     more(depth);
@@ -514,6 +519,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
     fresh.b.style.display = view.tab === 'shop' ? '' : 'none';
     const owned = ownedCounts();
     const scroll = results.scrollTop;
+    for (const io of watchers.splice(0)) io.disconnect();
     results.replaceChildren();
     if (view.tab === 'shop') paintShop(owned);
     else paintStorage();

@@ -173,4 +173,20 @@ describe('villager farms', () => {
       }
     }
   });
+
+  it("won't let a backdated action reopen yesterday's daily reward", async () => {
+    const saved = clock;
+    try {
+      const carol = await register('carol');
+      clock = Date.UTC(2026, 9, 13, 0, 0, 5);
+      const first = await call('/api/actions', { actions: [{ type: 'claimDaily', t: clock }] }, carol);
+      expect(first.body.ok).toBe(true);
+      // 20 seconds back is within the usual allowance, but on the other side of midnight.
+      const again = await call('/api/actions', { actions: [{ type: 'claimDaily', t: clock - 20_000 }] }, carol);
+      expect(again.body.ok).toBe(false);
+      expect(again.body.state.coins).toBe(first.body.state.coins);
+    } finally {
+      clock = saved;
+    }
+  });
 });

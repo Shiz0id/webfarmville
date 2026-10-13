@@ -1177,6 +1177,11 @@ img.ico {
   padding: 0 5px;
   border-radius: 6px;
 }
+/* The charm tag has the right corner: the count goes left. */
+.card .tag.charm + .owned {
+  right: auto;
+  left: 6px;
+}
 
 .event-banner {
   border: 2px solid var(--dark);
@@ -3451,6 +3456,16 @@ span.cl-keepsake { font-size: 26px; text-align: center; }
 .layout-phone .tool.shop {
   min-width: 62px;
 }
+/* Narrow phones (360px wide is common): six tiles still fit edge to edge. */
+@media (max-width: 380px) {
+  .layout-phone .tool {
+    min-width: 51px;
+    padding: 2px 1px;
+  }
+  .layout-phone .tool.shop {
+    min-width: 56px;
+  }
+}
 
 .layout-phone .mode-hint {
   bottom: calc(82px + env(safe-area-inset-bottom));
@@ -3520,6 +3535,12 @@ span.cl-keepsake { font-size: 26px; text-align: center; }
 }
 .layout-phone .modal-head h2 {
   font-size: 18px;
+}
+.layout-phone .modal-head h2.long {
+  font-size: 15px;
+}
+.layout-phone .modal-head h2.longer {
+  font-size: 13px;
 }
 .layout-phone .modal-head .close {
   width: 34px;

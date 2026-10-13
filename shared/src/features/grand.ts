@@ -54,6 +54,16 @@ export function canGrandDonate(state: FarmState, id: string): boolean {
   return Object.keys(stage.needs).some((item) => grandStillNeeded(state, id, item) > 0 && (item === 'coins' ? state.coins : (state.inventory[item] ?? 0)) > 0);
 }
 
+/** Coins from a sale or order on this farm, with the Botanical Conservatory's bonus on top. */
+export function grandSaleCoins(state: FarmState, coins: number): number {
+  return grandDone(state, 'botanical_conservatory') ? coins + Math.round(coins * CONSERVATORY_BONUS) : coins;
+}
+
+/** A recipe's craft time on this farm, after the Lighthouse Windmill's speed-up. */
+export function grandCraftMs(state: FarmState, ms: number): number {
+  return grandDone(state, 'lighthouse_windmill') ? ms - Math.round(ms * WINDMILL_SPEEDUP) : ms;
+}
+
 /** When the balloon's next gift can be collected: today (ready) or not at all. */
 export function balloonReady(state: FarmState, day: string): boolean {
   return grandDone(state, 'balloon_dock') && state.grand?.giftDay !== day;
@@ -115,11 +125,11 @@ registerFeature({
   },
   after: (state, action: { type: string; id?: string }, ctx, events, kit) => {
     // Glass Greenhouse: now and then a harvest comes up with a little extra.
-    if ((action.type === 'harvest' || action.type === 'drive' || action.type === 'useHelper') && grandDone(state, 'grand_greenhouse')) {
-      const crops = events.filter((e): e is Extract<GameEvent, { type: 'gain' }> => e.type === 'gain' && ITEMS[e.what]?.category === 'crop');
-      for (const e of crops) {
-        if (kit.nextRandom(state) < GREENHOUSE_CHANCE) kit.addItem(state, e.what, 1, events, e.x !== undefined ? { x: e.x, y: e.y! } : undefined);
-      }
+    // Vehicles and helpers harvest through applyAction, so each of their plots passes through here as a 'harvest'.
+    if (action.type === 'harvest' && grandDone(state, 'grand_greenhouse')) {
+      // One roll per harvest, however many gains it made (mastery bonuses arrive as extra gains).
+      const crop = events.find((e): e is Extract<GameEvent, { type: 'gain' }> => e.type === 'gain' && ITEMS[e.what]?.category === 'crop');
+      if (crop && kit.nextRandom(state) < GREENHOUSE_CHANCE) kit.addItem(state, crop.what, 1, events, crop.x !== undefined ? { x: crop.x, y: crop.y! } : undefined);
     }
     // Lighthouse Windmill: the job just queued finishes sooner.
     if (action.type === 'craft' && action.id && grandDone(state, 'lighthouse_windmill')) {
@@ -127,7 +137,10 @@ registerFeature({
       if (b?.kind === 'building' && b.queue.length) {
         const job = b.queue[b.queue.length - 1];
         const start = Math.max(ctx.now, b.queue.length > 1 ? b.queue[b.queue.length - 2].end : 0);
-        if (findRecipe(b.def, job.recipe) && job.end > start) job.end -= Math.round((job.end - start) * WINDMILL_SPEEDUP);
+        if (findRecipe(b.def, job.recipe) && job.end > start) {
+          job.end -= Math.round((job.end - start) * WINDMILL_SPEEDUP);
+          job.dur = job.end - start;
+        }
       }
     }
     // Botanical Conservatory: visitors pay a little extra for anything from your farm.

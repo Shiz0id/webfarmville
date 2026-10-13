@@ -244,7 +244,11 @@ const STEPS: Record<CookStep, (st: Stage, dish: DishDef) => Promise<number>> = {
       const goal = Math.PI * 2 * 4;
       let down = false;
       pot.addEventListener('pointerdown', () => (down = true));
-      window.addEventListener('pointerup', () => (down = false));
+      const up = () => {
+        down = false;
+        if (!pot.isConnected) window.removeEventListener('pointerup', up);
+      };
+      window.addEventListener('pointerup', up);
       pot.addEventListener('pointermove', (e) => {
         const p = rel(e, st.arena);
         spoon.style.transform = `translate(${p.x - 30}px, ${p.y - 60}px)`;

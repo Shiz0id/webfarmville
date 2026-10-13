@@ -383,6 +383,9 @@ export class FarmScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     this.stepAnimations(time);
+    const away = this.store.isVisiting;
+    this.mama?.hide(away);
+    this.treater?.hide(away);
     if (this.dirty) {
       this.dirty = false;
       this.sync();

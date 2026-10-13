@@ -52,6 +52,15 @@ export function saveFarm(db: DB, userId: number, state: FarmState, now: number):
   return (db.prepare('SELECT rev FROM farms WHERE user_id = ?').get(userId) as { rev: number }).rev;
 }
 
+/** The game time of the latest action played on this farm. */
+export function lastAction(db: DB, userId: number): number {
+  return (db.prepare('SELECT last_action FROM farms WHERE user_id = ?').get(userId) as { last_action: number } | undefined)?.last_action ?? 0;
+}
+
+export function setLastAction(db: DB, userId: number, t: number): void {
+  db.prepare('UPDATE farms SET last_action = MAX(last_action, ?) WHERE user_id = ?').run(t, userId);
+}
+
 export function insertFarm(db: DB, userId: number, state: FarmState, now: number): void {
   db.prepare('INSERT INTO farms (user_id, state, rev, updated_at) VALUES (?, ?, 1, ?)').run(
     userId,

@@ -5,6 +5,9 @@ import {
   babyGrowMs,
   babyPrice,
   craftMs,
+  grandCraftMs,
+  grandDone,
+  grandSaleCoins,
   workshopSlots,
   BUILDINGS,
   BUILDING_LIST,
@@ -44,7 +47,7 @@ import { artURL, iconURL } from '../art';
 import type { Store } from '../store';
 import { setTool } from '../tools';
 import { fmtDuration, fmtNum, h, nameOf, timeAgo } from '../util';
-import { confetti, openModal, toast } from './dom';
+import { confetti, interacting, openModal, toast } from './dom';
 import { forFingers, isTouch } from './layout';
 import { downloadBackup, pickBackup } from './backup';
 import { shareInvite } from '../share';
@@ -94,7 +97,7 @@ function liveModal(
     m.body.scrollTop = scroll;
   };
   off = S.onChange(rerender);
-  if (opts.tick) timer = window.setInterval(rerender, 1000);
+  if (opts.tick) timer = window.setInterval(() => interacting(m.body) || rerender(), 1000);
   rerender();
   return { ...m, rerender };
 }
@@ -150,7 +153,7 @@ export function openShop(tab: Exclude<ShopTab, 'decor'> = 'seeds'): void {
               name: c.event ? `🎃 ${c.name}` : c.name,
               price: seedCost(st, c),
               locked: levelLock(c.level),
-              meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth ${c.yield * ITEMS[c.id].sell}`, masteryLine(c.id)],
+              meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth\u00a0${c.yield * ITEMS[c.id].sell}`, masteryLine(c.id)],
               onClick: () => {
                 setTool('seed', { seed: c.id });
                 m.close();
@@ -298,7 +301,7 @@ export function openSeedPicker(plotId: string | null): void {
         name: c.name,
         price: seedCost(S.state, c),
         locked: levelLock(c.level),
-        meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth ${c.yield * ITEMS[c.id].sell}`, masteryLine(c.id)],
+        meta: [`⏱ ${fmtDuration(c.growSec * 1000)} · +${c.xp} XP`, `Harvest worth\u00a0${c.yield * ITEMS[c.id].sell}`, masteryLine(c.id)],
         onClick: () => {
           setTool('seed', { seed: c.id });
           if (plotId) S.dispatch({ type: 'plant', id: plotId, crop: c.id });
@@ -349,7 +352,7 @@ export function openBarn(): void {
       const inv = S.state.inventory;
       let any = false;
       const extra = extras();
-      const extraCoins = Object.entries(extra).reduce((t, [id, n]) => t + n * ITEMS[id].sell, 0);
+      const extraCoins = grandSaleCoins(S.state, Object.entries(extra).reduce((t, [id, n]) => t + n * ITEMS[id].sell, 0));
       if (extraCoins > 0) {
         let armed = false;
         const btn = h('button', { class: 'btn gold' }, `Sell · ${fmtNum(extraCoins)}`);
@@ -381,6 +384,7 @@ export function openBarn(): void {
           ),
         );
       }
+      const bonus = grandDone(S.state, 'botanical_conservatory');
       for (const cat of ['crop', 'fruit', 'animal', 'good', 'dish', 'special'] as ItemCategory[]) {
         const items = ITEM_LIST.filter((i) => i.category === cat && (inv[i.id] ?? 0) > 0);
         if (!items.length) continue;
@@ -396,8 +400,8 @@ export function openBarn(): void {
               h(
                 'div',
                 { class: 'grow' },
-                h('div', { class: 'title' }, `${it.name} ×${qty}`),
-                h('div', { class: 'sub' }, cat === 'special' ? 'Spend these in the seasonal token shop' : `Sells for ${it.sell} each`),
+                h('div', { class: 'title' }, `${it.name}\u00a0×${qty}`),
+                h('div', { class: 'sub' }, cat === 'special' ? 'Spend these in the seasonal token shop' : `Sells for ${it.sell} each${bonus ? ' (+10%)' : ''}`),
               ),
               cat === 'special'
                 ? null
@@ -406,7 +410,7 @@ export function openBarn(): void {
                 ? h(
                     'button',
                     { class: 'btn small gold', onclick: () => S.dispatch({ type: 'sellItem', item: it.id, qty }) },
-                    `Sell all · ${fmtNum(qty * it.sell)}`,
+                    `Sell all · ${fmtNum(grandSaleCoins(S.state, qty * it.sell))}`,
                   )
                 : null,
             ),
@@ -486,7 +490,7 @@ export function openOrders(): void {
             h(
               'div',
               { class: 'reward' },
-              h('span', null, h('img', { src: iconURL('coin') }), fmtNum(o.coins)),
+              h('span', null, h('img', { src: iconURL('coin') }), fmtNum(grandSaleCoins(S.state, o.coins))),
               h('span', null, h('img', { src: iconURL('xp') }), `${o.xp}`),
               o.bonus ? h('span', { title: nameOf(o.bonus) }, '+ ', h('img', { src: artURL(`deco:${o.bonus}`), style: { width: '26px', height: '26px' } })) : null,
             ),
@@ -623,7 +627,7 @@ export function openBuilding(id: string): void {
               { class: 'grow', style: { flex: '1' } },
               h('div', { class: 'title', style: { fontWeight: '900' } }, `${nameOf(r.output)}${r.qty > 1 ? ` ×${r.qty}` : ''}`),
               inputs,
-              h('div', { class: 'sub', style: { fontSize: '12px', color: 'var(--muted)', fontWeight: '800', marginTop: '3px' } }, `⏱ ${fmtDuration(craftMs(b, r))} · +${r.xp} XP · sells ${ITEMS[r.output].sell}🪙`),
+              h('div', { class: 'sub', style: { fontSize: '12px', color: 'var(--muted)', fontWeight: '800', marginTop: '3px' } }, `⏱ ${fmtDuration(grandCraftMs(S.state, craftMs(b, r)))} · +${r.xp} XP · sells ${ITEMS[r.output].sell}🪙`),
             ),
             h(
               'button',
@@ -744,6 +748,8 @@ export function socialBadge(): number {
 export async function visit(username: string): Promise<void> {
   await S.startVisit(username);
   if (S.isVisiting) {
+    // Planting or placing makes no sense on someone else's farm.
+    setTool('hand');
     recenter();
     toast(forFingers(`Welcome to ${S.visit!.state.name}! Click ✨ and 💧 bubbles to help.`), 'good');
   }
@@ -802,7 +808,7 @@ export function openNeighbors(): void {
               { class: 'row item-row' },
               h('img', { src: iconURL(g.item) }),
               h('div', { class: 'grow' }, h('div', { class: 'title' }, `${g.qty}× ${nameOf(g.item)}`), h('div', { class: 'sub' }, `from ${g.from.replace('_', ' ')} · ${timeAgo(g.createdAt, S.now())}`)),
-              h('button', { class: 'btn green small', onclick: () => S.claimGift(g.id).then(() => toast(`Got ${g.qty}× ${nameOf(g.item)}!`, 'good')) }, 'Accept'),
+              h('button', { class: 'btn green small', onclick: () => S.claimGift(g.id).then((ok) => ok && toast(`Got ${g.qty}× ${nameOf(g.item)}!`, 'good')) }, 'Accept'),
             ),
           );
         }
@@ -838,7 +844,7 @@ export function openNeighbors(): void {
               'div',
               { class: 'grow' },
               h('div', { class: 'title' }, f.username.replace('_', ' ')),
-              h('div', { class: 'sub' }, `${f.farmName} · Lv ${f.level} · 💗${f.charm}`),
+              h('div', { class: 'sub' }, `${f.farmName} · `, h('span', { style: { whiteSpace: 'nowrap' } }, `Lv ${f.level} · 💗${f.charm}`)),
               h('div', { class: 'sub' }, `Helps left today: ${f.helpsLeft}/5${f.isNpc ? '' : ` · ${f.pal ? 'shared' : 'seen'} ${timeAgo(f.lastSeen, S.now())}`}`),
             ),
             f.pal
@@ -926,6 +932,28 @@ export function dailyAvailable(): boolean {
 }
 
 export function openFarmhouse(): void {
+  // Built once, outside the live re-render, so typing isn't wiped by the next refresh.
+  const nameInput = h('input', { class: 'field', value: S.state.name, maxlength: 24 });
+  const top = h(
+    'div',
+    null,
+    h('div', { class: 'section-title' }, '🏡 Farm name'),
+    h(
+      'div',
+      { class: 'inline' },
+      nameInput,
+      h(
+        'button',
+        {
+          class: 'btn',
+          onclick: () => {
+            if (S.dispatch({ type: 'rename', name: nameInput.value })) toast('Farm renamed!', 'good');
+          },
+        },
+        'Rename',
+      ),
+    ),
+  );
   liveModal(
     'Farmhouse',
     (body) => {
@@ -934,25 +962,6 @@ export function openFarmhouse(): void {
       const stars = charmStars(charm);
       const tier = CHARM_TIERS[stars];
       const nextTier = CHARM_TIERS[stars + 1];
-      const nameInput = h('input', { class: 'field', value: st.name, maxlength: 24 });
-      body.append(
-        h('div', { class: 'section-title' }, '🏡 Farm name'),
-        h(
-          'div',
-          { class: 'inline' },
-          nameInput,
-          h(
-            'button',
-            {
-              class: 'btn',
-              onclick: () => {
-                if (S.dispatch({ type: 'rename', name: nameInput.value })) toast('Farm renamed!', 'good');
-              },
-            },
-            'Rename',
-          ),
-        ),
-      );
 
       const streak = st.daily.last === utcDay(S.now() - 86_400_000) ? st.daily.streak + 1 : 1;
       const bonus = dailyBonus(streak, stars);
@@ -1072,7 +1081,7 @@ export function openFarmhouse(): void {
         ),
       );
     },
-    { icon: artURL('building:farmhouse') },
+    { icon: artURL('building:farmhouse'), top },
   );
 }
 

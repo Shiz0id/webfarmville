@@ -117,7 +117,10 @@ export class Store {
 
   /** Try an action locally. Returns false (and reports why) if it isn't allowed. */
   dispatch(action: Action, opts: { quiet?: boolean } = {}): boolean {
-    if (this.visit) return false;
+    if (this.visit) {
+      if (!opts.quiet) this.error("You're visiting a neighbor. Head home to do that!");
+      return false;
+    }
     const t = this.now();
     try {
       const { state, events } = applyAction(this.state, action, { now: t, allEvents: this.allEvents });
@@ -263,9 +266,13 @@ export class Store {
     void this.refreshSocial();
   }
 
+  private helping = new Set<string>();
+
   async help(objectId: string): Promise<void> {
     const visit = this.visit;
-    if (!visit) return;
+    // A quick double tap would send the same help twice, and the second one fails.
+    if (!visit || this.helping.has(objectId)) return;
+    this.helping.add(objectId);
     try {
       const res = await api.help(visit.owner.username, objectId);
       if (this.visit !== visit) return;
@@ -278,6 +285,8 @@ export class Store {
       this.emit();
     } catch (err) {
       this.error((err as Error).message);
+    } finally {
+      this.helping.delete(objectId);
     }
   }
 
@@ -294,14 +303,23 @@ export class Store {
     }
   }
 
-  async claimGift(id: number): Promise<void> {
+  private claiming = new Set<number>();
+
+  /** Accept a gift; true once it's in the barn. A second tap while one is in flight is ignored. */
+  async claimGift(id: number): Promise<boolean> {
+    if (this.claiming.has(id)) return false;
+    this.claiming.add(id);
     await this.flush();
     try {
       const res = await api.claimGift(id);
       this.adoptServerState(res.state, res.rev);
       await this.refreshSocial();
+      return true;
     } catch (err) {
       this.error((err as Error).message);
+      return false;
+    } finally {
+      this.claiming.delete(id);
     }
   }
 

@@ -8,9 +8,12 @@ import {
   LANDMARK_LIST,
   applyAction,
   balloonReady,
+  buildingStatus,
+  grandCraftMs,
   createFarm,
   grandDone,
   grandStage,
+  type BuildingObject,
   type FarmState,
 } from '@farm/shared';
 
@@ -110,6 +113,29 @@ describe('grand projects', () => {
     expect(bonus).toBeLessThan(40);
   });
 
+  it('the greenhouse rolls once per plot when a harvester does the harvesting', () => {
+    // Against the same farm without it: mastery adds bonus crops of its own.
+    const run = (built: boolean) => {
+      let s = rich();
+      if (built) s = build(s, 'grand_greenhouse');
+      s = act(s, { type: 'buyVehicle', vehicle: 'harvester' }).state;
+      const plots = Object.values(s.objects).filter((o) => o.kind === 'plot' && o.x >= 7 && o.x <= 9 && o.y >= 5 && o.y <= 7);
+      let got = 0;
+      for (let i = 0; i < 80; i++) {
+        const now = T0 + i * 3600_000;
+        for (const p of plots) Object.assign(s.objects[p.id], { crop: 'strawberry', plantedAt: now - 120_000 });
+        const before = s.inventory.strawberry ?? 0;
+        s = act(s, { type: 'drive', vehicle: 'harvester', x: 8, y: 6 }, now).state;
+        got += (s.inventory.strawberry ?? 0) - before;
+      }
+      return got / (80 * plots.length);
+    };
+    // About one extra in four per plot, as by hand (rolling twice would give nearly double).
+    const extra = run(true) - run(false);
+    expect(extra).toBeLessThan(0.36);
+    expect(extra).toBeGreaterThan(0.14);
+  });
+
   it('the windmill speeds up crafting', () => {
     const plain = rich();
     plain.inventory.wheat = 50;
@@ -118,6 +144,9 @@ describe('grand projects', () => {
     const fast = act(build(structuredClone(plain), 'lighthouse_windmill'), { type: 'craft', id: 'mill', recipe: 'flour' }).state;
     const len = (s: FarmState) => (s.objects.mill as { queue: { end: number }[] }).queue[0].end - T0;
     expect(len(fast)).toBe(Math.round(len(slow) * 0.75));
+    // What the workshop panel shows, and the progress bar starts from empty.
+    expect(grandCraftMs(fast, len(slow))).toBe(len(fast));
+    expect(buildingStatus(fast.objects.mill as BuildingObject, T0).active?.progress).toBe(0);
   });
 
   it('the conservatory adds to sales', () => {

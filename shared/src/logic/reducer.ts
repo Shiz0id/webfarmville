@@ -112,6 +112,8 @@ function sellItem(state: FarmState, id: string, qty: number, events: GameEvent[]
   const deco = DECORATIONS[id];
   if (!item && !deco) throw new GameError('Unknown item');
   if (item?.category === 'special') throw new GameError("That can't be sold");
+  // Rewards are keepsakes, here as on the farm (see sellObject).
+  if (!item && deco.reward) throw new GameError("You can't sell that");
   takeItem(state, id, qty);
   const price = item ? item.sell : Math.floor(deco.cost * SELL_BACK);
   earn(state, price * qty, events);

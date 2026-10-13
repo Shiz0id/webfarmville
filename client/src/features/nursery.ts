@@ -98,7 +98,15 @@ function nameOfProduct(def: string): string {
 }
 
 function openNursery(): void {
-  const m = openModal('Nursery Barn', { narrow: true });
+  let off = () => {};
+  let timer = 0;
+  const m = openModal('Nursery Barn', {
+    narrow: true,
+    onClose: () => {
+      off();
+      clearInterval(timer);
+    },
+  });
   const render = () => {
     const now = S.now();
     const list = babies().sort((a, b) => a.grownAt! - b.grownAt!);
@@ -162,4 +170,7 @@ function openNursery(): void {
     );
   };
   render();
+  // Keep timers and naps current while it's open.
+  off = S.onChange(render);
+  timer = window.setInterval(render, 5000);
 }

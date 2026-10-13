@@ -411,8 +411,12 @@ class CritterSpawner {
     if (def.rarity >= 3) {
       const glow = sc.add.image(img.x, img.y, texture(sc, 'fx:sparkle')).setScale(0.5 / RES).setDepth(img.depth + 0.1).setAlpha(0.8);
       sc.tweens.add({ targets: glow, alpha: 0.1, duration: 700, yoyo: true, repeat: -1 });
-      img.once('destroy', () => glow.destroy());
-      sc.events.on('update', () => glow.active && img.active && glow.setPosition(img.x + 8, img.y - 10));
+      const follow = () => glow.setPosition(img.x + 8, img.y - 10);
+      sc.events.on('update', follow);
+      img.once('destroy', () => {
+        sc.events.off('update', follow);
+        glow.destroy();
+      });
     }
     img.on('pointerdown', (_p: Phaser.Input.Pointer, _x: number, _y: number, ev: Phaser.Types.Input.EventData) => {
       ev.stopPropagation();

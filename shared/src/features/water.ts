@@ -76,8 +76,20 @@ export function isWell(obj: { kind: string; def?: string } | undefined): boolean
 
 /** When this well can fill the can again (now or earlier means ready). */
 export function wellReadyAt(state: FarmState, id: string): number {
-  const last = state.water?.wells[id];
+  const wells = state.water?.wells ?? {};
+  const last = wells[id] ?? putAway(state)[0]?.[1];
   return last === undefined ? 0 : last + WELL_COOLDOWN;
+}
+
+/**
+ * Draws from wells that have since been stored or sold, oldest first. A well
+ * put away and set back out (with a new id) is still filling up, so a fresh
+ * well takes over the oldest of these.
+ */
+function putAway(state: FarmState): [string, number][] {
+  return Object.entries(state.water?.wells ?? {})
+    .filter(([id]) => !isWell(state.objects[id]))
+    .sort((a, b) => a[1] - b[1]);
 }
 
 /** Can this plot use a drink? (Growing, and not already watered by you or the rain.) */
@@ -115,7 +127,9 @@ registerFeature({
       const added = CAN_SIZE - w.level;
       w.level = CAN_SIZE;
       w.at = ctx.now;
-      for (const id of Object.keys(w.wells)) if (!isWell(state.objects[id])) delete w.wells[id];
+      const away = putAway(state);
+      if (w.wells[obj.id] === undefined && away.length) delete w.wells[away.shift()![0]];
+      for (const [id, t] of away) if (t + WELL_COOLDOWN <= ctx.now) delete w.wells[id];
       w.wells[obj.id] = ctx.now;
       kit.bumpStat(state, 'drawWater');
       events.push({ type: 'drewWater', id: obj.id, added });

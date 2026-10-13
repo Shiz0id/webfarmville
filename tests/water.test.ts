@@ -77,6 +77,24 @@ describe('well water', () => {
     expect(() => act(s, { type: 'drawWater', id: 'w1' }, T0 + 1000 + CAN_REFILL * 3 + WELL_COOLDOWN)).toThrow('already full');
   });
 
+  it('putting a well away and back out does not refill it early', () => {
+    let s = farmer();
+    s.water = { level: 0, at: T0, wells: {} };
+    s = act(s, { type: 'drawWater', id: 'w1' }).state;
+    for (let i = 0; i < CAN_SIZE; i++) s = act(s, { type: 'waterCrop', id: `p${i}` }).state;
+    s = act(s, { type: 'store', id: 'w1' }).state;
+    s = act(s, { type: 'placeStored', def: 'well', x: 10, y: 10 }).state;
+    const id = Object.values(s.objects).find((o) => o.kind === 'deco')!.id;
+    expect(id).not.toBe('w1');
+    expect(() => act(s, { type: 'drawWater', id })).toThrow('filling up');
+    // Once its two hours are up, it works as normal.
+    const later = T0 + WELL_COOLDOWN;
+    s.water!.at = later;
+    s.water!.level = 0;
+    s = act(s, { type: 'drawWater', id }, later).state;
+    expect(Object.keys(s.water!.wells)).toEqual([id]);
+  });
+
   it('only wells and pumps hold water, and a full can needs none', () => {
     const s = farmer();
     s.objects.f1 = { id: 'f1', kind: 'deco', def: 'tulips_red', x: 12, y: 12 };
