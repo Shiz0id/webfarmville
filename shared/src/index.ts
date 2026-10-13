@@ -36,6 +36,7 @@ export * from './logic/status';
 export * from './logic/quests';
 export * from './logic/reducer';
 export * from './logic/villagerFarms';
+export * from './logic/farmCode';
 export * from './logic/help';
 export * from './logic/create';
 export * from './logic/features';

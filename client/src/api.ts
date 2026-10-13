@@ -80,6 +80,8 @@ export interface Friend {
   lastSeen: number;
   helpsLeft: number;
   giftSent: boolean;
+  /** A friend's farm saved from an invite link (browser-only build). */
+  pal?: boolean;
 }
 
 export interface SocialPayload {
@@ -96,6 +98,8 @@ export interface VisitPayload {
   state: FarmState;
   helpsLeft: number;
   giftSent: boolean;
+  /** Set when this is a farm from an invite link: when it was shared. */
+  sharedAt?: number;
   myState?: FarmState;
   myRev?: number;
   serverTime: number;

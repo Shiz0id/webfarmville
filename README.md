@@ -33,6 +33,7 @@ All of the art is drawn in code at startup, so there are no image assets to down
   - Snow days make cooking worth more XP.
   - Rainbows add +1 to every harvest.
   - Cats shelter on your goodies when it's wet or snowy.
+- **Invite links**: share your farm as a link; friends open it to stroll around and help out, no account needed.
 - **Villager friendships**:
   - Chat with the six villagers and give each one gift a day. Everyone has five loved items to discover, and gifts
     on a birthday count triple. Filling a villager's order also makes them happier.
@@ -171,6 +172,13 @@ between devices as a file.
 npm run dev:local -w client   # play the browser-only build at http://localhost:5173
 npm run build:pages           # builds client/dist-pages (relative paths, so any static host works)
 ```
+
+**Invite links** let friends see each other's farms without accounts. **🔗 Share link** (in Neighbors or the Farmhouse) makes a
+link that holds a compressed copy of your farm after the `#`, so no server ever sees it. A villager-sized farm comes out
+at about 900 characters, small enough for a chat message. Opening a link takes you straight to that farm. A brand-new
+player starts their own farm first. In the browser-only build the friend is saved in Neighbors, where you can help them
+five times a day, and a newer link from the same friend replaces the old copy. In the server build a link is a
+look-only visit. `node scripts/invite-check.mjs <screenshot-dir>` plays a share-and-visit round trip.
 
 `.github/workflows/pages.yml` tests, builds and deploys this build on every push to `main`. It can also be run
 by hand from the Actions tab. You only need to set it up once: in the repository, go to **Settings → Pages →

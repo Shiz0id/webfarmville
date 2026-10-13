@@ -1242,6 +1242,49 @@ img.ico {
   font-weight: 800;
 }
 
+.invite-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin: 0 0 10px;
+  border: 2px dashed #e9a8bf;
+  border-radius: 18px;
+  background: linear-gradient(#fff6fa, #ffeef4);
+}
+
+.invite-card .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.invite-card .title {
+  font-weight: 900;
+}
+
+.invite-card .sub {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.invite-field {
+  width: 100%;
+  resize: none;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.auth-invite {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 2px dashed #e9a8bf;
+  border-radius: 16px;
+  background: #fff1f6;
+  font-weight: 800;
+  color: var(--dark);
+}
+
 .avatar {
   width: 42px;
   height: 42px;

@@ -18,11 +18,13 @@ import {
   bumpStat,
   completeQuestSet,
   createFarm,
+  farmFromSnapshot,
   farmCharm,
   keepLevel,
   refreshNpcFarm,
   refreshQuests,
   utcDay,
+  type FarmSnapshot,
   type FarmState,
   type GameEvent,
   type TimedAction,
@@ -44,11 +46,15 @@ export interface LocalSave {
   inbox: { id: number; item: string; qty: number; from: string; createdAt: number }[];
   notifications: { id: number; text: string; createdAt: number; seen: boolean }[];
   nextId: number;
+  /** Friends' farms saved from invite links, by the name they're listed under. */
+  pals?: Record<string, { snap: FarmSnapshot; addedAt: number }>;
 }
 
 let save: LocalSave | null = null;
 /** The villagers' farms for this session (rebuilt fresh each time the game opens). */
 const villagers = new Map<string, FarmState>();
+/** Friends' farms as built from their links (helps made today live here until the page closes). */
+const palFarms = new Map<string, FarmState>();
 const allEvents = new URLSearchParams(location.search).has('allEvents');
 const ctx = (now: number) => ({ now, allEvents });
 
@@ -115,15 +121,10 @@ function mePayload(s: LocalSave): MePayload {
   return { user: { username: s.username, isNpc: false }, state: structuredClone(s.state), rev: s.rev, serverTime: Date.now(), allEvents };
 }
 
-/** A villager's username as the game spells it. */
-function canonical(username: string): string {
-  const n = NPC_NEIGHBORS.find((v) => v.username.toLowerCase() === username.toLowerCase());
-  if (!n) throw new ApiError(404, `No farmer named "${username}"`);
-  return n.username;
-}
+const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 function villager(username: string, now: number): FarmState {
-  const def = VILLAGER_FARMS.find((f) => f.username === canonical(username));
+  const def = VILLAGER_FARMS.find((f) => f.username === username);
   if (!def) throw new ApiError(404, `No farmer named "${username}"`);
   let farm = villagers.get(def.username);
   if (!farm) {
@@ -131,6 +132,44 @@ function villager(username: string, now: number): FarmState {
     villagers.set(def.username, farm);
   } else refreshNpcFarm(farm, now);
   return farm;
+}
+
+function palFarm(s: LocalSave, name: string, now: number): FarmState {
+  let farm = palFarms.get(name);
+  if (!farm) {
+    farm = farmFromSnapshot(s.pals![name].snap, now);
+    palFarms.set(name, farm);
+  }
+  return farm;
+}
+
+/** A neighbor by name: one of the villagers, or a friend saved from a link. */
+function neighbor(s: LocalSave, username: string, now: number): { name: string; farm: FarmState; pal?: FarmSnapshot } {
+  const npc = NPC_NEIGHBORS.find((v) => sameName(v.username, username));
+  if (npc) return { name: npc.username, farm: villager(npc.username, now) };
+  const name = Object.keys(s.pals ?? {}).find((p) => sameName(p, username));
+  if (!name) throw new ApiError(404, `No farmer named "${username}"`);
+  return { name, farm: palFarm(s, name, now), pal: s.pals![name].snap };
+}
+
+/**
+ * Keep a friend's farm from an invite link. A newer link from the same friend
+ * replaces their old one. Returns the name they're listed under, or null for a
+ * link to this very farm.
+ */
+export function addPal(snap: FarmSnapshot): string | null {
+  const s = load();
+  if (sameName(snap.by, s.username) && snap.name === s.state.name) return null;
+  s.pals ??= {};
+  const taken = (n: string) => sameName(n, s.username) || NPC_NEIGHBORS.some((v) => sameName(v.username, n));
+  let name = snap.by;
+  for (let i = 2; taken(name); i++) name = `${snap.by} ${i}`;
+  const old = Object.keys(s.pals).find((p) => sameName(p, name));
+  if (old) delete s.pals[old];
+  s.pals[name] = { snap, addedAt: Date.now() };
+  palFarms.delete(name);
+  write(s);
+  return name;
 }
 
 function helpsUsed(s: LocalSave, username: string, now: number): number {
@@ -231,6 +270,20 @@ export const localApi = {
           giftSent: giftSentToday(s, n.username, now),
         };
       });
+      for (const [name, { snap }] of Object.entries(s.pals ?? {})) {
+        const farm = palFarm(s, name, now);
+        friends.push({
+          username: name,
+          isNpc: false,
+          pal: true,
+          farmName: farm.name,
+          level: farm.level,
+          charm: farmCharm(farm),
+          lastSeen: snap.at,
+          helpsLeft: Math.max(0, HELPS_PER_FRIEND_PER_DAY - helpsUsed(s, name, now)),
+          giftSent: true,
+        });
+      }
       return { rev: s.rev, friends, incoming: [], outgoing: [], gifts: [...s.inbox], notifications: [...s.notifications] };
     }),
   seenNotifications: () =>
@@ -245,24 +298,30 @@ export const localApi = {
       throw new ApiError(400, 'Share a farm postcard to show friends your farm');
     }),
   respondFriend: (_username: string, _accept: boolean) => resolve(() => ({ ok: true })),
-  removeFriend: (_username: string) =>
+  removeFriend: (username: string) =>
     resolve(() => {
-      throw new ApiError(400, 'The villagers will always be your neighbors');
+      const s = load();
+      const name = Object.keys(s.pals ?? {}).find((p) => sameName(p, username));
+      if (!name) throw new ApiError(400, 'The villagers will always be your neighbors');
+      delete s.pals![name];
+      palFarms.delete(name);
+      write(s);
+      return { ok: true };
     }),
 
   visit: (username: string) =>
     resolve((): VisitPayload => {
       const s = load();
       const now = Date.now();
-      const name = canonical(username);
-      const farm = villager(name, now);
+      const { name, farm, pal } = neighbor(s, username, now);
       changeMine(s, now, (state) => bumpStat(state, 'visit'));
       write(s);
       return {
-        owner: { username: name, isNpc: true },
+        owner: { username: name, isNpc: !pal },
         state: structuredClone(farm),
         helpsLeft: Math.max(0, HELPS_PER_FRIEND_PER_DAY - helpsUsed(s, name, now)),
-        giftSent: giftSentToday(s, name, now),
+        giftSent: pal ? true : giftSentToday(s, name, now),
+        sharedAt: pal?.at,
         myState: structuredClone(s.state),
         myRev: s.rev,
         serverTime: now,
@@ -273,8 +332,7 @@ export const localApi = {
     resolve((): HelpPayload => {
       const s = load();
       const now = Date.now();
-      const name = canonical(username);
-      const farm = villager(name, now);
+      const { name, farm } = neighbor(s, username, now);
       const used = helpsUsed(s, name, now);
       if (used >= HELPS_PER_FRIEND_PER_DAY) throw new ApiError(429, 'No helps left for this neighbor today');
       const result = applyHelp(farm, objectId, now);
@@ -301,7 +359,8 @@ export const localApi = {
     resolve(() => {
       const s = load();
       const now = Date.now();
-      const name = canonical(username);
+      const { name, pal } = neighbor(s, username, now);
+      if (pal) throw new ApiError(400, "Gifts can't travel through a link (yet!)");
       const gift = GIFTS[giftId];
       if (!gift) throw new ApiError(400, 'Unknown gift');
       if (giftSentToday(s, name, now)) throw new ApiError(429, 'You already sent them a gift today');

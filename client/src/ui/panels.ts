@@ -50,6 +50,7 @@ import { fmtDuration, fmtNum, h, nameOf, timeAgo } from '../util';
 import { confetti, openModal, toast } from './dom';
 import { forFingers } from './layout';
 import { downloadBackup, pickBackup } from './backup';
+import { shareInvite } from '../share';
 import { LOCAL } from '../api';
 import { portrait } from './villager';
 import { eventLive as liveEvent } from '../events';
@@ -887,14 +888,21 @@ export function openNeighbors(): void {
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') void add();
   });
+  const invite = h(
+    'div',
+    { class: 'invite-card' },
+    h('div', { class: 'grow' }, h('div', { class: 'title' }, '💌 Invite a friend'), h('div', { class: 'sub' }, 'Send a link to your farm. It shows your farm as it looks right now, so share a fresh one after you redecorate!')),
+    h('button', { class: 'btn green small', onclick: () => void shareInvite(S) }, '🔗 Share link'),
+  );
   const top = LOCAL
-    ? h('div', { class: 'muted small center', style: { margin: '0 0 12px' } }, 'The villagers are your neighbors: drop by, lend a hand and swap gifts every day.')
+    ? h('div', null, invite, h('div', { class: 'muted small center', style: { margin: '0 0 12px' } }, 'Open a friend\'s link to add them here. The villagers are always happy to see you too!'))
     : h(
     'div',
     null,
     h('div', { class: 'section-title' }, '➕ Add a neighbor'),
     h('div', { class: 'inline' }, input, h('button', { class: 'btn green', onclick: add }, 'Invite')),
     h('div', { class: 'sub', style: { fontSize: '12px', color: 'var(--muted)', fontWeight: '800', margin: '6px 0 12px' } }, `Share your farmer name: ${S.username}`),
+    invite,
   );
   void S.refreshSocial().then(() => setTimeout(() => import('../api').then(({ api }) => api.seenNotifications()), 1500));
 
@@ -952,13 +960,29 @@ export function openNeighbors(): void {
               { class: 'grow' },
               h('div', { class: 'title' }, f.username.replace('_', ' ')),
               h('div', { class: 'sub' }, `${f.farmName} · Lv ${f.level} · 💗${f.charm}`),
-              h('div', { class: 'sub' }, `Helps left today: ${f.helpsLeft}/5${f.isNpc ? '' : ` · seen ${timeAgo(f.lastSeen, S.now())}`}`),
+              h('div', { class: 'sub' }, `Helps left today: ${f.helpsLeft}/5${f.isNpc ? '' : ` · ${f.pal ? 'shared' : 'seen'} ${timeAgo(f.lastSeen, S.now())}`}`),
             ),
-            h(
-              'button',
-              { class: 'btn pink small', disabled: f.giftSent, onclick: () => openGiftPicker(f.username) },
-              f.giftSent ? 'Gift sent' : '🎁 Gift',
-            ),
+            f.pal
+              ? h(
+                  'button',
+                  {
+                    class: 'btn small',
+                    title: 'Remove from your neighbors',
+                    'aria-label': `Remove ${f.username}`,
+                    onclick: async () => {
+                      if (!confirm(`Remove ${f.username} from your neighbors? Opening their link again brings them back.`)) return;
+                      const { api } = await import('../api');
+                      await api.removeFriend(f.username).catch((e) => toast(e.message, 'error'));
+                      await S.refreshSocial();
+                    },
+                  },
+                  '✕',
+                )
+              : h(
+                  'button',
+                  { class: 'btn pink small', disabled: f.giftSent, onclick: () => openGiftPicker(f.username) },
+                  f.giftSent ? 'Gift sent' : '🎁 Gift',
+                ),
             h(
               'button',
               {
@@ -1147,6 +1171,7 @@ export function openFarmhouse(): void {
             },
             '📸 Save a postcard',
           ),
+          h('button', { class: 'btn small green', onclick: () => void shareInvite(S) }, '🔗 Invite a friend'),
           ...(LOCAL
             ? [
                 h('button', { class: 'btn small', onclick: () => downloadBackup(st.name) }, '💾 Back up'),

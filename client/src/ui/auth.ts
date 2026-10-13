@@ -1,6 +1,6 @@
 import { LOCAL, api, setToken, type MePayload } from '../api';
 import { pickBackup } from './backup';
-import { DECORATION_LIST } from '@farm/shared';
+import { DECORATION_LIST, type FarmSnapshot } from '@farm/shared';
 import { artURL, hasArt, iconURL } from '../art';
 import { featuredEvent } from '../events';
 import { h } from '../util';
@@ -50,7 +50,7 @@ function titleScenery(): HTMLElement[] {
 }
 
 /** Shows the login/register screen and resolves once the player is signed in. */
-export function showAuth(): Promise<MePayload> {
+export function showAuth(invite?: FarmSnapshot | null): Promise<MePayload> {
   return new Promise((resolve) => {
     let mode: 'login' | 'register' = 'register';
     const user = h('input', { class: 'field', placeholder: 'Farmer name', autocomplete: 'username', maxlength: 16 });
@@ -96,6 +96,7 @@ export function showAuth(): Promise<MePayload> {
       h('img', { class: 'auth-logo', src: iconURL('sunflower'), alt: '' }),
       h('h1', null, 'Meadowbrook Farm'),
       h('p', null, LOCAL ? 'Grow crops, raise animals, decorate, and visit the villagers. Your farm is saved on this device.' : 'Grow crops, raise animals, decorate, and visit your neighbors.'),
+      invite ? h('div', { class: 'auth-invite' }, `💌 ${invite.by.replace('_', ' ')} invited you to visit ${invite.name}! Start a farm of your own and we'll take you straight there.`) : null,
       LOCAL ? null : h('div', { class: 'auth-tabs' }, tabReg, tabLogin),
       user,
       LOCAL ? null : pass,

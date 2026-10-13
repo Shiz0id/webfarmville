@@ -4,7 +4,7 @@
 // instant, and is queued for the server. When the server answers with its
 // authoritative state, any actions still in flight are replayed on top of it.
 
-import { GameError, applyAction, type Action, type FarmState, type GameEvent, type TimedAction } from '@farm/shared';
+import { GameError, applyAction, farmFromSnapshot, type Action, type FarmSnapshot, type FarmState, type GameEvent, type TimedAction } from '@farm/shared';
 import { ApiError, api, setToken, type MePayload, type SocialPayload, type VisitPayload } from './api';
 
 export interface Visit {
@@ -12,6 +12,8 @@ export interface Visit {
   state: FarmState;
   helpsLeft: number;
   giftSent: boolean;
+  /** A farm from an invite link: when it was shared. */
+  sharedAt?: number;
 }
 
 type Listener = () => void;
@@ -234,7 +236,7 @@ export class Store {
 
   private applyVisit(v: VisitPayload): void {
     this.syncClock(v.serverTime);
-    this.visit = { owner: v.owner, state: v.state, helpsLeft: v.helpsLeft, giftSent: v.giftSent };
+    this.visit = { owner: v.owner, state: v.state, helpsLeft: v.helpsLeft, giftSent: v.giftSent, sharedAt: v.sharedAt };
     if (v.myState && v.myRev !== undefined) this.adoptServerState(v.myState, v.myRev);
   }
 
@@ -246,6 +248,13 @@ export class Store {
     } catch (err) {
       this.error((err as Error).message);
     }
+  }
+
+  /** Stroll around a farm from an invite link (a look-only visit: there's no one to help). */
+  async viewSnapshot(snap: FarmSnapshot): Promise<void> {
+    await this.flush();
+    this.visit = { owner: { username: snap.by, isNpc: false }, state: farmFromSnapshot(snap, this.now()), helpsLeft: 0, giftSent: true, sharedAt: snap.at };
+    this.emit();
   }
 
   endVisit(): void {

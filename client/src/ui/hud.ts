@@ -8,7 +8,8 @@ import { audioSettings, setMusic } from '../sfx';
 import { installRow } from './install';
 import { forFingers, isTouch, layout, onLayout, type Layout } from './layout';
 import { openKitchen, readyDishes } from './cooking';
-import { fmtNum, h } from '../util';
+import { fmtNum, h, timeAgo } from '../util';
+import { LOCAL } from '../api';
 import { HUD_BUTTONS, HUD_PILLS, MODE_HINTS, catalogTabBadges } from '../features/registry';
 import {
   claimableQuests,
@@ -362,7 +363,12 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     hint.style.display = 'none';
     if (visiting) {
       visitWho.textContent = `Visiting ${visiting.state.name}`;
-      visitSub.textContent = `${visiting.owner.username.replace('_', ' ')} · Lv ${visiting.state.level} · Helps left today: ${visiting.helpsLeft}/5`;
+      const helps = `Helps left today: ${visiting.helpsLeft}/5`;
+      const shared = visiting.sharedAt === undefined ? '' : `shared ${timeAgo(visiting.sharedAt, store.now())}`;
+      // A farm from a link on the server build is just for looking: there's no one there to help.
+      const parts = visiting.sharedAt === undefined ? [helps] : LOCAL ? [helps, shared] : [shared];
+      visitSub.textContent = [`${visiting.owner.username.replace('_', ' ')}`, `Lv ${visiting.state.level}`, ...parts].join(' · ');
+      giftBtn.style.display = visiting.sharedAt === undefined ? '' : 'none';
       giftBtn.disabled = visiting.giftSent;
       giftBtn.textContent = visiting.giftSent ? '🎁 Gift sent' : '🎁 Gift';
     } else {

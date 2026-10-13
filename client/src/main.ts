@@ -8,6 +8,8 @@ import { buildArt } from './art';
 import { bus } from './bus';
 import { FarmScene } from './scenes/FarmScene';
 import { Store } from './store';
+import { openInvite, readInvite } from './share';
+import type { FarmSnapshot } from '@farm/shared';
 import { featuredEvent } from './events';
 import { setMusicStyle, sfx, unlockAudioOnGesture } from './sfx';
 import { setTool } from './tools';
@@ -19,7 +21,7 @@ import { dailyAvailable, initPanels, showUnwrap, openBuilding, openFarmhouse, op
 import { villagerSay } from './ui/villager';
 import { initFeatures } from './features';
 
-async function signIn(): Promise<MePayload> {
+async function signIn(invite: FarmSnapshot | null): Promise<MePayload> {
   if (getToken()) {
     try {
       return await api.me();
@@ -32,7 +34,7 @@ async function signIn(): Promise<MePayload> {
     }
   }
   document.getElementById('boot')?.remove();
-  return showAuth();
+  return showAuth(invite);
 }
 
 /** Keep the game on the device so it opens fast and can be added to a home screen. */
@@ -47,7 +49,9 @@ async function start(): Promise<void> {
   // Paint all the art while we talk to the server.
   await new Promise((r) => setTimeout(r, 0));
   buildArt();
-  const me = await signIn();
+  // A friend's farm link to open once we're in.
+  const invite = await readInvite();
+  const me = await signIn(invite);
   document.getElementById('boot')?.remove();
 
   const store = new Store(me);
@@ -184,7 +188,30 @@ async function start(): Promise<void> {
   });
 
   void store.refreshSocial();
+  // Links opened while the game is already running (pasted into the address bar).
+  window.addEventListener('hashchange', () => {
+    void readInvite().then((snap) => snap && openInvite(store, snap).then(recenter));
+  });
   if (import.meta.env.DEV || location.search.includes('debug')) Object.assign(window, { __farm: { store, scene } });
+  const greet = () => greetings(store, feature, openQuests);
+  if (invite) {
+    // Straight to the friend's farm; the usual hellos wait until you're home.
+    const go = () => void openInvite(store, invite).then(() => {
+      recenter();
+      if (!store.isVisiting) return greet();
+      const off = store.onChange(() => {
+        if (store.isVisiting) return;
+        off();
+        setTimeout(greet, 500);
+      });
+    });
+    if (sceneReady) go();
+    else sceneWaiters.push(go);
+  } else greet();
+}
+
+/** Who says hello when the game opens: a festival greeting, the mayor's welcome or the daily bonus reminder. */
+function greetings(store: Store, feature: ReturnType<typeof featuredEvent>, openQuests: () => void): void {
   const introSeen = feature ? `farm.intro.${feature.event}.${new Date(store.now()).getUTCFullYear()}` : '';
   let seen = true;
   try {
