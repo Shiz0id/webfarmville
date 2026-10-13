@@ -1,7 +1,7 @@
 # 🌻 Meadowbrook Farm
 
 A cozy isometric farming game for the browser, in the spirit of classic social farm games and Animal Crossing.
-Plow and plant, raise animals, grow an orchard, craft goods in workshops, decorate with 150+ wholesome
+Plow and plant, raise animals, grow an orchard, craft goods in workshops, decorate with 400+ wholesome
 decorations (including seasonal holiday sets), and visit your neighbors to help out and send gifts.
 
 All of the art is drawn in code at startup, so there are no image assets to download or license.
@@ -92,7 +92,7 @@ All of the art is drawn in code at startup, so there are no image assets to down
   head start, once per crop. The can holds 10 splashes and slowly trickles back by itself, or tap a Wishing Well or
   Water Pump to fill it to the brim (each well refills every two hours). On rainy days the sky does the watering.
 - **Mystery gifts**: surprise presents that drop while you farm and unwrap into decorations.
-- **About 320 decorations** in six collections:
+- **Over 400 decorations** in six collections:
   - *core*: flowers, plants, fences, paths, furniture, lights, water and whimsy
   - *holiday lifestyle*
   - *Gardening Mama-style horticulture*
@@ -102,6 +102,15 @@ All of the art is drawn in code at startup, so there are no image assets to down
 
   Windmills spin, flames flicker, fountains splash, ghosts float and trees sway. A **Decor Catalog** tracks
   everything you've collected.
+- **The Decor page** (the pink Decor button next to the Market, or the lantern in the corner on phones) holds
+  every decoration:
+  - It has a category rail, search (by name, category or festival), sorting, and *Can afford* and *New to me*
+    filters.
+  - The Seasonal shelf includes each festival's token shop.
+  - A Rewards shelf shows the decorations you earn rather than buy, and how to earn each one.
+  - A Storage tab holds everything the Store tool has tucked away.
+  - The page remembers where you were, so you can place something and pop straight back.
+  - `node scripts/decor-check.mjs <screenshot-dir>` tests it.
 - **15 seasonal events**: Lunar New Year, Valentine's Day, St. Patrick's Day, Cherry Blossom Viewing, the
   Spring Egg Hunt, Earth Day, the Summer Festival, the Star Festival, the Mid-Autumn Moon Festival, the Harvest
   Festival, Halloween, the Festival of Lights, Thanksgiving, the Winter Holidays and New Year. Each one has:

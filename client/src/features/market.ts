@@ -25,7 +25,7 @@ import { artURL, hasArt, iconURL, texture } from '../art';
 import { bus } from '../bus';
 import { sfx } from '../sfx';
 import { openModal, toast } from '../ui/dom';
-import { openShop } from '../ui/panels';
+import { openDecor } from '../ui/decor';
 import { fmtDuration, fmtNum, h } from '../util';
 import type { FarmScene } from '../scenes/FarmScene';
 import type { Store } from '../store';
@@ -74,8 +74,8 @@ export function openStall(): void {
           { class: 'mk-empty' },
           hasArt('deco:market_stall') ? h('img', { src: artURL('deco:market_stall') }) : null,
           h('div', { class: 'title' }, "Set up a Farmers' Market Stall"),
-          h('div', { class: 'muted' }, 'Villagers pay more than the barn does, and something is always in demand! Find the stall in Market › Decor.'),
-          h('button', { class: 'btn green', onclick: () => (m.close(), openShop('decor')) }, 'Shop 🛒'),
+          h('div', { class: 'muted' }, 'Villagers pay more than the barn does, and something is always in demand! Find the stall on the Decor page.'),
+          h('button', { class: 'btn green', onclick: () => (m.close(), openDecor({ q: "Farmers' Market Stall" })) }, 'Decor 🌷'),
         ),
       );
       return;

@@ -7,6 +7,7 @@ import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
 import { nowPlaying, onTrackChange } from '../music/engine';
 import { installRow } from './install';
+import { openDecor } from './decor';
 import { forFingers, isTouch, layout, onLayout, type Layout } from './layout';
 import { openKitchen, readyDishes } from './cooking';
 import { fmtNum, h, timeAgo } from '../util';
@@ -69,16 +70,17 @@ function countTo(el: HTMLElement, to: number): void {
 /** The level each feature's button appears at (its first quest's level). */
 const FEATURE_UNLOCK: Record<string, number> = { kitties: 3, fish: 3, journal: 3, friends: 4, town: 4, garage: 4, fair: 4, blooms: 5 };
 
-const TOOLS: { id: Tool | 'shop' | 'cook'; label: string; em: string; hint?: string }[] = [
+const TOOLS: { id: Tool | 'shop' | 'decor' | 'cook'; label: string; em: string; hint?: string }[] = [
   { id: 'hand', label: 'Hand', em: '✋' },
   { id: 'harvest', label: 'Harvest', em: '🧺' },
   { id: 'plow', label: 'Plow', em: '⛏️', hint: 'Click or drag over grass to plow plots (15 coins each)' },
   { id: 'seed', label: 'Seeds', em: '🌱' },
   { id: 'water', label: 'Water', em: '💧', hint: 'Click or drag over growing crops to water them. Tap a Wishing Well or Water Pump to fill your can.' },
   { id: 'shop', label: 'Market', em: '🛒' },
+  { id: 'decor', label: 'Decor', em: '🌷' },
   { id: 'cook', label: 'Cook', em: '🍳' },
   { id: 'move', label: 'Move', em: '🔀', hint: 'Click something to pick it up, then click where it should go' },
-  { id: 'store', label: 'Store', em: '📦', hint: 'Click a decoration to put it in your barn' },
+  { id: 'store', label: 'Store', em: '📦', hint: 'Click a decoration to put it in storage (find it on the Decor page)' },
   { id: 'sell', label: 'Sell', em: '💰', hint: 'Click something to sell it (or remove a plot)' },
 ];
 
@@ -108,8 +110,8 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
       'div',
       {
         class: 'pill candy-pill',
-        title: `${f.currencyName}: spend them in the ${EVENTS[f.event].name} shop (Market › Decor › Seasonal)`,
-        onclick: () => openShop('decor'),
+        title: `${f.currencyName}: spend them in the ${EVENTS[f.event].name} token shop (Decor › Seasonal)`,
+        onclick: () => openDecor({ cat: 'seasonal' }),
       },
       h('img', { class: 'ico', src: iconURL(f.currency) }),
       count,
@@ -140,6 +142,8 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const daily = roundBtn('farm', '🏡', 'Farm', openFarmhouse);
   const catalog = roundBtn('collections', '📖', 'Collections', () => openCatalog());
   const musicIcon = () => (audioSettings.music ? uiIcon('music', '🎵') : uiIcon('music_off', '🔇'));
+  // On phones the Decor page gets a corner button instead of a dock slot.
+  const decor = roundBtn('decor', '🌷', 'Decor', () => openDecor());
   const music = roundBtn('music', '🎵', 'Music', () => {
     setMusic(!audioSettings.music);
     music.btn.firstChild!.replaceWith(musicIcon());
@@ -209,12 +213,14 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const toolbar = h('div', { class: 'toolbar' });
   for (const t of TOOLS) {
     const em = h('span', { class: 'em' }, t.id === 'seed' ? seedImg : uiIcon(t.id === 'shop' ? 'market' : t.id, t.em));
+    const cls = t.id === 'shop' ? ' shop' : t.id === 'decor' ? ' decor' : '';
     const btn = h(
       'button',
       {
-        class: `tool${t.id === 'shop' ? ' shop' : ''}`,
+        class: `tool${cls}`,
         onclick: () => {
           if (t.id === 'shop') return openShop();
+          if (t.id === 'decor') return openDecor();
           if (t.id === 'cook') return openKitchen();
           if (t.id === 'seed') return openSeedPicker(null);
           setTool(t.id);
@@ -275,7 +281,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   const toolOrder = [...toolbar.children] as HTMLElement[];
   // Seeds plow fresh ground by themselves, so the plow can wait in the tray.
   const DOCK = new Set(['hand', 'harvest', 'seed', 'water', 'shop']);
-  const trayTools = [...toolButtons].filter(([id]) => !DOCK.has(id)).map(([, b]) => b);
+  const trayTools = [...toolButtons].filter(([id]) => !DOCK.has(id) && id !== 'decor').map(([, b]) => b);
   const moreBadge = h('span', { class: 'badge', style: { display: 'none' } });
   const moreTools = h('button', { class: 'tool more-tools', 'aria-label': 'More tools' }, h('span', { class: 'em' }, uiIcon('more_tools', '')), 'More', moreBadge);
   const tray = h('div', { class: 'tool-tray' });
@@ -293,7 +299,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   });
 
   const cornerOrder = [...corner.children] as HTMLElement[];
-  const ON_SCREEN = new Set<HTMLElement>([quests.btn, orders.btn, barn.btn]);
+  const ON_SCREEN = new Set<HTMLElement>([quests.btn, orders.btn, barn.btn, decor.btn]);
   const drawerGrid = h('div', { class: 'drawer-grid' });
   const drawerBack = h(
     'div',
@@ -460,7 +466,10 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     for (const b of cornerOrder) corner.append(b);
     moreTools.remove();
     menu.btn.remove();
+    decor.btn.remove();
     if (phone) {
+      toolButtons.get('decor')?.remove();
+      corner.insertBefore(decor.btn, barn.btn.nextSibling);
       for (const b of trayTools) tray.append(b);
       toolbar.append(moreTools);
       for (const b of cornerOrder) if (!ON_SCREEN.has(b)) drawerGrid.append(b);

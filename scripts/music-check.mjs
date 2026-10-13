@@ -40,8 +40,8 @@ for (const r of levels) {
   if (r.peak > 0.9) errors.push(`${r.id} clips`);
 }
 
-// The live player: a tap unlocks the sound and a song starts with its name card.
-await page.mouse.click(640, 400);
+// The live player: a key press unlocks the sound and a song starts with its name card.
+await page.keyboard.press('Shift');
 await page.waitForFunction(() => window.__farm.music.nowPlaying(), null, { timeout: 8000 });
 // A festival, when one is on, outranks the farm's own songs.
 const festival = await page.evaluate(() => [...document.body.classList].find((c) => c.startsWith('event-'))?.slice(6) ?? null);
@@ -57,7 +57,7 @@ for (const [q, want] of [...moods.map(([q, w]) => [`event=none&${q}`, w]), ['eve
   await page.goto(`${base}?debug&${q}`);
   await page.waitForSelector('.toolbar', { state: 'attached' });
   await page.waitForTimeout(800);
-  await page.mouse.click(640, 400);
+  await page.keyboard.press('Shift');
   await page.waitForFunction(() => window.__farm.music.nowPlaying(), null, { timeout: 8000 });
   const np = await page.evaluate(() => window.__farm.music.nowPlaying());
   console.log(`• ${q}:`, np);

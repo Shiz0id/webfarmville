@@ -18,7 +18,6 @@ import {
   ITEMS,
   ITEM_LIST,
   QUESTS,
-  EVENT_FEATURES,
   villagerFor,
   RIBBON_COLORS,
   RIBBON_LIST,
@@ -27,7 +26,6 @@ import {
   charmStars,
   dailyBonus,
   farmCharm,
-  isEventActive,
   isQuestComplete,
   masteryProgress,
   masteryStars,
@@ -37,7 +35,6 @@ import {
   utcDay,
   type BuildingObject,
   type DecoCategory,
-  type EventDef,
   type ItemCategory,
   GIFT_LEVEL_FROM,
   MYSTERY_GIFT,
@@ -56,6 +53,8 @@ import { portrait } from './villager';
 import { eventLive as liveEvent } from '../events';
 import { bus } from '../bus';
 import { BUILDING_SECTIONS, CATALOG_TABS } from '../features/registry';
+import { openDecor, storedCount } from './decor';
+import { card, levelLock, startPlacing, tabsBar } from './cards';
 
 let S: Store;
 let recenter: () => void = () => {};
@@ -66,7 +65,6 @@ export function initPanels(store: Store, onVisitChange: () => void): void {
 }
 
 const coin = () => h('img', { class: 'ico', src: iconURL('coin'), alt: 'coins' });
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 
 /** A modal whose body re-renders when the store changes (and optionally on a timer). */
@@ -101,75 +99,8 @@ function liveModal(
   return { ...m, rerender };
 }
 
-interface CardOpts {
-  img: string;
-  name: string;
-  price?: number;
-  tokens?: number;
-  tokenIcon?: string;
-  meta?: (string | Node)[];
-  locked?: string | false;
-  charm?: number;
-  owned?: number;
-  onClick?: () => void;
-}
-
-function card(o: CardOpts): HTMLElement {
-  const el = h(
-    'div',
-    { class: `card${o.locked ? ' locked' : ''}`, title: o.locked || o.name },
-    o.locked ? h('span', { class: 'tag' }, o.locked) : null,
-    o.charm ? h('span', { class: 'tag charm' }, `💗${o.charm}`) : null,
-    o.owned ? h('span', { class: 'owned' }, `×${o.owned}`) : null,
-    h('div', { class: 'art' }, h('img', { src: o.img, alt: o.name, loading: 'lazy' })),
-    h('div', { class: 'name' }, o.name),
-    o.tokens
-      ? h('div', { class: 'price candy' }, h('img', { class: 'ico', src: iconURL(o.tokenIcon ?? 'candy') }), fmtNum(o.tokens))
-      : o.price !== undefined
-        ? h('div', { class: 'price' }, coin(), o.price === 0 ? 'Free' : fmtNum(o.price))
-        : null,
-    ...(o.meta ?? []).map((m) => h('div', { class: 'meta' }, m)),
-  );
-  el.addEventListener('click', () => {
-    if (o.locked) toast(o.locked.startsWith('Lv') ? `Unlocks at level ${o.locked.slice(3)}` : o.locked, 'error');
-    else o.onClick?.();
-  });
-  return el;
-}
-
 function eventLive(ev: string): boolean {
   return liveEvent(ev, S.now(), S.allEvents);
-}
-
-function levelLock(level: number): string | false {
-  return S.state.level < level ? `Lv ${level}` : false;
-}
-
-function eventReturn(ev: EventDef): string {
-  return `Back ${MONTHS[ev.start[0] - 1]} ${ev.start[1]}`;
-}
-
-function tabsBar<T extends string>(tabs: { id: T; label: string }[], active: T, onPick: (t: T) => void): HTMLElement {
-  const bar = h('div', { class: 'modal-tabs' });
-  const render = (cur: T) => {
-    bar.replaceChildren(
-      ...tabs.map((t) =>
-        h(
-          'button',
-          {
-            class: `btn small tab${t.id === cur ? ' active' : ''}`,
-            onclick: () => {
-              render(t.id);
-              onPick(t.id);
-            },
-          },
-          t.label,
-        ),
-      ),
-    );
-  };
-  render(active);
-  return bar;
 }
 
 // ---------------------------------------------------------------------------
@@ -177,21 +108,12 @@ function tabsBar<T extends string>(tabs: { id: T; label: string }[], active: T, 
 
 type ShopTab = 'seeds' | 'trees' | 'animals' | 'buildings' | 'decor' | 'land';
 
-function startPlacing(def: string, name: string, source: 'shop' | 'inventory', close: () => void, baby = false): void {
-  setTool('place', { place: { def, source, ...(baby ? { baby } : {}) } });
-  close();
-  toast(`Place your ${name}. Press R to flip, Esc or right-click to stop.`, 'info');
-}
-
 function owned(def: string): number {
   return Object.values(S.state.objects).filter((o) => o.kind !== 'plot' && o.def === def).length;
 }
 
-export function openShop(tab: ShopTab = 'seeds'): void {
-  let current = tab;
-  const now = S.now();
-  const active = DECORATION_LIST.some((d) => d.event && isEventActive(EVENTS[d.event], now));
-  let decoCat: DecoCategory = active ? 'seasonal' : 'flowers';
+export function openShop(tab: Exclude<ShopTab, 'decor'> = 'seeds'): void {
+  let current: ShopTab = tab;
   let babies = false;
   const tabs = tabsBar<ShopTab>(
     [
@@ -199,11 +121,17 @@ export function openShop(tab: ShopTab = 'seeds'): void {
       { id: 'trees', label: '🌳 Trees' },
       { id: 'animals', label: '🐮 Animals' },
       { id: 'buildings', label: '🏠 Buildings' },
-      { id: 'decor', label: '🌷 Decor' },
       { id: 'land', label: '🗺️ Land' },
+      { id: 'decor', label: '🌷 Decor ›' },
     ],
     current,
     (t) => {
+      // Decorations have a page of their own.
+      if (t === 'decor') {
+        m.close();
+        openDecor({ tab: 'shop' });
+        return;
+      }
       current = t;
       m.rerender();
     },
@@ -301,99 +229,6 @@ export function openShop(tab: ShopTab = 'seeds'): void {
           );
         }
         body.append(grid);
-      } else if (current === 'decor') {
-        const chips = h('div', { class: 'chips' });
-        for (const c of DECO_CATEGORIES) {
-          chips.append(
-            h(
-              'button',
-              {
-                class: `chip${c.id === decoCat ? ' active' : ''}`,
-                onclick: () => {
-                  decoCat = c.id;
-                  m.rerender();
-                },
-              },
-              c.id === 'seasonal' ? `✨ ${c.name}` : c.name,
-            ),
-          );
-        }
-        body.append(chips);
-        const now = S.now();
-        const items = DECORATION_LIST.filter((d) => d.category === decoCat && !d.reward);
-        if (decoCat === 'seasonal') {
-          const evIds = [...new Set(items.map((d) => d.event!))];
-          // Running events first.
-          evIds.sort(
-            (a, b) =>
-              Number(eventLive(b)) - Number(eventLive(a)) ||
-              (EVENT_FEATURES[a]?.priority ?? 99) - (EVENT_FEATURES[b]?.priority ?? 99),
-          );
-          for (const evId of evIds) {
-            const ev = EVENTS[evId];
-            const on = S.allEvents || isEventActive(ev, now);
-            body.append(
-              h(
-                'div',
-                { class: 'event-banner', style: { background: on ? ev.color : '#b9a993' } },
-                h('span', null, `${on ? '🎉' : '🔒'} ${ev.name}`),
-                h('span', null, on ? 'Available now!' : eventReturn(ev)),
-              ),
-            );
-            const evItems = items.filter((x) => x.event === evId).sort((a, b) => Number(!!b.tokens) - Number(!!a.tokens));
-            const feature = EVENT_FEATURES[evId];
-            if (on && feature && evItems.some((x) => x.tokens)) {
-              body.append(
-                h(
-                  'div',
-                  { class: 'candy-banner' },
-                  h('img', { src: iconURL(feature.currency) }),
-                  h(
-                    'div',
-                    null,
-                    h('b', null, `${ev.name} Token Shop`),
-                    h('div', null, `Exclusives paid in ${feature.currencyName.toLowerCase()}. Harvest, collect and greet ${feature.visitorName}s to earn more!`),
-                  ),
-                  h('div', { class: 'candy-count' }, fmtNum(S.state.inventory[feature.currency] ?? 0)),
-                ),
-              );
-            }
-            const grid = h('div', { class: 'grid', style: { marginBottom: '14px' } });
-            for (const d of evItems) {
-              grid.append(
-                card({
-                  img: artURL(`deco:${d.id}`),
-                  name: d.name,
-                  price: d.cost,
-                  tokens: d.tokens,
-                  tokenIcon: EVENT_FEATURES[d.event ?? '']?.currency,
-                  charm: d.charm,
-                  owned: owned(d.id),
-                  locked: on ? false : eventReturn(ev),
-                  onClick: () => startPlacing(d.id, d.name, 'shop', m.close),
-                }),
-              );
-            }
-            body.append(grid);
-          }
-        } else {
-          const grid = h('div', { class: 'grid' });
-          for (const d of items) {
-            grid.append(
-              card({
-                img: artURL(`deco:${d.id}`),
-                name: d.name,
-                price: d.cost,
-                charm: d.charm,
-                owned: owned(d.id),
-                locked: levelLock(d.level),
-                meta: d.w * d.h > 1 ? [`${d.w}×${d.h} tiles`] : [],
-                onClick: () => startPlacing(d.id, d.name, 'shop', m.close),
-              }),
-            );
-          }
-          body.append(grid);
-        }
       } else {
         const next = nextExpansion(st.size);
         body.append(
@@ -542,25 +377,19 @@ export function openBarn(): void {
           ),
         );
       }
-      const stored = Object.entries(inv).filter(([id, n]) => DECORATIONS[id] && n > 0);
-      if (stored.length) {
+      const boxed = storedCount();
+      if (boxed) {
         any = true;
-        body.append(h('div', { class: 'section-title' }, '📦 Stored decorations'));
-        const grid = h('div', { class: 'grid' });
-        for (const [id, n] of stored) {
-          const d = DECORATIONS[id];
-          grid.append(
-            card({
-              img: artURL(`deco:${id}`),
-              name: d.name,
-              owned: n,
-              charm: d.charm,
-              meta: [forFingers('Click to place')],
-              onClick: () => startPlacing(id, d.name, 'inventory', closeTop),
-            }),
-          );
-        }
-        body.append(grid);
+        body.append(
+          h('div', { class: 'section-title' }, '📦 Stored decorations'),
+          h(
+            'div',
+            { class: 'row item-row' },
+            h('img', { src: artURL('ui:decor'), alt: '' }),
+            h('div', { class: 'grow' }, h('div', { class: 'title' }, `${fmtNum(boxed)} in storage`), h('div', { class: 'sub' }, 'They live on the Decor page now.')),
+            h('button', { class: 'btn small green', onclick: () => (closeTop(), openDecor({ tab: 'storage' })) }, 'Open storage'),
+          ),
+        );
       }
       if (!any) body.append(h('div', { class: 'empty' }, 'Your barn is empty. Harvest some crops! 🌾'));
     },

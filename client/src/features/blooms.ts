@@ -200,7 +200,7 @@ function openAlbum(): void {
       const name = nameOfBloom(id);
       const n = garden.filter((o) => o.def === id).length;
       if (!b.hybrid)
-        return h('div', { class: 'journal-card bl-card' }, h('img', { src: deco(id) }), h('div', { class: 'name' }, name), h('div', { class: 'when' }, n ? `${n} in your garden` : 'Buy in Market › Decor'));
+        return h('div', { class: 'journal-card bl-card' }, h('img', { src: deco(id) }), h('div', { class: 'name' }, name), h('div', { class: 'when' }, n ? `${n} in your garden` : 'Buy on the Decor page'));
       const r = recipeOf(id)!;
       const known = found.includes(id);
       const rare = r.odds <= 0.25 ? ' r5' : r.odds <= 0.4 ? ' r4' : ' r3';

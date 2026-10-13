@@ -293,6 +293,45 @@ function uiMarket(p: Pen): void {
   glint(p, 9, 7.6, 6, 0.5, 0, 0.6);
 }
 
+/** A glowing garden lantern on a stone plinth, with a pink bow on its post and a little pink flower beside it. */
+function uiDecor(p: Pen): void {
+  p.lineWidth = 1.1;
+  ground(p, 20, 12.5);
+  // a warm halo, drawn first so it sits behind the lantern
+  p.glow(20, 21, 14, BUTTER, 0.6);
+  // the squat stone plinth the lantern stands on
+  p.roundRect(9.6, 30.8, 20.8, 5.2, 2.2, p.vgrad(30.8, 36, '#f6e3cc', '#d9b596'));
+  // the wide wooden collar, which sits on the plinth
+  p.roundRect(13.6, 27.6, 12.8, 3.6, 1.4, WOOD_L);
+  // the chunky lantern body: a wide tapered box of butter glass, lit from within
+  p.poly(
+    [pt(13.4, 14.4), pt(26.6, 14.4), pt(28, 28.4), pt(12, 28.4)],
+    p.vgrad(14.4, 28.4, BUTTER_L, '#ffd66e'),
+  );
+  p.ellipse(20, 21.2, 3.6, 4.8, CREAM_W, null);
+  glint(p, 15.2, 20.8, 1.1, 4.4, 0.1, 0.8);
+  // the wide pink peaked cap, with a butter finial
+  p.poly([pt(8.4, 15), pt(31.6, 15), pt(20, 7.2)], p.vgrad(7.2, 15, '#ffd0e0', PINK));
+  p.circle(20, 5.8, 1.5, BUTTER);
+  glint(p, 15.6, 11.4, 1.1, 0.55, -0.55, 0.8);
+  // a small pink bow tied on the collar: two loops and a knot
+  p.poly([pt(20, 29.4), pt(16.2, 26.6), pt(16.4, 32.2)], PINK);
+  p.poly([pt(20, 29.4), pt(23.8, 26.6), pt(23.6, 32.2)], PINK);
+  p.circle(20, 29.4, 1.5, PINK_DD);
+  // a bigger flower tucked close beside the plinth: a stalk, a leaf, five petals
+  stalk(p, pt(33.2, 36.2), pt(32.8, 33.4), pt(33.8, 30.8), 1.4);
+  leaf(p, 33, 34.2, -0.5, 4.2);
+  const fx = 33.8;
+  const fy = 28.2;
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+    p.circle(fx + Math.cos(a) * 2.6, fy + Math.sin(a) * 2.6, 2.6, PINK, O);
+  }
+  p.circle(fx, fy, 1.6, BUTTER, O);
+  // one small sparkle in the top right
+  sparkle(p, 34.4, 9.6, 2.4);
+}
+
 /** A frying pan with a sunny-side egg and a wisp of steam. */
 function uiCook(p: Pen): void {
   p.lineWidth = 1.1;
@@ -972,6 +1011,7 @@ export const icons: IconSpec[] = [
   { key: 'ui:plow', paint: uiPlow },
   { key: 'ui:water', paint: uiWater },
   { key: 'ui:market', paint: uiMarket },
+  { key: 'ui:decor', paint: uiDecor },
   { key: 'ui:cook', paint: uiCook },
   { key: 'ui:fish', paint: uiFish },
   { key: 'ui:garage', paint: uiGarage },

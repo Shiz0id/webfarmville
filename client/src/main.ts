@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { EVENTS, EVENT_QUESTS_AFTER, MAMA, MAMA_BRAGS, QUESTS, RIBBONS, RIBBON_COLORS } from '@farm/shared';
 import { nameOf } from './util';
 import { initCooking } from './ui/cooking';
+import { initDecor } from './ui/decor';
+import { initCards } from './ui/cards';
 import './style.css';
 import { ApiError, api, getToken, setToken, type MePayload } from './api';
 import { buildArt } from './art';
@@ -80,6 +82,8 @@ async function start(): Promise<void> {
 
   const recenter = () => scene().centerCamera();
   initPanels(store, recenter);
+  initDecor(store);
+  initCards(store);
   initCooking(store);
   const sceneWaiters: ((s: FarmScene) => void)[] = [];
   let sceneReady = false;

@@ -158,6 +158,7 @@ export function expectedKeys(mod: string): string[] {
       'ui:plow',
       'ui:water',
       'ui:market',
+      'ui:decor',
       'ui:cook',
       'ui:fish',
       'ui:garage',
