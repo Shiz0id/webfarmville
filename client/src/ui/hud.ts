@@ -5,6 +5,7 @@ import type { Store } from '../store';
 import { setTool, tools, type Tool } from '../tools';
 import { activeFeatures } from '../events';
 import { audioSettings, setMusic } from '../sfx';
+import { nowPlaying, onTrackChange } from '../music/engine';
 import { installRow } from './install';
 import { forFingers, isTouch, layout, onLayout, type Layout } from './layout';
 import { openKitchen, readyDishes } from './cooking';
@@ -145,6 +146,23 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   });
   music.btn.firstChild!.replaceWith(musicIcon());
   music.btn.classList.add('small-round');
+  // Each new song gets a little name card, like a radio between tracks.
+  const musicTitle = () => {
+    const np = nowPlaying();
+    music.btn.title = audioSettings.music ? (np ? `Now playing: ${np.title}\nClick to turn the music off.` : 'Click to turn the music off.') : 'Click to turn the music on.';
+  };
+  musicTitle();
+  music.btn.addEventListener('mouseenter', musicTitle);
+  let card: HTMLElement | null = null;
+  onTrackChange((title) => {
+    musicTitle();
+    if (!title || !audioSettings.music) return;
+    card?.remove();
+    const el = (card = h('div', { class: 'now-playing' }, h('span', { class: 'np-note' }, '♪'), title));
+    document.body.append(el);
+    setTimeout(() => el.classList.add('out'), 4200);
+    setTimeout(() => el.remove(), 5200);
+  });
   // Feature buttons (fishing, critters, ...) slot in before Farm and Music.
   const extraCorner = HUD_BUTTONS.filter((b) => b.where === 'corner').map((b) => ({ def: b, ...roundBtn(b.id, b.em, b.label, b.onClick) }));
   const corner = h(

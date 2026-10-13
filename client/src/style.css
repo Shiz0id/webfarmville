@@ -3831,3 +3831,56 @@ body:has(.pond, .kitchen) .villager-say {
 @media (prefers-reduced-motion: reduce) {
   .mode-hint.nudge { animation: none; }
 }
+
+/* The music box's "now playing" card, shown briefly when a new song starts. */
+.now-playing {
+  position: fixed;
+  left: 16px;
+  bottom: 18px;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px 6px 8px;
+  background: var(--dots), linear-gradient(#fffef6, var(--cream));
+  border: 2px solid var(--dark);
+  border-radius: 999px;
+  box-shadow: 0 3px 0 rgba(94, 65, 41, 0.25), 0 8px 18px rgba(61, 52, 40, 0.16);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--dark);
+  pointer-events: none;
+  animation: toast-in 0.4s var(--spring);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+}
+.now-playing.out {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.now-playing .np-note {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--event, #f2a7b8);
+  color: #fff;
+  font-size: 13px;
+  animation: np-bob 1.2s ease-in-out infinite;
+}
+@keyframes np-bob {
+  50% {
+    transform: translateY(-2px) rotate(-8deg);
+  }
+}
+.layout-phone .now-playing {
+  left: auto;
+  right: 10px;
+  bottom: auto;
+  top: calc(190px + env(safe-area-inset-top));
+  font-size: 12px;
+}
+.layout-phone.orient-landscape .now-playing {
+  top: auto;
+  bottom: 14px;
+}

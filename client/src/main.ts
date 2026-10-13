@@ -11,7 +11,9 @@ import { Store } from './store';
 import { openInvite, readInvite } from './share';
 import type { FarmSnapshot } from '@farm/shared';
 import { featuredEvent } from './events';
-import { setMusicStyle, sfx, unlockAudioOnGesture } from './sfx';
+import { setSfxFlavor, sfx, unlockAudioOnGesture } from './sfx';
+import { nowPlaying, renderTrack, setPlaylist } from './music/engine';
+import { PLAYLISTS } from './music/tracks';
 import { setTool } from './tools';
 import { showAuth } from './ui/auth';
 import { closeAllModals, setupTooltip, toast } from './ui/dom';
@@ -56,7 +58,8 @@ async function start(): Promise<void> {
 
   const store = new Store(me);
   const feature = featuredEvent(store.now(), store.allEvents);
-  setMusicStyle(feature?.music ?? 'default');
+  setPlaylist(feature?.event ?? null);
+  setSfxFlavor(feature?.event ?? null);
   if (feature) {
     document.body.classList.add('festive', `event-${feature.event}`);
     document.body.style.setProperty('--event', EVENTS[feature.event].color);
@@ -194,7 +197,7 @@ async function start(): Promise<void> {
   window.addEventListener('hashchange', () => {
     void readInvite().then((snap) => snap && openInvite(store, snap).then(recenter));
   });
-  if (import.meta.env.DEV || location.search.includes('debug')) Object.assign(window, { __farm: { store, scene } });
+  if (import.meta.env.DEV || location.search.includes('debug')) Object.assign(window, { __farm: { store, scene, music: { renderTrack, PLAYLISTS, nowPlaying } } });
   const greet = () => greetings(store, feature, openQuests);
   if (invite) {
     // Straight to the friend's farm; the usual hellos wait until you're home.

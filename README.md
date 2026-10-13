@@ -109,12 +109,19 @@ All of the art is drawn in code at startup, so there are no image assets to down
   - an event crop and costumed **visitors** (trick-or-treaters, carolers, lion dancers, egg hunters and more)
   - animals in **costumes**
   - a quest chain
-  - its own music-box tune, particles, lighting and title screen
+  - a playlist of **three or four songs**, holiday touches on the UI sounds (sleigh bells, firecrackers, a
+    bubbling cauldron, birdsong, a gobble...), particles, lighting and a title screen
 - **Villagers**: Mayor Maple, Henrietta, Penny, Rosie, Grandma Fern and Mama Marigold, each with a painted
   portrait, quests and a themed farm you can visit and help.
 - **Ribbons**: FarmVille-style yellow, white, red and blue ribbons for lifetime milestones.
 - **Coziness**:
-  - A procedural music box and synthesized sound effects (no audio files).
+  - A **music box of 66 songs**, all synthesized (no audio files). Outside festivals the farm's own songs follow
+    the clock and the sky: morning, day, evening, night, rain and snow. Every festival has its own playlist,
+    with public-domain tunes arranged for their holidays (Jingle Bells, Deck the Halls, Greensleeves, Sakura,
+    Auld Lang Syne...) next to new ones. Instruments include a music box, koto, erhu, tin whistle, sitar, steel
+    pan and theremin, with drums to match: taiko, bodhrán, tabla and sleigh bells. Songs are written in
+    `client/src/music/tracks.ts` and composed and arranged by `client/src/music/compose.ts`. Each song plays a
+    few times through, arranged a bit differently each time, then rests and gives way to another.
   - Day/night lighting from your local clock, with glowing lamps and fireflies.
   - Seasonal weather and grass, drifting clouds and butterflies, and a puppy and kitten who wander your farm.
   - Coins that fly to your HUD, and farm postcards you can save.
@@ -240,7 +247,9 @@ There are also some helper scripts:
   the how-to on iPhones). A service worker keeps the game files on the device. The app icons are painted from the
   game's own art by `node scripts/app-icons.mjs`.
 - Add `?hour=22` to the URL to preview night time (or any hour of the day), and `?event=winter` (or any event id)
-  to preview an event's look, music and visitors any time of year.
+  to preview an event's look, music and visitors any time of year (`?event=none` turns festivals off). `?music=`
+  pins a playlist or a song by id (`?music=rain`, `?music=jingle_bells`). `node scripts/music-check.mjs
+  <screenshot-dir>` renders every song offline to check the mix, then checks which playlist plays when.
 
 ## Adding content
 
