@@ -299,11 +299,16 @@ describe('orders and mystery gifts', () => {
 describe('halloween event', () => {
   const JUNE = Date.UTC(2026, 5, 10, 12);
 
-  it('offers Halloween quests only during Halloween', () => {
-    expect(createFarm('Oct', T0).quests.active).toContain('spooky_sprouts');
-    expect(createFarm('Jun', JUNE).quests.active).not.toContain('spooky_sprouts');
+  it('offers Halloween quests only during Halloween, once the opening quests are done', () => {
+    const opened = (s: FarmState, now = T0) => {
+      s.quests.completed.push('welcome', 'dig_in', 'seed_money');
+      return applyAction(s, { type: 'rename', name: 'x' }, { now }).state;
+    };
+    expect(createFarm('Oct', T0).quests.active).not.toContain('spooky_sprouts');
+    expect(opened(createFarm('Oct', T0)).quests.active).toContain('spooky_sprouts');
+    expect(opened(createFarm('Jun', JUNE), JUNE).quests.active).not.toContain('spooky_sprouts');
     // Event quests leave when the event ends.
-    const s = createFarm('Oct', T0);
+    const s = opened(createFarm('Oct', T0));
     const later = applyAction(s, { type: 'rename', name: 'x' }, { now: JUNE }).state;
     expect(later.quests.active).not.toContain('spooky_sprouts');
   });
@@ -391,6 +396,8 @@ describe('event features for every holiday', () => {
 
   it('drops each running event currency and serves its visitors', () => {
     let s = createFarm('Winter', DEC);
+    s.quests.completed.push('welcome', 'dig_in', 'seed_money');
+    s = applyAction(s, { type: 'rename', name: 'Winter' }, { now: DEC }).state;
     expect(s.quests.active).toContain('winter_grow');
     const plot = plots(s).find((p) => !p.crop)!;
     s = applyAction(s, { type: 'plant', id: plot.id, crop: 'peppermint' }, { now: DEC }).state;

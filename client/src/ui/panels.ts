@@ -223,7 +223,7 @@ export function openShop(tab: ShopTab = 'seeds'): void {
               onClick: () => {
                 setTool('seed', { seed: c.id });
                 m.close();
-                toast(`Click plots or grass to plant ${c.name}. Drag to plant many!`, 'info');
+                toast(forFingers(`Click plots or grass to plant ${c.name}. Drag to plant many!`), 'info');
               },
             }),
           );
@@ -449,8 +449,11 @@ function masteryLine(crop: string): HTMLElement {
 export function openSeedPicker(plotId: string | null): void {
   const m = openModal('Plant seeds', { icon: iconURL('strawberry') });
   const grid = h('div', { class: 'grid' });
+  // What you can plant now, plus a peek at the next two crops (the Market lists them all).
+  const peek = new Set(CROP_LIST.filter((c) => !c.event && c.level > S.state.level).slice(0, 2).map((c) => c.id));
   for (const c of CROP_LIST) {
     if (c.event && !eventLive(c.event)) continue;
+    if (c.level > S.state.level && !peek.has(c.id)) continue;
     grid.append(
       card({
         img: iconURL(c.id),
@@ -549,7 +552,7 @@ export function openBarn(): void {
               name: d.name,
               owned: n,
               charm: d.charm,
-              meta: ['Click to place'],
+              meta: [forFingers('Click to place')],
               onClick: () => startPlacing(id, d.name, 'inventory', closeTop),
             }),
           );
@@ -830,7 +833,7 @@ export function openQuests(): void {
           ),
         );
       }
-      body.append(h('div', { class: 'sub', style: { textAlign: 'center', color: 'var(--muted)', fontWeight: '800' } }, `${qs.completed.length} quests completed`));
+      body.append(h('div', { class: 'sub', style: { textAlign: 'center', color: 'var(--muted)', fontWeight: '800' } }, `${qs.completed.length} ${qs.completed.length === 1 ? 'quest' : 'quests'} completed`));
     },
     { narrow: false, icon: artURL('ui:quests') },
   );
@@ -1114,8 +1117,8 @@ export function openFarmhouse(): void {
         h(
           'ul',
           { class: 'help-list' },
-          h('li', null, 'Pick seeds from the Market (or click an empty plot), then click or drag over plots to plant.'),
-          h('li', null, 'Click ripe crops, animals and trees to collect. Drag across a field to harvest it all.'),
+          h('li', null, forFingers('Pick seeds from the Market (or click an empty plot), then click or drag over plots to plant.')),
+          h('li', null, forFingers('Click ripe crops, animals and trees to collect. Drag across a field to harvest it all.')),
           h('li', null, "Crops wither if left too long after they're ready. Neighbors can revive them!"),
           h('li', null, 'Build workshops to turn produce into goods worth much more.'),
           h('li', null, 'Decorations add charm ⭐, which boosts your daily bonus.'),

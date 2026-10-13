@@ -33,6 +33,9 @@ import { EVENT_FEATURE_LIST, type EventFeature } from './eventFeatures';
 const stat = (s: string, count: number, label: string): QuestGoal => ({ type: 'stat', stat: s, count, label });
 const have = (what: HaveWhat, count: number, label: string): QuestGoal => ({ type: 'have', what, count, label });
 
+/** Seasonal quests wait until the opening steps (harvest, plow, plant) are done, so they don't crowd the tutorial. */
+export const EVENT_QUESTS_AFTER = 'seed_money';
+
 export const QUEST_LIST: QuestDef[] = [
   {
     id: 'welcome',
@@ -377,7 +380,7 @@ export const QUEST_LIST: QuestDef[] = [
     title: 'Here, Kitty Kitty!',
     text: "I keep seeing little paw prints by your barn! Put out a Kitty Food Bowl and some food, and see who comes to play.",
     giver: 'Rosie',
-    level: 2,
+    level: 3,
     requires: ['welcome'],
     goals: [stat('kittyFeed', 1, 'Fill a kitty food bowl')],
     reward: { coins: 120, xp: 15 },
@@ -408,7 +411,7 @@ export const QUEST_LIST: QuestDef[] = [
     title: 'Good Neighbors',
     text: "Hoo-hoo! A town is only as warm as its friendships. Pop by for a chat with the villagers, and maybe bring a little something!",
     giver: 'Mayor Maple',
-    level: 2,
+    level: 4,
     requires: ['welcome'],
     goals: [stat('chat', 3, 'Chat with villagers 3 times'), stat('gift', 1, 'Give a villager a gift')],
     reward: { coins: 150, xp: 20 },
@@ -439,7 +442,7 @@ export const QUEST_LIST: QuestDef[] = [
     title: 'Flower Friends',
     text: 'Flowers get lonely too, dear! Plant some tulips or roses side by side, give them a little water with your hand, and see what sprouts.',
     giver: 'Grandma Fern',
-    level: 2,
+    level: 5,
     requires: ['welcome'],
     goals: [stat('waterFlower', 3, 'Water 3 tulips or roses'), stat('sprout', 1, 'See a new flower sprout')],
     reward: { coins: 150, xp: 25, items: { roses_white: 1 } },
@@ -449,7 +452,7 @@ export const QUEST_LIST: QuestDef[] = [
     title: 'Cross-Pollination',
     text: "Ooh, I heard the right colours side by side make brand-new flowers! Can you breed a hybrid? The Flower Album has hints from everyone in town!",
     giver: 'Rosie',
-    level: 3,
+    level: 5,
     requires: ['flower_friends'],
     goals: [stat('hybrid', 1, 'Breed a hybrid flower')],
     reward: { coins: 400, xp: 60 },
@@ -471,7 +474,7 @@ export const QUEST_LIST: QuestDef[] = [
     title: 'Town Spirit',
     text: "Hoo-hoo! Meadowbrook is fixing up the old pond bridge. Every bit helps! Check the Town board and chip in what you can.",
     giver: 'Mayor Maple',
-    level: 3,
+    level: 4,
     requires: ['welcome'],
     goals: [stat('donate', 10, 'Donate 10 things to a town project')],
     reward: { coins: 300, xp: 40 },
@@ -534,7 +537,7 @@ export const QUEST_LIST: QuestDef[] = [
     title: 'A Star Is Sown',
     text: "The more you grow a crop, the better you get at it, dear. Keep harvesting your favourite and you'll earn a mastery star. Mastered seeds even cost less!",
     giver: 'Grandma Fern',
-    level: 2,
+    level: 3,
     requires: ['welcome'],
     goals: [stat('masteryStar', 1, 'Earn a crop mastery star')],
     reward: { coins: 200, xp: 30 },
@@ -555,7 +558,7 @@ export const QUEST_LIST: QuestDef[] = [
     title: 'Little Treasures',
     text: 'Ooh, I found a ladybug button in my carrots once! Keep your eyes peeled while you harvest. Little treasures turn up all the time!',
     giver: 'Rosie',
-    level: 2,
+    level: 3,
     requires: ['welcome'],
     goals: [stat('collectible', 3, 'Find 3 collectibles')],
     reward: { coins: 150, xp: 20 },

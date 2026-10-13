@@ -3737,3 +3737,36 @@ body:has(.pond, .kitchen) .villager-say {
   justify-content: center;
   padding: 2px 0 6px;
 }
+
+/* Buttons for features the farmer hasn't reached yet stay hidden. */
+.locked-out {
+  display: none !important;
+}
+/* ...and say hello when they arrive. */
+.just-unlocked {
+  position: relative;
+  animation: just-unlocked 1.6s var(--spring) infinite;
+}
+.just-unlocked::after {
+  content: 'New!';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mint);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 0 var(--mint-d);
+  pointer-events: none;
+  white-space: nowrap;
+}
+@keyframes just-unlocked {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.12) rotate(-3deg); }
+  24% { transform: scale(0.98) rotate(2deg); }
+  36% { transform: scale(1); }
+}

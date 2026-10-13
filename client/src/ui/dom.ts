@@ -1,4 +1,5 @@
 import { bus, type HoverInfo } from '../bus';
+import { forFingers } from './layout';
 import { sfx } from '../sfx';
 import { h } from '../util';
 
@@ -34,7 +35,7 @@ export function setupTooltip(): void {
       tip.style.display = 'none';
       return;
     }
-    tip.replaceChildren(h('b', null, info.title), ...info.lines.map((l) => h('div', null, l)));
+    tip.replaceChildren(h('b', null, info.title), ...info.lines.map((l) => h('div', null, forFingers(l))));
     tip.style.display = 'block';
     const w = tip.offsetWidth;
     const x = Math.min(window.innerWidth - w - 8, info.x + 16);

@@ -104,7 +104,8 @@ step(`decorations: ${Object.values(s.objects).filter((o) => o.kind === 'deco').l
 await shot('06-placed');
 
 step('orders');
-await page.click('button[aria-label="Orders"]', { force: true });
+// A level 1 farm hasn't unlocked this button yet; open the panel anyway.
+await page.evaluate(() => document.querySelector('button[aria-label="Orders"]').click());
 await page.waitForTimeout(400);
 await shot('06b-orders');
 await page.keyboard.press('Escape');
@@ -116,7 +117,8 @@ await shot('07-barn');
 await page.keyboard.press('Escape');
 
 step('visit Mayor Maple');
-await page.click('button[aria-label="Neighbors"]', { force: true });
+// A level 1 farm hasn't unlocked this button yet; open the panel anyway.
+await page.evaluate(() => document.querySelector('button[aria-label="Neighbors"]').click());
 await page.waitForTimeout(800);
 await shot('08-neighbors');
 // The panel re-renders live, so use a locator (which re-finds the button) rather than a handle.

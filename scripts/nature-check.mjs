@@ -19,7 +19,8 @@ await page.click('button[type=submit]');
 await page.waitForSelector('.toolbar');
 await page.waitForTimeout(800);
 await page.keyboard.press('Escape');
-await page.click('.tool:has-text("Fish")', { force: true });
+// Fishing unlocks at level 3; a new farm opens the pond through the hidden button.
+await page.evaluate(() => [...document.querySelectorAll('.tool')].find((b) => b.textContent.includes('Fish')).click());
 await page.waitForSelector('.pond');
 await page.waitForTimeout(400);
 await shot('n1-pond');

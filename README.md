@@ -134,7 +134,8 @@ All of the art is drawn in code at startup, so there are no image assets to down
 All art, including the HUD icons, is drawn in code. The interface kit (jelly buttons, quilted panels, ribbon
 titles, leafy tabs, the mint and sunshine palette) takes its look from
 [Animal Island UI](https://github.com/guokaigdg/animal-island-ui) (MIT), restyled in plain CSS.
-Run `node scripts/ui-tour.mjs <dir> [WxH]` to screenshot the whole kit at any screen size.
+Run `node scripts/ui-tour.mjs <dir> [WxH]` to screenshot the whole kit at any screen size, and
+`node scripts/first-play.mjs <dir> [WxH]` to play the opening minutes of a brand-new farm.
 
 To check pacing, `npx tsx scripts/balance-sim.ts [days] [casual|keen]` plays a simulated farmer through the real
 rules (four or twelve visits a day) and reports when each level arrives, where the coins come from and which quests

@@ -64,6 +64,9 @@ function countTo(el: HTMLElement, to: number): void {
   c.raf = requestAnimationFrame(step);
 }
 
+/** The level each feature's button appears at (its first quest's level). */
+const FEATURE_UNLOCK: Record<string, number> = { kitties: 3, fish: 3, journal: 3, friends: 4, town: 4, garage: 4, fair: 4, blooms: 5 };
+
 const TOOLS: { id: Tool | 'shop' | 'cook'; label: string; em: string; hint?: string }[] = [
   { id: 'hand', label: 'Hand', em: '✋' },
   { id: 'plow', label: 'Plow', em: '⛏️', hint: 'Click or drag over grass to plow plots (15 coins each)' },
@@ -398,7 +401,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     let n = 0;
     let pulse = false;
     for (const el of els) {
-      if ((el as HTMLElement).style.display === 'none') continue;
+      if ((el as HTMLElement).style.display === 'none' || el.classList.contains('locked-out')) continue;
       const b = el.querySelector('.badge') as HTMLElement | null;
       if (b && b.style.display !== 'none') n += b.textContent === '9+' ? 10 : Number(b.textContent) || 0;
       pulse ||= el.classList.contains('pulse');
@@ -431,6 +434,41 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     }
     render();
   };
+
+  // A new farm starts simple: buttons for side activities wait for the level
+  // their first quest arrives at, then appear with a gentle pulse.
+  const UNLOCK_AT: [HTMLElement | undefined, number][] = [
+    [toolButtons.get('move'), 2],
+    [toolButtons.get('store'), 2],
+    [toolButtons.get('sell'), 2],
+    [toolButtons.get('cook'), 2],
+    [orders.btn, 2],
+    [neighbors.btn, 2],
+    [catalog.btn, 3],
+    ...extraCorner.map((b): [HTMLElement, number] => [b.btn, FEATURE_UNLOCK[b.def.id] ?? 1]),
+    ...HUD_BUTTONS.filter((b) => b.where === 'toolbar').map((b): [HTMLElement | undefined, number] => [toolButtons.get(`feature:${b.id}`), FEATURE_UNLOCK[b.id] ?? 1]),
+  ];
+  let unlockedSoFar: Set<HTMLElement> | null = null;
+  const applyUnlocks = () => {
+    const level = store.state.level;
+    const now = new Set<HTMLElement>();
+    for (const [el, at] of UNLOCK_AT) {
+      if (!el) continue;
+      const open = level >= at;
+      el.classList.toggle('locked-out', !open);
+      if (!open) continue;
+      now.add(el);
+      // Only pulse buttons that appear while you play, not on every page load.
+      if (unlockedSoFar && !unlockedSoFar.has(el)) {
+        el.classList.add('just-unlocked');
+        el.addEventListener('click', () => el.classList.remove('just-unlocked'), { once: true });
+      }
+    }
+    unlockedSoFar = now;
+    moreTools.classList.toggle('locked-out', !trayTools.some((b) => !b.classList.contains('locked-out')));
+  };
+  applyUnlocks();
+  store.onChange(applyUnlocks);
 
   store.onChange(render);
   store.onChange(renderPhone);

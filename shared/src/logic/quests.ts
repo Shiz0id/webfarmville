@@ -1,7 +1,7 @@
 import { BUILDINGS } from '../content/buildings';
 import { DECORATIONS } from '../content/decorations';
 import { EVENTS, isEventActive } from '../content/events';
-import { MAX_ACTIVE_QUESTS, QUESTS, QUEST_LIST, type QuestGoal } from '../content/quests';
+import { EVENT_QUESTS_AFTER, MAX_ACTIVE_QUESTS, QUESTS, QUEST_LIST, type QuestGoal } from '../content/quests';
 import type { FarmState, GameEvent } from '../types';
 
 export function farmCharm(state: FarmState): number {
@@ -77,7 +77,7 @@ export function refreshQuests(
   for (const q of QUEST_LIST) {
     if (qs.completed.includes(q.id) || qs.active.includes(q.id)) continue;
     // Event quests don't count toward the cap, so they always show up.
-    if (q.event ? !eventOn(q.event) : normalActive() >= MAX_ACTIVE_QUESTS) continue;
+    if (q.event ? !eventOn(q.event) || !qs.completed.includes(EVENT_QUESTS_AFTER) : normalActive() >= MAX_ACTIVE_QUESTS) continue;
     if (state.level < q.level) continue;
     if (!q.requires.every((r) => qs.completed.includes(r))) continue;
     qs.active.push(q.id);
