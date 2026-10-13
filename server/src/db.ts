@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS farms (
   user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   state TEXT NOT NULL,
   rev INTEGER NOT NULL DEFAULT 1,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  last_action INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS friendships (
   requester INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -65,6 +66,9 @@ export function openDb(file: string): DB {
   const db = new DatabaseSync(file);
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
   db.exec(SCHEMA);
+  // Farms saved before actions were clocked.
+  const cols = db.prepare('PRAGMA table_info(farms)').all() as { name: string }[];
+  if (!cols.some((c) => c.name === 'last_action')) db.exec('ALTER TABLE farms ADD COLUMN last_action INTEGER NOT NULL DEFAULT 0');
   return db;
 }
 

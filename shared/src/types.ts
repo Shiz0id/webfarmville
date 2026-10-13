@@ -30,6 +30,8 @@ export interface CraftJob {
   recipe: string;
   /** When this job finishes; jobs run one after another. */
   end: number;
+  /** How long it takes, when a perk changed it from the recipe's usual time. */
+  dur?: number;
 }
 
 export interface BuildingObject extends Placed {

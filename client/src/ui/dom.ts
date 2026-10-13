@@ -25,6 +25,8 @@ export function toast(message: string, kind: 'info' | 'error' | 'good' = 'info')
 // --- tooltip ----------------------------------------------------------------------
 
 let tip: HTMLElement | null = null;
+let tipKey = '';
+let tipSize = { w: 0, h: 0 };
 
 export function setupTooltip(): void {
   tip = h('div', { class: 'tooltip', style: { display: 'none' } });
@@ -35,11 +37,16 @@ export function setupTooltip(): void {
       tip.style.display = 'none';
       return;
     }
-    tip.replaceChildren(h('b', null, info.title), ...info.lines.map((l) => h('div', null, forFingers(l))));
-    tip.style.display = 'block';
-    const w = tip.offsetWidth;
-    const x = Math.min(window.innerWidth - w - 8, info.x + 16);
-    const y = Math.max(8, info.y - tip.offsetHeight - 12);
+    // The mouse moves far more often than the words change: only rebuild (and measure) when they do.
+    const key = [info.title, ...info.lines].join('\n');
+    if (key !== tipKey || tip.style.display === 'none') {
+      tipKey = key;
+      tip.replaceChildren(h('b', null, info.title), ...info.lines.map((l) => h('div', null, forFingers(l))));
+      tip.style.display = 'block';
+      tipSize = { w: tip.offsetWidth, h: tip.offsetHeight };
+    }
+    const x = Math.min(window.innerWidth - tipSize.w - 8, info.x + 16);
+    const y = Math.max(8, info.y - tipSize.h - 12);
     tip.style.left = `${x}px`;
     tip.style.top = `${y}px`;
   });
@@ -65,6 +72,12 @@ export function openModal(
   opts: { narrow?: boolean; onClose?: () => void; tabs?: HTMLElement; icon?: string } = {},
 ): ModalHandle {
   const titleEl = h('h2', null, title);
+  // Long titles shrink a little on phones rather than losing their ends.
+  const fit = (t: string) => {
+    titleEl.classList.toggle('long', t.length > 16);
+    titleEl.classList.toggle('longer', t.length > 20);
+  };
+  fit(title);
   const body = h('div', { class: 'modal-body' });
   const back = h('div', { class: 'modal-back' });
   const close = () => {
@@ -104,7 +117,11 @@ export function openModal(
   stack.push({ back, onClose: opts.onClose });
   sfx.open();
   bus.emit('hover', null);
-  return { el: modal, body, close, setTitle: (t) => (titleEl.textContent = t) };
+  return { el: modal, body, close, setTitle: (t) => {
+      titleEl.textContent = t;
+      fit(t);
+    },
+  };
 }
 
 /** On phones a panel is a bottom sheet: drag its header down to put it away. */
@@ -180,4 +197,15 @@ export function confetti(n = 60): void {
     root().append(el);
     setTimeout(() => el.remove(), 3800);
   }
+}
+
+// A press in progress: re-rendering under a finger swaps the button out and the tap is lost.
+let held = false;
+document.addEventListener('pointerdown', () => (held = true), true);
+for (const ev of ['pointerup', 'pointercancel']) window.addEventListener(ev, () => (held = false), true);
+
+/** Is it a bad moment to rebuild this panel (a press in progress, or a field or picker in use)? */
+export function interacting(root: HTMLElement): boolean {
+  const a = document.activeElement;
+  return held || (!!a && root.contains(a) && (a.tagName === 'INPUT' || a.tagName === 'SELECT' || a.tagName === 'TEXTAREA'));
 }

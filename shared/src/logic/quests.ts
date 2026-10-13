@@ -1,12 +1,15 @@
 import { BUILDINGS } from '../content/buildings';
 import { DECORATIONS } from '../content/decorations';
 import { EVENTS, isEventActive } from '../content/events';
+import { LANDMARKS, grandStage } from '../content/grand';
 import { EVENT_QUESTS_AFTER, MAX_ACTIVE_QUESTS, QUESTS, QUEST_LIST, type QuestGoal } from '../content/quests';
 import type { FarmState, GameEvent } from '../types';
 
 export function farmCharm(state: FarmState): number {
   let charm = 0;
   for (const o of Object.values(state.objects)) {
+    // A landmark only adds its charm once it's finished.
+    if (o.kind === 'deco' && LANDMARKS[o.def] && grandStage(state, o.def) < LANDMARKS[o.def].stages.length) continue;
     if (o.kind === 'deco') charm += DECORATIONS[o.def]?.charm ?? 0;
     else if (o.kind === 'building') charm += BUILDINGS[o.def]?.charm ?? 0;
   }

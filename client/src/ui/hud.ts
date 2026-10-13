@@ -291,6 +291,12 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   };
   moreTools.addEventListener('click', () => {
     const open = !tray.classList.contains('open');
+    if (open) {
+      // Pop up just above the More button, wherever the toolbar puts it.
+      const r = moreTools.getBoundingClientRect();
+      tray.style.right = `${Math.max(8, window.innerWidth - r.right - 4)}px`;
+      tray.style.bottom = `${window.innerHeight - toolbar.getBoundingClientRect().top + 12}px`;
+    }
     tray.classList.toggle('open', open);
     moreTools.classList.toggle('open', open);
   });
@@ -334,6 +340,9 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     badge.textContent = n > 9 ? '9+' : String(n);
   };
 
+  // The farm only changes with an action (a new state object), but the HUD redraws every second.
+  const charmOf = new WeakMap<object, number>();
+  let shownStars = -1;
   const render = () => {
     const st = store.state;
     const lo = xpForLevel(st.level);
@@ -351,13 +360,18 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
       c.count.textContent = fmtNum(n);
       c.pill.style.display = live.has(cur) && (n > 0 || running[0]?.currency === cur) ? 'flex' : 'none';
     }
-    const c = farmCharm(st);
+    let c = charmOf.get(st);
+    if (c === undefined) charmOf.set(st, (c = farmCharm(st)));
     countTo(charm, c);
     const s = charmStars(c);
-    stars.replaceChildren('★'.repeat(s), h('span', { style: { opacity: '0.3' } }, '★'.repeat(5 - s)));
+    if (s !== shownStars) {
+      shownStars = s;
+      stars.replaceChildren('★'.repeat(s), h('span', { style: { opacity: '0.3' } }, '★'.repeat(5 - s)));
+    }
 
-    setBadge(quests.badge, claimableQuests());
-    quests.btn.classList.toggle('pulse', claimableQuests() > 0);
+    const claimable = claimableQuests();
+    setBadge(quests.badge, claimable);
+    quests.btn.classList.toggle('pulse', claimable > 0);
     setBadge(neighbors.badge, socialBadge());
     setBadge(daily.badge, dailyAvailable() ? 1 : 0);
     setBadge(barn.badge, st.inventory.mystery_gift ?? 0);
@@ -389,7 +403,8 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     }
 
     const seed = CROPS[tools.seed];
-    seedImg.src = iconURL(seed?.id ?? 'strawberry');
+    const seedSrc = iconURL(seed?.id ?? 'strawberry');
+    if (seedImg.getAttribute('src') !== seedSrc) seedImg.src = seedSrc;
     for (const [id, btn] of toolButtons) if (!id.startsWith('feature:')) btn.classList.toggle('active', id === tools.tool);
     const lvl = waterLevel(st, store.now());
     waterCount.textContent = `${lvl}`;
@@ -457,7 +472,7 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
     return { n, pulse };
   };
   const renderPhone = () => {
-    if (layout() !== 'phone') return;
+    if (!moreTools.isConnected) return;
     const m = sumBadges(drawerGrid.children);
     setBadge(menu.badge, m.n);
     menu.btn.classList.toggle('pulse', m.pulse);
@@ -482,9 +497,19 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
       toolbar.append(moreTools);
       for (const b of cornerOrder) if (!ON_SCREEN.has(b)) drawerGrid.append(b);
       corner.append(menu.btn);
+    } else if (toolbar.getClientRects().length && toolbar.scrollWidth > toolbar.clientWidth + 1) {
+      // A tablet held upright can't fit every tool: tuck the extras behind More, as on a phone.
+      for (const b of trayTools) tray.append(b);
+      toolbar.append(moreTools);
     }
     render();
+    renderPhone();
   };
+  let refit = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(refit);
+    refit = window.setTimeout(() => layout() !== 'phone' && applyLayout(layout()), 200);
+  });
 
   // A new farm starts simple: buttons for side activities wait for the level
   // their first quest arrives at, then appear with a gentle pulse.
@@ -515,8 +540,11 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
         el.addEventListener('click', () => el.classList.remove('just-unlocked'), { once: true });
       }
     }
+    const grew = !!unlockedSoFar && now.size !== unlockedSoFar.size;
     unlockedSoFar = now;
     moreTools.classList.toggle('locked-out', !trayTools.some((b) => !b.classList.contains('locked-out')));
+    // New tools might not fit on a tablet toolbar any more.
+    if (grew && layout() !== 'phone') applyLayout(layout());
   };
   applyUnlocks();
   store.onChange(applyUnlocks);
@@ -526,6 +554,10 @@ export function mountHud({ store, goHome, zoom }: HudDeps): void {
   bus.on('tool', render);
   bus.on('tool', renderPhone);
   setInterval(renderPhone, 1000);
+  // The toolbar may not have been on screen (or its font loaded) when the layout was first fitted.
+  setInterval(() => {
+    if (layout() !== 'phone' && !moreTools.isConnected && toolbar.getClientRects().length && toolbar.scrollWidth > toolbar.clientWidth + 1) applyLayout(layout());
+  }, 1000);
   onLayout(applyLayout);
   applyLayout(layout());
   setInterval(render, 1000);

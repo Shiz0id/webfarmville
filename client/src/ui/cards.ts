@@ -86,7 +86,11 @@ export function tabsBar<T extends string>(tabs: { id: T; label: string }[], acti
 }
 
 export function startPlacing(def: string, name: string, source: 'shop' | 'inventory', close: () => void, baby = false): void {
-  setTool('place', { place: { def, source, ...(baby ? { baby } : {}) } });
   close();
+  if (S?.visit) {
+    toast("You're visiting a neighbor. Head home to place things!", 'info');
+    return;
+  }
+  setTool('place', { place: { def, source, ...(baby ? { baby } : {}) } });
   toast(`Place your ${name}. Press R to flip, Esc or right-click to stop.`, 'info');
 }

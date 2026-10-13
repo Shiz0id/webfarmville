@@ -11,6 +11,7 @@ import {
   STALL_SLOTS,
   WEATHER,
   cravingFor,
+  grandSaleCoins,
   hasStall,
   isStall,
   quote,
@@ -24,7 +25,7 @@ import {
 import { artURL, hasArt, iconURL, texture } from '../art';
 import { bus } from '../bus';
 import { sfx } from '../sfx';
-import { openModal, toast } from '../ui/dom';
+import { interacting, openModal, toast } from '../ui/dom';
 import { openDecor } from '../ui/decor';
 import { fmtDuration, fmtNum, h } from '../util';
 import type { FarmScene } from '../scenes/FarmScene';
@@ -56,7 +57,7 @@ function shoppersNote(now: number): string {
 
 export function openStall(): void {
   let off = () => {};
-  const timer = window.setInterval(() => render(), 1000);
+  const timer = window.setInterval(() => interacting(m.body) || render(), 1000);
   const m = openModal("Farmers' Market", {
     icon: hasArt('icon:market') ? artURL('icon:market') : undefined,
     onClose: () => {
@@ -196,7 +197,7 @@ function openListPicker(): void {
               }
             },
           },
-          `Put out ${qty} for ${fmtNum(q.each * qty)} coins 🧺`,
+          `Put out ${qty} for ${fmtNum(grandSaleCoins(S.state, q.each * qty))} coins 🧺`,
         ),
       ),
     );

@@ -39,10 +39,12 @@ import {
   giftSentToday,
   helpsUsed,
   insertFarm,
+  lastAction,
   loadFarm,
   notify,
   requireUser,
   saveFarm,
+  setLastAction,
   userByName,
   type UserRow,
 } from './repo';
@@ -58,6 +60,8 @@ export interface AppOptions {
 const MAX_CLOCK_BEHIND = 30_000;
 const MAX_CLOCK_AHEAD = 3_000;
 const MAX_BATCH = 200;
+const DAY = 86_400_000;
+const dayStart = (t: number) => t - (t % DAY);
 
 function str(v: unknown, field: string): string {
   if (typeof v !== 'string' || !v) throw new HttpError(400, `Missing ${field}`);
@@ -160,11 +164,15 @@ export function createApp(db: DB, opts: AppOptions = {}) {
       let applied = 0;
       let error: string | undefined;
       const serverNow = clock();
+      // A client may date its actions a little in the past (they queue up between saves), but never
+      // back across midnight once the farm has seen the new day: daily rewards would open twice.
+      let latest = lastAction(db, user.id);
       for (const action of actions) {
         const t = typeof action?.t === 'number' ? action.t : serverNow;
-        const now = Math.min(serverNow + MAX_CLOCK_AHEAD, Math.max(serverNow - MAX_CLOCK_BEHIND, t));
+        const now = Math.max(dayStart(latest), Math.min(serverNow + MAX_CLOCK_AHEAD, Math.max(serverNow - MAX_CLOCK_BEHIND, t)));
         try {
           state = applyAction(state, action, ctx(now)).state;
+          latest = Math.max(latest, now);
           applied++;
         } catch (err) {
           if (!(err instanceof GameError)) throw err;
@@ -173,6 +181,7 @@ export function createApp(db: DB, opts: AppOptions = {}) {
         }
       }
       const rev = applied > 0 ? saveFarm(db, user.id, state, serverNow) : farm.rev;
+      if (applied > 0) setLastAction(db, user.id, latest);
       return { ok: !error, error, applied, state, rev };
     });
     res.json({ ...result, serverTime: clock() });

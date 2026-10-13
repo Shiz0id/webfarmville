@@ -14,7 +14,10 @@ import {
   CROP_LIST,
   DECORATION_LIST,
   ITEMS,
+  LANDMARK_LIST,
   MYSTERY_GIFT,
+  grandStage,
+  grandStillNeeded,
   QUESTS,
   TREE_LIST,
   applyAction,
@@ -33,6 +36,7 @@ import {
   type PlotObject,
   type ProducerObject,
   witherAfterSec,
+  utcDay,
 } from '@farm/shared';
 
 import { writeFileSync } from 'node:fs';
@@ -60,7 +64,9 @@ function run(profile: string) {
   const seen: Record<number, number> = {};
   const sales: Record<string, number> = {};
   let actions = 0;
-  const income: Record<string, number> = { crops: 0, goods: 0, orders: 0, quests: 0, daily: 0, levelUp: 0, crafts: 0 };
+  const income: Record<string, number> = { crops: 0, goods: 0, orders: 0, quests: 0, daily: 0, levelUp: 0, crafts: 0, balloon: 0 };
+  const grandAt: Record<string, number> = {};
+  let grandCoins = 0;
 
   const act = (a: Action, source?: string): boolean => {
     try {
@@ -207,6 +213,53 @@ function run(profile: string) {
       if (!spot || !act({ type: 'plow', x: spot.x, y: spot.y })) break;
     }
 
+    // Grand Projects: place begun landmarks, collect the balloon's gift, then chip in.
+    const grandNeeds: Record<string, number> = {};
+    for (const l of LANDMARK_LIST) {
+      if (l.level > st.level) continue;
+      if ((st.inventory[l.id] ?? 0) > 0) {
+        const spot = freeSpot(l.w, l.h);
+        if (spot) act({ type: 'placeStored', def: l.id, x: spot.x, y: spot.y });
+      }
+      if (l.id === 'balloon_dock' && st.grand?.giftDay !== utcDay(now)) {
+        const dock = objs().find((o) => o.kind === 'deco' && o.def === l.id);
+        if (dock) act({ type: 'balloonGift', id: dock.id }, 'balloon');
+      }
+      const stage = l.stages[grandStage(st, l.id)];
+      if (!stage) continue;
+      for (const item of Object.keys(stage.needs)) {
+        const left = grandStillNeeded(st, l.id, item);
+        if (!left) continue;
+        if (item === 'coins') {
+          // Keep a cushion for growing the farm itself.
+          const give = Math.min(left, spare() - 20_000);
+          const c0 = st.coins;
+          if (give > 0 && act({ type: 'grandDonate', landmark: l.id, item, qty: give })) grandCoins += c0 - st.coins;
+        } else if (inv(item) > 0) act({ type: 'grandDonate', landmark: l.id, item, qty: Math.min(left, inv(item)) });
+        const still = grandStillNeeded(st, l.id, item);
+        if (item !== 'coins' && still) grandNeeds[item] = (grandNeeds[item] ?? 0) + still;
+      }
+      if (grandStage(st, l.id) > (grandAt[`${l.id}:n`] ?? 0)) {
+        grandAt[`${l.id}:n`] = grandStage(st, l.id);
+        grandAt[`${l.id}:${grandStage(st, l.id)}`] = now;
+      }
+    }
+
+    // Work back from the goods a project wants to the crops that go into them.
+    const expand = (item: string, n: number, depth: number) => {
+      const r = depth < 3 ? BUILDING_LIST.flatMap((b) => b.recipes).find((r) => r.output === item) : undefined;
+      if (!r) return;
+      for (const [i, k] of Object.entries(r.inputs)) {
+        const want = Math.max(0, Math.ceil(n / r.qty) * k - inv(i));
+        if (!want) continue;
+        grandNeeds[i] = (grandNeeds[i] ?? 0) + want;
+        expand(i, want, depth + 1);
+      }
+    };
+    for (const [i, n] of Object.entries({ ...grandNeeds })) expand(i, n, 0);
+    const grandCrops = new Set(Object.keys(grandNeeds).filter((c) => CROP_LIST.some((x) => x.id === c)));
+    for (const c of grandCrops) if (!wants.crops.includes(c)) wants.crops.push(c);
+
     // Workshops: quest crafts, then order needs, then the best value recipe we can afford.
     const orderNeeds: Record<string, number> = {};
     for (const o of st.orders) for (const [i, n] of Object.entries(o.items)) orderNeeds[i] = (orderNeeds[i] ?? 0) + n;
@@ -220,6 +273,7 @@ function run(profile: string) {
         const value = (r: (typeof ok)[number]) =>
           (wants.crafts.includes(r.output) ? 1e6 : 0) +
           (orderNeeds[r.output] ? 1e4 : 0) +
+          (grandNeeds[r.output] ? 5e3 : 0) +
           (ITEMS[r.output]?.sell ?? 0) * r.qty -
           Object.entries(r.inputs).reduce((s, [i, n]) => s + (ITEMS[i]?.sell ?? 0) * n, 0);
         const pick = ok.sort((a, b) => value(b) - value(a))[0];
@@ -231,6 +285,7 @@ function run(profile: string) {
     const keep: Record<string, number> = { ...orderNeeds };
     for (const b of buildings()) for (const r of BUILDINGS[b.def]?.recipes ?? []) for (const [i, n] of Object.entries(r.inputs)) keep[i] = Math.max(keep[i] ?? 0, n * 3 + (orderNeeds[i] ?? 0));
     for (const c of wants.crops) keep[c] = (keep[c] ?? 0) + 10;
+    for (const [i, n] of Object.entries(grandNeeds)) keep[i] = (keep[i] ?? 0) + n;
     for (const [id, n] of Object.entries(st.inventory)) {
       const item = ITEMS[id];
       if (!item || item.category === 'special' || item.category === 'dish') continue;
@@ -247,7 +302,8 @@ function run(profile: string) {
     const score = (c: (typeof crops)[number]) => c.yield * (ITEMS[c.id]?.sell ?? 0) - c.cost + c.xp * 4;
     const best = (fits.length ? fits : [crops[0]]).sort((a, b) => score(b) - score(a))[0];
     // Quest crops only when they'll still be fresh at the next visit.
-    const questCrops = wants.crops.filter((c) => crops.some((x) => x.id === c && x.growSec <= gap && x.growSec + witherAfterSec(x) >= gap));
+    // (Crops a Grand Project needs are worth waiting for, so they may take more than one gap.)
+    const questCrops = wants.crops.filter((c) => crops.some((x) => x.id === c && ((x.growSec <= gap && x.growSec + witherAfterSec(x) >= gap) || grandCrops.has(c))));
     let q = 0;
     for (const p of plots()) {
       if (cropStatus(p, now).stage !== 'empty') continue;
@@ -284,6 +340,10 @@ function run(profile: string) {
   console.log('  levels: ' + Object.entries(levelAt).map(([l, t]) => `L${l}@${fmt(t)}`).join(' '));
   console.log('  income: ' + Object.entries(income).map(([k, v]) => `${k} ${v}`).join(', '));
   console.log(`  withered: ${withered}, actions: ${actions}`);
+  console.log(
+    `  grand projects (${grandCoins} coins given): ` +
+      LANDMARK_LIST.map((l) => `${l.id} ${grandStage(st, l.id)}/4${grandAt[`${l.id}:4`] ? `@${fmt(grandAt[`${l.id}:4`])}` : grandAt[`${l.id}:1`] ? ` (started ${fmt(grandAt[`${l.id}:1`])})` : ''}`).join(', '),
+  );
   console.log('  top sales: ' + Object.entries(sales).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => `${k} ${v}`).join(', '));
   console.log('  stuck quests: ' + st.quests.active.map((id) => `${id}(${questProgress(st, id).map((g) => `${g.label} ${g.have}/${g.need}`).join('; ')})`).join(', '));
   if (process.env.SAVE) {

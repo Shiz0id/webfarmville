@@ -57,7 +57,7 @@ export function buildingStatus(b: BuildingObject, now: number): BuildingStatus {
   let active: BuildingStatus['active'];
   if (next) {
     const recipe = def?.recipes.find((r) => r.id === next.recipe);
-    const dur = recipe ? craftMs(b, recipe) : 1000;
+    const dur = next.dur ?? (recipe ? craftMs(b, recipe) : 1000);
     active = { recipe: next.recipe, progress: Math.max(0, Math.min(1, 1 - (next.end - now) / dur)), end: next.end };
   }
   return { done, active, freeSlots: Math.max(0, workshopSlots(b, def) - b.queue.length) };

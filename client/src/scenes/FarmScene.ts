@@ -12,6 +12,10 @@ import {
   isBloom,
   isWatered,
   isWell,
+  LANDMARKS,
+  balloonReady,
+  grandStage,
+  utcDay,
   masteryStars,
   thirsty,
   wellReadyAt,
@@ -93,7 +97,13 @@ interface RenderSpec {
   tint?: number;
   /** Draw smaller than usual, standing on the tile's centre (baby animals). */
   scale?: number;
+  /** Show only this bottom fraction of the base image (a landmark going up), under this scaffolding. */
+  rise?: number;
+  scaffold?: string;
 }
+
+/** How much of a landmark stands after each funded stage (the first is just the building site). */
+const LANDMARK_RISE = [0, 0, 0.45, 0.8, 1];
 
 /** How big baby animals are drawn, compared with grown-ups. */
 const BABY_SCALE = 0.7;
@@ -373,6 +383,9 @@ export class FarmScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     this.stepAnimations(time);
+    const away = this.store.isVisiting;
+    this.mama?.hide(away);
+    this.treater?.hide(away);
     if (this.dirty) {
       this.dirty = false;
       this.sync();
@@ -620,6 +633,19 @@ export class FarmScene extends Phaser.Scene {
       }
       case 'deco': {
         const def = DECORATIONS[obj.def];
+        const landmark = LANDMARKS[obj.def];
+        if (landmark) {
+          const stage = grandStage(this.store.viewed, obj.def);
+          const rise = LANDMARK_RISE[Math.min(stage, LANDMARK_RISE.length - 1)];
+          if (!rise) return { tex: `grand:site_${landmark.w}`, flat: false };
+          const spec: RenderSpec = { tex: `deco:${obj.def}`, flat: false };
+          if (rise < 1) Object.assign(spec, { rise, scaffold: `grand:scaffold_${landmark.w}` });
+          else if (!visiting && obj.def === 'balloon_dock' && balloonReady(this.store.state, utcDay(now))) {
+            spec.bubble = { icon: 'icon:mystery_gift' };
+            spec.ready = true;
+          }
+          return spec;
+        }
         return { tex: `deco:${obj.def}`, flat: !!def?.flat, glow: def?.category === 'lights' || GLOWING.test(obj.def) };
       }
     }
@@ -662,6 +688,7 @@ export class FarmScene extends Phaser.Scene {
         night,
         spec.tint,
         spec.scale,
+        spec.rise,
       ].join('|');
       const existing = this.sprites.get(obj.id);
       if (existing?.sig === sig) continue;
@@ -697,6 +724,23 @@ export class FarmScene extends Phaser.Scene {
       main.setOrigin(0.5, 1).setScale(spec.scale / RES).setPosition(cx, main.y - HALF_H * (1 - spec.scale));
     }
     const entry: ObjSprite = { sig, main, kind: obj.kind, ready: !!spec.ready };
+
+    if (spec.rise !== undefined) {
+      // Only the bottom of the finished building is up so far; scaffolding hugs the top of it.
+      const fh = main.frame.height;
+      const shown = fh * spec.rise;
+      main.setCrop(0, fh - shown, main.frame.width, shown);
+      if (spec.scaffold) {
+        const sc = this.add.image(0, 0, texture(this, spec.scaffold, w, h));
+        this.placeImage(sc, obj.x, obj.y, w, h);
+        const sh = sc.frame.height;
+        const reach = Math.min(sh, shown + 24 * RES);
+        sc.setCrop(0, sh - reach, sc.frame.width, reach);
+        sc.setDepth(main.depth + 0.1);
+        if (moving) sc.setAlpha(0.35);
+        entry.overlay = sc;
+      }
+    }
 
     if (spec.overlay) {
       const ov = this.add.image(0, 0, texture(this, spec.overlay, 1, 1));
@@ -1041,6 +1085,15 @@ export class FarmScene extends Phaser.Scene {
       }
       case 'deco': {
         const def = DECORATIONS[obj.def];
+        const landmark = LANDMARKS[obj.def];
+        if (landmark) {
+          const stage = grandStage(this.store.viewed, obj.def);
+          const n = landmark.stages.length;
+          if (stage < n) return { title: landmark.name, lines: [`🏗️ Stage ${stage} of ${n} built`, visiting ? 'Under construction' : `Next: ${landmark.stages[stage].name} · click to help build`] };
+          const lines = [`✨ ${landmark.perk}`, `💗 +${landmark.charm} charm`];
+          if (!visiting && obj.def === 'balloon_dock') lines.push(balloonReady(this.store.state, utcDay(now)) ? '🎁 The balloon is back! Click to unpack' : '🎈 Off to the city · back tomorrow');
+          return { title: landmark.name, lines };
+        }
         const lines = def?.charm ? [`💗 +${def.charm} charm`] : [];
         if (!visiting && isWell(obj)) {
           const ready = wellReadyAt(this.store.state, obj.id);

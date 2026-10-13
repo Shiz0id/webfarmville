@@ -34,7 +34,10 @@ import {
   FEED_MILL,
   VEHICLE_LIST,
   HELPER_LIST,
+  GRAND_DECORATIONS,
 } from '@farm/shared';
+
+const GOLDEN = GRAND_DECORATIONS.filter((d) => !d.reward);
 
 /** Every cat sprite frame (key `cat:<id>:<frame>`); `#1` frames animate. */
 export const KITTY_FRAMES = ['sit', 'loaf', 'sleep', 'sleep#1', 'play', 'play#1', 'walk', 'walk#1'];
@@ -151,6 +154,13 @@ export function expectedKeys(mod: string): string[] {
     vehicles: () => [...VEHICLE_LIST.map((v) => `icon:vehicle_${v.id}`), ...VEHICLE_LIST.map((v) => `vehicle:${v.id}`)],
     // Helpers: Farmhand, Arborist and Unwither Charm icons (drawn as their emoji until painted).
     helpers: () => HELPER_LIST.map((h) => `icon:${h.id}`),
+    // Grand Projects: the four landmarks (finished look; the scene crops them while they're being built),
+    // the building sites and scaffolding that cover them meanwhile, and the Grand decoration line.
+    grand_landmarks_a: () => ['deco:grand_greenhouse', 'deco:botanical_conservatory'],
+    grand_landmarks_b: () => ['deco:lighthouse_windmill', 'deco:balloon_dock'],
+    grand_build: () => ['grand:site_3', 'grand:site_4', 'grand:scaffold_3', 'grand:scaffold_4', 'icon:grand', 'ui:grand'],
+    grand_decor_a: () => GOLDEN.slice(0, 6).map((d) => `deco:${d.id}`),
+    grand_decor_b: () => GOLDEN.slice(6).map((d) => `deco:${d.id}`),
     // UI icons: the HUD toolbar and corner buttons (drawn as their emoji until painted).
     ui_icons: () => [
       'ui:hand',

@@ -4,6 +4,7 @@
 // placing something and coming back drops you on the same shelf.
 
 import {
+  LANDMARKS,
   DECORATIONS,
   DECORATION_LIST,
   DECO_CATEGORIES,
@@ -21,6 +22,7 @@ import { fmtNum, h } from '../util';
 import { openModal, toast } from './dom';
 import { forFingers, isTouch } from './layout';
 import { card, eventReturn, levelLock, startPlacing } from './cards';
+import { openGrand } from '../features/grand';
 
 let S: Store;
 
@@ -82,6 +84,7 @@ const CAT_ART: Partial<Record<Cat, string>> = {
   country: 'chicken_coop',
   party: 'birthday_cake',
   kitty: 'cat_bed',
+  grand: 'pearl_carousel',
 };
 
 function catArt(c: Cat): string {
@@ -299,6 +302,9 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
     }
   }
 
+  /** "More…" watchers on the shelf on screen, dropped whenever it's redrawn. */
+  const watchers: IntersectionObserver[] = [];
+
   /** Draws cards a batch at a time as the shelf scrolls into view. */
   function lazyGrid(defs: DecoDef[], make: (d: DecoDef) => HTMLElement, into: HTMLElement) {
     const grid = h('div', { class: 'grid' });
@@ -311,7 +317,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
       if (shown < defs.length) {
         const sentinel = h('div', { class: 'decor-more' }, 'More…');
         grid.after(sentinel);
-        const io = new IntersectionObserver(
+        const io: IntersectionObserver = new IntersectionObserver(
           (es) => {
             if (!es.some((e) => e.isIntersecting)) return;
             io.disconnect();
@@ -321,6 +327,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
           { root: results, rootMargin: '400px' },
         );
         io.observe(sentinel);
+        watchers.push(io);
       }
     };
     more(depth);
@@ -340,7 +347,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
       if (next < sections.length) {
         const sentinel = h('div', { class: 'decor-more' }, 'More…');
         results.append(sentinel);
-        const io = new IntersectionObserver(
+        const io: IntersectionObserver = new IntersectionObserver(
           (es) => {
             if (!es.some((e) => e.isIntersecting)) return;
             io.disconnect();
@@ -350,6 +357,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
           { root: results, rootMargin: '400px' },
         );
         io.observe(sentinel);
+        watchers.push(io);
       }
     };
     more(depth);
@@ -366,7 +374,12 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
         owned: n,
         cls: n ? 'earned' : 'unearned',
         meta: [n ? (inBox ? forFingers('In storage · click to place') : '✓ Earned') : `🏆 ${d.reward}`],
-        onClick: () => (inBox ? startPlacing(d.id, d.name, 'inventory', m.close) : toast(n ? `${d.name} is already on your farm.` : `🏆 ${d.reward}`, 'info')),
+        onClick: () =>
+          inBox
+            ? startPlacing(d.id, d.name, 'inventory', m.close)
+            : LANDMARKS[d.id] && !n
+              ? (m.close(), openGrand(d.id))
+              : toast(n ? `${d.name} is already on your farm.` : `🏆 ${d.reward}`, 'info'),
       });
     }
     const ev = d.event ? EVENTS[d.event] : null;
@@ -436,6 +449,15 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
       lazySections(sections);
       return;
     }
+    if (cat === 'grand' && !view.q)
+      results.append(
+        h(
+          'div',
+          { class: 'decor-tidy' },
+          h('span', null, '🏰 The biggest landmarks of all are built stage by stage in Grand Projects.'),
+          h('button', { class: 'btn small gold', onclick: () => (m.close(), openGrand()) }, 'Grand Projects'),
+        ),
+      );
     if (cat === 'rewards' && !view.q)
       results.append(h('div', { class: 'nu-hint' }, '🏆 Rewards are never sold: earn them from collections, mastery, the County Fair and friends.'));
     lazyGrid(items, (d) => shopCard(d, owned), results);
@@ -497,6 +519,7 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
     fresh.b.style.display = view.tab === 'shop' ? '' : 'none';
     const owned = ownedCounts();
     const scroll = results.scrollTop;
+    for (const io of watchers.splice(0)) io.disconnect();
     results.replaceChildren();
     if (view.tab === 'shop') paintShop(owned);
     else paintStorage();

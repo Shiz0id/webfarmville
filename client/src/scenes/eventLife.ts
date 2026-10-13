@@ -132,6 +132,12 @@ export class Visitor {
     });
   }
 
+  /** Out of sight while you're over on a neighbor's farm. */
+  hide(hidden: boolean): void {
+    this.img.setVisible(!hidden);
+    this.bubble.setVisible(!hidden && this.waiting);
+  }
+
   at(tx: number, ty: number): boolean {
     return this.waiting && Math.abs(Math.floor(this.x) - tx) <= 0 && Math.abs(Math.floor(this.y) - ty) <= 0;
   }
