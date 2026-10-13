@@ -178,6 +178,22 @@ describe('farming loop', () => {
     expect(() => act(s, { type: 'sellItem', item: 'strawberry', qty: 1 })).toThrow();
   });
 
+  it('sells several stacks at once, all or nothing', () => {
+    let s = createFarm('Test', T0);
+    s.inventory.strawberry = 5;
+    s.inventory.egg = 3;
+    const coins = s.coins;
+    s = act(s, { type: 'sellItems', items: { strawberry: 4, egg: 3 } }).state;
+    expect(s.coins).toBe(coins + 4 * ITEMS.strawberry.sell + 3 * ITEMS.egg.sell);
+    expect(s.inventory.strawberry).toBe(1);
+    expect(s.inventory.egg).toBeUndefined();
+    s.inventory.egg = 1;
+    // One bad stack rejects the whole sale.
+    expect(() => act(s, { type: 'sellItems', items: { egg: 1, strawberry: 2 } })).toThrow();
+    expect(() => act(s, { type: 'sellItems', items: { egg: 1, candy: 1 } })).toThrow();
+    expect(() => act(s, { type: 'sellItems', items: {} })).toThrow();
+  });
+
   it('levels up and pays a reward', () => {
     const s = createFarm('Test', T0);
     s.xp = xpForLevel(2) - 1;

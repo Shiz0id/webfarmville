@@ -326,6 +326,35 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
     more(depth);
   }
 
+  /** Like lazyGrid, but whole sections at a time (for the festival-by-festival seasonal shelf). */
+  function lazySections(sections: { cards: number; build: () => HTMLElement }[]) {
+    let next = 0;
+    let drawn = 0;
+    const more = (n: number) => {
+      const stop = drawn + n;
+      while (next < sections.length && drawn < stop) {
+        results.append(sections[next].build());
+        drawn += sections[next++].cards;
+      }
+      depth = Math.max(depth, drawn);
+      if (next < sections.length) {
+        const sentinel = h('div', { class: 'decor-more' }, 'More…');
+        results.append(sentinel);
+        const io = new IntersectionObserver(
+          (es) => {
+            if (!es.some((e) => e.isIntersecting)) return;
+            io.disconnect();
+            sentinel.remove();
+            more(BATCH);
+          },
+          { root: results, rootMargin: '400px' },
+        );
+        io.observe(sentinel);
+      }
+    };
+    more(depth);
+  }
+
   function shopCard(d: DecoDef, owned: Map<string, number>): HTMLElement {
     const n = owned.get(d.id) ?? 0;
     if (d.reward) {
@@ -370,7 +399,8 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
       const evIds = [...new Set(items.map((d) => d.event!))].sort(
         (a, b) => Number(eventLive(b, S.now(), S.allEvents)) - Number(eventLive(a, S.now(), S.allEvents)) || (EVENT_FEATURES[a]?.priority ?? 99) - (EVENT_FEATURES[b]?.priority ?? 99),
       );
-      for (const evId of evIds) {
+      const sections = evIds.map((evId) => ({ cards: items.filter((x) => x.event === evId).length, build: () => eventSection(evId) }));
+      const eventSection = (evId: string) => {
         const ev = EVENTS[evId];
         const on = eventLive(evId, S.now(), S.allEvents);
         const section = h('div', { class: 'decor-section' });
@@ -401,8 +431,9 @@ export function openDecor(opts: { tab?: Tab; cat?: Cat; q?: string } = {}): void
           );
         }
         section.append(h('div', { class: 'grid' }, ...evItems.map((d) => shopCard(d, owned))));
-        results.append(section);
-      }
+        return section;
+      };
+      lazySections(sections);
       return;
     }
     if (cat === 'rewards' && !view.q)

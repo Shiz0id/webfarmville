@@ -14,6 +14,8 @@ All of the art is drawn in code at startup, so there are no image assets to down
 - **Animals & trees**: 8 animals and 8 fruit trees that produce on a cycle. Animals blink, swish their tails and
   hop around.
 - **Crafting**: 7 workshops with 30 recipes and queued production slots.
+- **Barn**: everything you've harvested and made. **Sell extras** clears out surplus produce in one go, keeping ten
+  of each (or more if an order needs it) for crafting and cooking.
 - **Cooking mini-games** in the spirit of Cooking Mama. Chop, stir, crack eggs, whisk, knead, flip and mind the
   heat to turn farm ingredients into 15 home-cooked dishes. Cook perfectly and you make two.
 - **Mama Marigold**: a jolly bear who strolls onto your farm each day to brag about her garden and bring you a
@@ -156,7 +158,14 @@ Run `node scripts/ui-tour.mjs <dir> [WxH]` to screenshot the whole kit at any sc
 
 To check pacing, `npx tsx scripts/balance-sim.ts [days] [casual|keen]` plays a simulated farmer through the real
 rules (four or twelve visits a day) and reports when each level arrives, where the coins come from and which quests
-stall.
+stall. With `SAVE=<path>` it also writes each simulated farm as a browser-only save (`<path>-<profile>.json`), which
+the next two scripts load:
+
+- `node scripts/phone-tour.mjs <save.json> <dir> [WxH] [url]` opens that farm on a phone-sized browser and
+  screenshots every main screen (farm, menu, quests, orders, barn, decor, neighbors and so on).
+- `npx tsx scripts/perf-check.ts <dir> <save.json>... [--throttle=4] [--url=...]` measures frame rate, update and
+  render time on each farm, plus one with every free tile decorated, on a CPU slowed to phone speed. Headless
+  Chromium draws with a software GPU, so compare runs with each other rather than trusting the absolute fps.
 
 Requires **Node 22.13+**. Node's built-in SQLite prints an "experimental" warning, which is harmless.
 

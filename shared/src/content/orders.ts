@@ -22,7 +22,6 @@ export const ORDER_GIVERS = ['Mayor Maple', 'Henrietta', 'Penny', 'Rosie', 'Gran
 
 const ORDER_NOTES = [
   'for a picnic by the pond',
-  'for my famous recipe',
   'for the village fair',
   'to share with the neighbors',
   'for a cozy dinner',
@@ -30,6 +29,15 @@ const ORDER_NOTES = [
   'for the festival stall',
   'because I simply adore them',
 ];
+
+/** Each villager's own reasons, so an order sounds like the one asking. */
+const GIVER_NOTES: Record<string, string[]> = {
+  'Mayor Maple': ['for the town hall bake sale', 'to welcome some new villagers', 'for my evening cocoa, hoo-hoo', 'for the harvest speech banquet'],
+  Henrietta: ['to keep my chicks well fed', 'for my sister’s hen party', 'for a nest-warming brunch', 'for my famous egg salad'],
+  Penny: ['for my market stall', 'because the customers keep asking', 'for a very good deal, I promise', 'to restock my sweet shop'],
+  Rosie: ['for a picnic in the clover', 'for my famous recipe', 'to decorate my garden party', 'for a carrot cake (shh!)'],
+  'Grandma Fern': ['for a pot of my special soup', 'for the grandkids’ visit', 'to put up preserves for winter', 'for my knitting circle'],
+};
 
 /** Advance the farm's random seed and return a number in [0, 1). */
 export function nextRandom(state: FarmState): number {
@@ -81,10 +89,15 @@ export function generateOrder(state: FarmState): Order {
     value += sell * qty;
   }
   const bonusRoll = nextRandom(state);
+  // A different villager, with a different reason, from the orders already up.
+  const board = state.orders ?? [];
+  const givers = ORDER_GIVERS.filter((g) => !board.some((o) => o.giver === g));
+  const giver = pick(state, givers.length ? givers : ORDER_GIVERS);
+  const notes = [...GIVER_NOTES[giver], ...ORDER_NOTES].filter((n) => !board.some((o) => o.note === n));
   const order: Order = {
     id: state.nextId++,
-    giver: pick(state, ORDER_GIVERS),
-    note: pick(state, ORDER_NOTES),
+    giver,
+    note: pick(state, notes),
     items,
     coins: Math.round((value * 1.5) / 5) * 5 + 10,
     xp: Math.max(3, Math.round(value / 12)),

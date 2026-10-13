@@ -115,6 +115,9 @@ export class FarmScene extends Phaser.Scene {
   private store!: Store;
   private sprites = new Map<string, ObjSprite>();
   private ground: Phaser.GameObjects.GameObject[] = [];
+  /** Ground tiles and wild scenery with their world bounds, drawn only when on screen. */
+  private still: { obj: Phaser.GameObjects.Image; x0: number; y0: number; x1: number; y1: number }[] = [];
+  private stillView = '';
   private groundKey = '';
   private hover!: Phaser.GameObjects.Graphics;
   private border!: Phaser.GameObjects.Graphics;
@@ -378,18 +381,38 @@ export class FarmScene extends Phaser.Scene {
     }
     this.keyboardPan(delta);
     for (const p of this.pets) p.update();
+    this.cullStill();
   }
 
   // -------------------------------------------------------------------------
   // Camera
 
   /** Centre the camera on the current farm. */
+  /** Frame the farm: everything that's on it when that fits, else the busiest part. */
   centerCamera(): void {
-    const size = this.store.viewed.size;
+    const { size, objects } = this.store.viewed;
     const cam = this.cameras.main;
-    const fit = Math.min(this.scale.width / ((size + 4) * HALF_W * 2), this.scale.height / ((size + 6) * HALF_H * 2));
+    const objs = Object.values(objects);
+    // The patch of land in use (the whole farm while it's still empty).
+    let [x0, y0, x1, y1] = [0, 0, size, size];
+    let cx = size / 2;
+    let cy = size / 2;
+    if (objs.length) {
+      x0 = Math.min(...objs.map((o) => o.x)) - 1.5;
+      y0 = Math.min(...objs.map((o) => o.y)) - 1.5;
+      x1 = Math.max(...objs.map((o) => o.x)) + 2.5;
+      y1 = Math.max(...objs.map((o) => o.y)) + 2.5;
+      cx = objs.reduce((s, o) => s + o.x + 0.5, 0) / objs.length;
+      cy = objs.reduce((s, o) => s + o.y + 0.5, 0) / objs.length;
+    }
+    const xs = [isoX(x0, y0), isoX(x1, y0), isoX(x0, y1), isoX(x1, y1)];
+    const ys = [isoY(x0, y0), isoY(x1, y0), isoY(x0, y1), isoY(x1, y1)];
+    const w = Math.max(...xs) - Math.min(...xs);
+    const h = Math.max(...ys) - Math.min(...ys) + HALF_H * 6;
+    const fit = Math.min(this.scale.width / w, this.scale.height / h);
     cam.setZoom(Phaser.Math.Clamp(Math.max(fit, 0.6), MIN_ZOOM, 1.2));
-    cam.centerOn(isoX(size / 2, size / 2), isoY(size / 2, size / 2));
+    if (fit >= 0.6) cam.centerOn((Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2);
+    else cam.centerOn(isoX(cx, cy), isoY(cx, cy));
   }
 
   private clampCamera(): void {
@@ -430,9 +453,36 @@ export class FarmScene extends Phaser.Scene {
   // -------------------------------------------------------------------------
   // Rendering
 
+  private keepStill(img: Phaser.GameObjects.Image): void {
+    const b = img.getBounds();
+    this.still.push({ obj: img, x0: b.x, y0: b.y, x1: b.right, y1: b.bottom });
+  }
+
+  /**
+   * The ground and the woods around the farm are a couple of thousand sprites
+   * that never move, most of them off screen: skip drawing those.
+   */
+  private cullStill(): void {
+    const cam = this.cameras.main;
+    const w = this.scale.width / cam.zoom;
+    const h = this.scale.height / cam.zoom;
+    // Phaser zooms about the camera's centre, so its middle is scroll + half its size.
+    const x = cam.scrollX + cam.width / 2 - w / 2;
+    const y = cam.scrollY + cam.height / 2 - h / 2;
+    const key = `${Math.round(x)},${Math.round(y)},${Math.round(w)},${Math.round(h)}`;
+    if (key === this.stillView) return;
+    this.stillView = key;
+    // A margin so a quick pan never shows a gap before the next pass.
+    const pad = 96 / cam.zoom;
+    const [l, t, r, b] = [x - pad, y - pad, x + w + pad, y + h + pad];
+    for (const s of this.still) s.obj.setVisible(s.x1 > l && s.x0 < r && s.y1 > t && s.y0 < b);
+  }
+
   private rebuildGround(state: FarmState): void {
     for (const g of this.ground) g.destroy();
     this.ground = [];
+    this.still = [];
+    this.stillView = '';
     const lo = -MARGIN;
     const hi = MAX_SIZE + MARGIN;
     // Grass turns a little golden in autumn and frosty in winter.
@@ -450,6 +500,7 @@ export class FarmScene extends Phaser.Scene {
           .setDepth(DEPTH_GROUND);
         if (groundTint !== 0xffffff) img.setTint(groundTint);
         this.ground.push(img);
+        this.keepStill(img);
         // Scenery outside the land you own.
         if (owned) continue;
         const inside = x >= 0 && y >= 0 && x < MAX_SIZE && y < MAX_SIZE;
@@ -465,6 +516,7 @@ export class FarmScene extends Phaser.Scene {
           this.placeImage(s, x, y, 1, 1);
           s.setDepth(this.depthFor(x, y, 1, 1));
           this.ground.push(s);
+          this.keepStill(s);
         }
       }
     }
@@ -729,15 +781,30 @@ export class FarmScene extends Phaser.Scene {
     this.sprites.set(obj.id, entry);
   }
 
-  private makeBubble(x: number, y: number, b: { icon?: string; emoji?: string }): Bubble {
-    const c = this.add.container(x, y - 16).setDepth(DEPTH_UI - 2);
-    const g = this.add.graphics();
+  /**
+   * The speech bubble behind a ready icon, painted once into a texture. As a
+   * live Graphics it was re-tessellated every frame, and a big farm can have a
+   * hundred of them up at once.
+   */
+  private bubbleTexture(): string {
+    const key = 'fx:bubble';
+    if (this.textures.exists(key)) return key;
+    const g = this.make.graphics({}, false);
+    // Drawn at RES, with the circle's centre at (16, 15) in bubble units.
+    g.translateCanvas(16 * RES, 15 * RES).scaleCanvas(RES, RES);
     g.fillStyle(0x4a3426, 0.25).fillEllipse(0, 18, 18, 6);
     g.fillStyle(0xfffaf0, 1).lineStyle(2, 0x4a3426, 1);
     g.fillCircle(0, 0, 13).strokeCircle(0, 0, 13);
     g.fillTriangle(-5, 10, 5, 10, 0, 17);
     g.lineBetween(-5, 11, 0, 17).lineBetween(5, 11, 0, 17);
-    c.add(g);
+    g.generateTexture(key, 32 * RES, 38 * RES);
+    g.destroy();
+    return key;
+  }
+
+  private makeBubble(x: number, y: number, b: { icon?: string; emoji?: string }): Bubble {
+    const c = this.add.container(x, y - 16).setDepth(DEPTH_UI - 2);
+    c.add(this.add.image(0, 4, this.bubbleTexture()).setScale(1 / RES));
     if (b.icon) c.add(this.add.image(0, 0, texture(this, b.icon)).setDisplaySize(22, 22));
     else if (b.emoji) {
       c.add(this.add.text(0, 0, b.emoji, { fontSize: '15px' }).setOrigin(0.5));
@@ -1481,12 +1548,23 @@ export class FarmScene extends Phaser.Scene {
   /** A few butterflies drifting over the farm for ambience. */
   private spawnButterflies(): void {
     const colors = [0xffb3d9, 0xfff1a1, 0xb9e6ff, 0xffffff];
+    // White wings, painted once and tinted per butterfly.
+    const wings = 'fx:butterfly';
+    if (!this.textures.exists(wings)) {
+      const p = this.make.graphics({}, false);
+      p.translateCanvas(7 * RES, 4 * RES).scaleCanvas(RES, RES);
+      p.fillStyle(0xffffff, 1).lineStyle(1, 0x4a3426, 0.8);
+      p.fillEllipse(-3, 0, 6, 5).strokeEllipse(-3, 0, 6, 5);
+      p.fillEllipse(3, 0, 6, 5).strokeEllipse(3, 0, 6, 5);
+      p.generateTexture(wings, 14 * RES, 8 * RES);
+      p.destroy();
+    }
     for (let i = 0; i < 6; i++) {
-      const g = this.add.graphics().setDepth(DEPTH_UI - 50);
-      const col = colors[i % colors.length];
-      g.fillStyle(col, 1).lineStyle(1, 0x4a3426, 0.8);
-      g.fillEllipse(-3, 0, 6, 5).strokeEllipse(-3, 0, 6, 5);
-      g.fillEllipse(3, 0, 6, 5).strokeEllipse(3, 0, 6, 5);
+      const g = this.add
+        .image(0, 0, wings)
+        .setScale(1 / RES)
+        .setTint(colors[i % colors.length])
+        .setDepth(DEPTH_UI - 50);
       const flyTo = () => {
         const size = this.store.viewed.size;
         const tx = Phaser.Math.FloatBetween(0, size);
@@ -1502,7 +1580,7 @@ export class FarmScene extends Phaser.Scene {
       };
       const size = this.store.viewed.size;
       g.setPosition(isoX(Math.random() * size, Math.random() * size), isoY(Math.random() * size, Math.random() * size) - 40);
-      this.tweens.add({ targets: g, scaleX: 0.3, duration: 160, yoyo: true, repeat: -1 });
+      this.tweens.add({ targets: g, scaleX: 0.3 / RES, duration: 160, yoyo: true, repeat: -1 });
       flyTo();
     }
   }
