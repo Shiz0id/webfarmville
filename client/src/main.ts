@@ -68,6 +68,8 @@ async function start(): Promise<void> {
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     render: { antialias: true, roundPixels: false },
     input: { activePointers: 3 },
+    // All our sound is synthesized in sfx.ts; Phaser's own audio would just sit open in the background.
+    audio: { noAudio: true },
     scene: [],
   });
   game.scene.add('farm', FarmScene, true, { store });

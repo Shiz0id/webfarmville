@@ -435,11 +435,22 @@ export function setSfx(on: boolean): void {
   saveSettings();
 }
 
+let unlocked = false;
+
+// Browsers happily keep a page's sound going in a background tab (that's how
+// music sites work), so a game has to hush itself when you look away.
+document.addEventListener('visibilitychange', () => {
+  if (!ac || !unlocked) return;
+  if (document.hidden) void ac.suspend();
+  else void ac.resume();
+});
+
 /** Browsers only allow audio after a user gesture. */
 export function unlockAudioOnGesture(): void {
   const unlock = () => {
     const a = ctx();
-    void a?.resume();
+    unlocked = true;
+    if (!document.hidden) void a?.resume();
     if (audioSettings.music) startMusic();
     window.removeEventListener('pointerdown', unlock);
     window.removeEventListener('keydown', unlock);
