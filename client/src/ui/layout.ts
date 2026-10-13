@@ -54,7 +54,7 @@ export function setupLayout(): void {
 export function forFingers(text: string): string {
   if (!isTouch()) return text;
   return text
-    .replace(/\bClick or drag\b/g, 'Tap or drag')
+    .replace(/\bClick or drag\b/g, 'Tap or swipe')
     .replace(/\bClick\b/g, 'Tap')
     .replace(/\bclick\b/g, 'tap')
     .replace(/\bClicking\b/g, 'Tapping')

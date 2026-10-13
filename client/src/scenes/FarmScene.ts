@@ -140,10 +140,40 @@ export class FarmScene extends Phaser.Scene {
     camX: number;
     camY: number;
     lastTile: string;
+    /** Where the pointer was last seen in the world, to trace fast swipes. */
+    lastWorld: { x: number; y: number };
     errored: boolean;
     pinchDist: number;
     pinchZoom: number;
-  } = { mode: 'none', sx: 0, sy: 0, camX: 0, camY: 0, lastTile: '', errored: false, pinchDist: 0, pinchZoom: 1 };
+    /** The two fingers' midpoint, so a pinch can also move the camera. */
+    mid: { x: number; y: number };
+    touch: boolean;
+    /** Tiles already worked in this stroke. */
+    visited: Set<string>;
+    /** Things done in this stroke so far. */
+    combo: number;
+    /** May the seed tool plow fresh ground in this stroke? */
+    plowOk: boolean;
+    /** A touch stroke waiting to be sure it isn't the start of a pinch. */
+    armed: Phaser.Time.TimerEvent | null;
+  } = {
+    mode: 'none',
+    sx: 0,
+    sy: 0,
+    camX: 0,
+    camY: 0,
+    lastTile: '',
+    lastWorld: { x: 0, y: 0 },
+    errored: false,
+    pinchDist: 0,
+    pinchZoom: 1,
+    mid: { x: 0, y: 0 },
+    touch: false,
+    visited: new Set(),
+    combo: 0,
+    plowOk: false,
+    armed: null,
+  };
 
   constructor() {
     super('farm');
@@ -963,19 +993,28 @@ export class FarmScene extends Phaser.Scene {
     return { x: Math.floor(fx), y: Math.floor(fy) };
   }
 
+  /** A one-finger drag with a working tool (plow, seeds, water, harvest) paints tiles instead of moving the camera. */
+  private strokeTool(): boolean {
+    if (this.store.isVisiting) return false;
+    return tools.tool === 'plow' || tools.tool === 'seed' || tools.tool === 'water' || tools.tool === 'harvest';
+  }
+
   private setupInput(): void {
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       const cam = this.cameras.main;
       const d = this.drag;
       if (this.input.pointer1.isDown && this.input.pointer2.isDown) {
+        // A second finger: pinch to zoom, and both fingers together move the camera.
         d.mode = 'pinch';
-        d.pinchDist = Phaser.Math.Distance.Between(
-          this.input.pointer1.x,
-          this.input.pointer1.y,
-          this.input.pointer2.x,
-          this.input.pointer2.y,
-        );
+        const a = this.input.pointer1;
+        const b = this.input.pointer2;
+        d.pinchDist = Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y);
         d.pinchZoom = cam.zoom;
+        d.mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        // The first finger's stroke hadn't started yet: it was the start of a pinch.
+        d.armed?.remove();
+        d.armed = null;
+        this.endStroke();
         return;
       }
       d.sx = p.x;
@@ -983,12 +1022,12 @@ export class FarmScene extends Phaser.Scene {
       d.camX = cam.scrollX;
       d.camY = cam.scrollY;
       d.errored = false;
+      d.touch = p.wasTouch;
       const tile = this.tileAt(p.worldX, p.worldY);
       d.lastTile = `${tile.x},${tile.y}`;
-      // Touch screens have no hover, so show the tooltip for whatever was tapped.
+      d.lastWorld = { x: p.worldX, y: p.worldY };
       this.pointerScreen = { x: p.x, y: p.y };
       this.hoverTile = tile;
-      this.refreshHover();
       if (p.rightButtonDown() || p.middleButtonDown()) {
         if (p.rightButtonDown() && (tools.tool === 'place' || tools.moving)) {
           setTool(tools.tool === 'place' ? 'hand' : 'move');
@@ -997,16 +1036,25 @@ export class FarmScene extends Phaser.Scene {
         d.mode = 'pan';
         return;
       }
-      const visiting = this.store.isVisiting;
-      if (!visiting && (tools.tool === 'plow' || tools.tool === 'seed' || tools.tool === 'water')) {
-        d.mode = 'paint';
-        this.paint(tile);
-      } else if (!visiting && tools.tool === 'hand' && this.quickAction(tile, true)) {
-        d.mode = 'harvest';
-        this.quickAction(tile, false);
-      } else {
-        d.mode = 'pending';
+      if (this.strokeTool()) {
+        d.mode = tools.tool === 'harvest' ? 'harvest' : 'paint';
+        d.visited = new Set([d.lastTile]);
+        d.combo = 0;
+        // Seeds only break new ground when the stroke starts on grass, so a wild
+        // swipe across a field never plows the lawn around it.
+        d.plowOk = !objectAt(this.store.state, tile.x, tile.y);
+        // On touch, wait a moment before working the first tile: a second finger
+        // landing right after means a pinch, not a swipe.
+        if (d.touch) d.armed = this.time.delayedCall(90, () => this.fireStroke());
+        else this.strokeAt(tile);
+        // Fingers hide what's under them: skip the tooltip mid-swipe.
+        if (d.touch) bus.emit('hover', null);
+        else this.refreshHover();
+        return;
       }
+      // Touch screens have no hover, so show the tooltip for whatever was tapped.
+      this.refreshHover();
+      d.mode = 'pending';
     });
 
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
@@ -1014,42 +1062,65 @@ export class FarmScene extends Phaser.Scene {
       const d = this.drag;
       const cam = this.cameras.main;
       if (d.mode === 'pinch') {
-        if (this.input.pointer1.isDown && this.input.pointer2.isDown) {
-          const dist = Phaser.Math.Distance.Between(
-            this.input.pointer1.x,
-            this.input.pointer1.y,
-            this.input.pointer2.x,
-            this.input.pointer2.y,
-          );
+        const a = this.input.pointer1;
+        const b = this.input.pointer2;
+        if (a.isDown && b.isDown) {
+          const dist = Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y);
+          const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
           const target = Phaser.Math.Clamp((d.pinchZoom * dist) / Math.max(1, d.pinchDist), MIN_ZOOM, MAX_ZOOM);
-          this.zoomAt(target / cam.zoom, (this.input.pointer1.x + this.input.pointer2.x) / 2, (this.input.pointer1.y + this.input.pointer2.y) / 2);
+          this.zoomAt(target / cam.zoom, mid.x, mid.y);
+          cam.scrollX -= (mid.x - d.mid.x) / cam.zoom;
+          cam.scrollY -= (mid.y - d.mid.y) / cam.zoom;
+          this.clampCamera();
+          d.mid = mid;
         }
         return;
       }
-      if (d.mode === 'pending' && Phaser.Math.Distance.Between(p.x, p.y, d.sx, d.sy) > 6) d.mode = 'pan';
+      // A finger wobbles more than a mouse, so it gets a bit more room before a tap becomes a drag.
+      if (d.mode === 'pending' && Phaser.Math.Distance.Between(p.x, p.y, d.sx, d.sy) > (d.touch ? 12 : 6)) {
+        d.mode = 'pan';
+        bus.emit('hover', null);
+      }
       if (d.mode === 'pan') {
         cam.scrollX = d.camX - (p.x - d.sx) / cam.zoom;
         cam.scrollY = d.camY - (p.y - d.sy) / cam.zoom;
         this.clampCamera();
       }
       const tile = this.tileAt(p.worldX, p.worldY);
-      const key = `${tile.x},${tile.y}`;
-      if ((d.mode === 'paint' || d.mode === 'harvest') && p.isDown && key !== d.lastTile) {
-        d.lastTile = key;
-        if (d.mode === 'paint') this.paint(tile);
-        else this.quickAction(tile, false);
+      if ((d.mode === 'paint' || d.mode === 'harvest') && p.isDown) {
+        if (d.armed && Phaser.Math.Distance.Between(p.x, p.y, d.sx, d.sy) > 8) this.fireStroke();
+        // Until the stroke starts, the path waits to be traced from where the finger landed.
+        if (!d.armed) {
+          this.traceStroke(d.lastWorld, { x: p.worldX, y: p.worldY });
+          d.lastWorld = { x: p.worldX, y: p.worldY };
+        }
       }
       if (!this.hoverTile || this.hoverTile.x !== tile.x || this.hoverTile.y !== tile.y) {
         this.hoverTile = tile;
         this.updateGhost();
       }
-      this.refreshHover();
+      if (d.touch && (d.mode === 'paint' || d.mode === 'harvest' || d.mode === 'pan')) this.hover.clear();
+      else this.refreshHover();
     });
 
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       const d = this.drag;
-      if (d.mode === 'pending' && !p.rightButtonReleased()) this.click(this.tileAt(p.worldX, p.worldY));
-      if (d.mode === 'pinch' && (this.input.pointer1.isDown || this.input.pointer2.isDown)) return;
+      if (d.mode === 'pinch') {
+        if (this.input.pointer1.isDown || this.input.pointer2.isDown) return;
+      } else if (d.armed) this.fireStroke();
+      else if (d.mode === 'pending' && !p.rightButtonReleased()) {
+        const tile = this.tileAt(p.worldX, p.worldY);
+        // The hand gathers one thing per tap; the Harvest tool is for sweeping up a field.
+        if (tools.tool === 'hand' && !this.store.isVisiting && this.quickAction(tile, false)) bus.emit('hover', null);
+        else this.click(tile);
+      }
+      if ((d.mode === 'paint' || d.mode === 'harvest') && d.touch) {
+        // A tap that did nothing shows what's there (how long until it's ready); a swipe tidies the highlight away.
+        const idleTap = d.combo === 0 && d.visited.size === 1;
+        if (!idleTap) this.hoverTile = null;
+        this.refreshHover();
+      }
+      this.endStroke();
       d.mode = 'none';
     });
 
@@ -1062,6 +1133,52 @@ export class FarmScene extends Phaser.Scene {
     this.input.on('wheel', (p: Phaser.Input.Pointer, _objs: unknown, _dx: number, dy: number) => {
       this.zoomAt(dy > 0 ? 0.9 : 1.1, p.x, p.y);
     });
+  }
+
+  /** Work the tile a touch stroke started on. */
+  private fireStroke(): void {
+    const d = this.drag;
+    if (!d.armed) return;
+    d.armed.remove();
+    d.armed = null;
+    const [x, y] = d.visited.values().next().value!.split(',').map(Number);
+    this.strokeAt({ x, y });
+  }
+
+  /** Every tile a fast swipe crossed, not just the ones the pointer happened to report from. */
+  private traceStroke(from: { x: number; y: number }, to: { x: number; y: number }): void {
+    const d = this.drag;
+    const steps = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / (HALF_H / 2)));
+    for (let i = 1; i <= steps; i++) {
+      const t = this.tileAt(from.x + ((to.x - from.x) * i) / steps, from.y + ((to.y - from.y) * i) / steps);
+      const key = `${t.x},${t.y}`;
+      if (key === d.lastTile) continue;
+      d.lastTile = key;
+      // Each tile is worked once per stroke, so swiping back and forth never undoes itself.
+      if (d.visited.has(key)) continue;
+      d.visited.add(key);
+      this.strokeAt(t);
+    }
+  }
+
+  private strokeAt(tile: Tile): void {
+    const d = this.drag;
+    const done = d.mode === 'harvest' ? this.quickAction(tile, false) : this.paint(tile);
+    if (!done) return;
+    d.combo++;
+    // A tiny tick under the finger for each thing gathered (phones that support it).
+    if (d.touch && d.mode === 'harvest') navigator.vibrate?.(6);
+  }
+
+  private endStroke(): void {
+    const d = this.drag;
+    // A big sweep earns a little cheer where the finger lifted.
+    if (d.combo >= 8) {
+      this.floatText(d.lastWorld.x, d.lastWorld.y - 40, `${d.combo} in one swipe!`, '#ffd6e8', null, 120);
+      sfx.cheer();
+    }
+    d.combo = 0;
+    d.visited.clear();
   }
 
   private setupKeyboard(): void {
@@ -1115,8 +1232,10 @@ export class FarmScene extends Phaser.Scene {
       action = { type: 'collectCrafts', id: obj.id };
     }
     if (!action) return false;
-    if (!dryRun) this.store.dispatch(action, { quiet: true });
-    return true;
+    if (dryRun) return true;
+    // A full barn says so once per swipe rather than failing silently.
+    this.paintError(this.store.check(action));
+    return this.store.dispatch(action, { quiet: true });
   }
 
   private paintError(msg: string | null): void {
@@ -1126,39 +1245,39 @@ export class FarmScene extends Phaser.Scene {
     }
   }
 
-  private paint(tile: Tile): void {
+  /** Plow, plant or water one tile. Returns whether anything happened. */
+  private paint(tile: Tile): boolean {
     const state = this.store.state;
-    if (tile.x < 0 || tile.y < 0 || tile.x >= state.size || tile.y >= state.size) return;
+    if (tile.x < 0 || tile.y < 0 || tile.x >= state.size || tile.y >= state.size) return false;
     const obj = objectAt(state, tile.x, tile.y);
+    const attempt = (action: Parameters<Store['dispatch']>[0]): boolean => {
+      this.paintError(this.store.check(action));
+      return this.store.dispatch(action, { quiet: true });
+    };
     if (tools.tool === 'plow') {
-      if (obj) return;
-      this.paintError(this.store.check({ type: 'plow', x: tile.x, y: tile.y }));
-      this.store.dispatch({ type: 'plow', x: tile.x, y: tile.y }, { quiet: true });
-    } else if (tools.tool === 'seed') {
+      if (obj) return false;
+      return attempt({ type: 'plow', x: tile.x, y: tile.y });
+    }
+    if (tools.tool === 'seed') {
       let plotId = obj?.kind === 'plot' && !obj.crop ? obj.id : null;
       if (!obj) {
-        const err = this.store.check({ type: 'plow', x: tile.x, y: tile.y });
-        if (err) return this.paintError(err);
-        this.store.dispatch({ type: 'plow', x: tile.x, y: tile.y }, { quiet: true });
+        if (!this.drag.plowOk) return false;
+        if (!attempt({ type: 'plow', x: tile.x, y: tile.y })) return false;
         plotId = objectAt(this.store.state, tile.x, tile.y)?.id ?? null;
       }
-      if (!plotId) {
-        if (obj && this.quickAction(tile, false)) return;
-        return;
-      }
-      const action = { type: 'plant' as const, id: plotId, crop: tools.seed };
-      this.paintError(this.store.check(action));
-      this.store.dispatch(action, { quiet: true });
-    } else if (tools.tool === 'water') {
-      if (!obj) return;
+      // Ripe crops along the way get picked; the next swipe replants them.
+      if (!plotId) return !!obj && this.quickAction(tile, false);
+      return attempt({ type: 'plant', id: plotId, crop: tools.seed });
+    }
+    if (tools.tool === 'water') {
+      if (!obj) return false;
       let action: Parameters<Store['dispatch']>[0] | null = null;
       if (obj.kind === 'plot' && thirsty(obj, this.store.now())) action = { type: 'waterCrop', id: obj.id };
       else if (isBloom(obj) && !isWatered(this.store.state, obj.id, this.store.now())) action = { type: 'waterFlower', id: obj.id };
       else if (isWell(obj)) action = { type: 'drawWater', id: obj.id };
-      if (!action) return;
-      this.paintError(this.store.check(action));
-      this.store.dispatch(action, { quiet: true });
+      return action ? attempt(action) : false;
     }
+    return false;
   }
 
   private click(tile: Tile): void {

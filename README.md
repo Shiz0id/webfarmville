@@ -201,7 +201,7 @@ npm test             # game-rule and API tests (vitest)
 npm run typecheck    # TypeScript across all packages
 ```
 
-There are also two helper scripts:
+There are also some helper scripts:
 
 - `node scripts/art-sheet.mjs <module|all> out.png` renders a contact sheet of the generated art. Modules are
   `crops`, `trees`, `animals`, `buildings`, `goods`, `ground`, `decorations`, `seasonal`, `lifestyle`,
@@ -209,6 +209,8 @@ There are also two helper scripts:
   `events_a` through `events_e`, `cooking`, `portraits`, `pets`, `fx` and the newer feature modules (`mastery`,
   `collections`, `nursery`, ...). You can also view
   it live at http://localhost:5173/art-preview.html?mod=all.
+- `node scripts/swipe-check.mjs <screenshot-dir> [url]` checks touch farming on the browser-only build with real
+  multi-touch swipes: harvest and seed strokes, two-finger panning and the hand.
 - `node scripts/smoke.mjs <screenshot-dir> <url>` drives a real browser through a play session. Companion
   scripts check other features (`scripts/blooms-check.mjs` and `scripts/collections-check.mjs` run with `npx tsx`;
   `scripts/mastery-check.mjs`, `scripts/lonely-check.mjs`, `scripts/water-check.mjs`, `scripts/nursery-check.mjs`, `scripts/feedmill-check.mjs`, `scripts/vehicles-check.mjs`, `scripts/helpers-check.mjs` and `scripts/workshops-check.mjs` run with plain `node`; `scripts/fair-check.mjs` needs the server started with
@@ -219,13 +221,18 @@ There are also two helper scripts:
 
 ## Controls
 
-- **Click** things to harvest, collect or open them. **Drag** across crops to harvest a whole field.
-- Use the **toolbar** to switch between Hand, Plow, Seeds, Water, Market, Move, Store and Sell, or open the Garage
-  to drive a vehicle.
-- **Drag** empty ground (or right-drag) to pan the camera. **Scroll** or pinch to zoom. **WASD** or the arrow
-  keys also pan.
+- The **Hand** taps things to harvest, collect or open them, and drags to look around.
+- The **🧺 Harvest** basket is for sweeping: swipe or drag anywhere across the farm and everything ripe along the way
+  is gathered (crops, animals, trees, finished crafts and withered plots). The **Seeds** bag works the same way
+  for planting. A stroke never moves the camera, fast swipes are traced tile by tile so nothing is skipped, and
+  the pops climb a little scale as you go. The seed bag only plows new ground when a stroke starts on grass, so
+  swiping across a field never plows the lawn around it.
+- Use the **toolbar** to switch between Hand, Harvest, Plow, Seeds, Water, Market, Move, Store and Sell, or open
+  the Garage to drive a vehicle. When things are ready, tap the "✨ N ready" hint to pick up the basket.
+- On touch screens, **two fingers** move the camera with any tool, and pinching zooms. With a mouse, right-drag
+  pans with any tool. **Scroll** zooms, and **WASD** or the arrow keys also pan.
 - **R** flips a decoration while placing or moving it. **Esc** or right-click cancels.
-- **Phones** get their own layout: a dock with Hand, Plow, Seeds, Water and Market (the other tools wait behind
+- **Phones** get their own layout: a dock with Hand, Harvest, Seeds, Water and Market (the other tools wait behind
   **More**), Quests, Orders and Barn on the side with everything else in the **Farm Menu**, and panels that slide
   up as sheets (swipe one down to close it). While a tool is busy, the hint above the dock has **Flip** and
   **Done** buttons in place of R and Esc. **Tablets** keep the full toolbar with bigger, labelled buttons.

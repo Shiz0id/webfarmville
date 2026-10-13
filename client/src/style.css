@@ -3813,3 +3813,21 @@ body:has(.pond, .kitchen) .villager-say {
   24% { transform: scale(0.98) rotate(2deg); }
   36% { transform: scale(1); }
 }
+
+/* "N things ready" doubles as a shortcut to the Harvest tool. */
+.mode-hint.nudge {
+  pointer-events: auto;
+  cursor: pointer;
+  background: rgba(94, 65, 41, 0.92);
+  animation: nudge-bob 2.6s ease-in-out infinite;
+}
+.mode-hint.nudge:hover {
+  background: rgba(118, 84, 52, 0.95);
+}
+@keyframes nudge-bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mode-hint.nudge { animation: none; }
+}

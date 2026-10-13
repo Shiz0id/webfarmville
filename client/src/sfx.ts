@@ -94,10 +94,22 @@ function throttled(name: string, ms: number): boolean {
   return false;
 }
 
+// A run of quick pops climbs a pentatonic ladder, so sweeping a whole field
+// sounds like a happy little tune rather than one sound on repeat.
+const LADDER = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
+const runs = new Map<string, { at: number; step: number }>();
+function ladder(name: string): number {
+  const now = performance.now();
+  const r = runs.get(name);
+  const step = r && now - r.at < 450 ? Math.min(r.step + 1, LADDER.length - 1) : 0;
+  runs.set(name, { at: now, step });
+  return 2 ** (LADDER[step] / 12);
+}
+
 export const sfx = {
   pop() {
     if (throttled('pop', 40)) return;
-    const f = 520 + Math.random() * 160;
+    const f = 520 * ladder('pop') * (1 + Math.random() * 0.03);
     tone(f, 0.12, { type: 'sine', vol: 0.25, slide: 1.9 });
     tone(f * 2, 0.08, { type: 'triangle', vol: 0.08, delay: 0.02 });
   },
@@ -108,7 +120,7 @@ export const sfx = {
   },
   plant() {
     if (throttled('plant', 40)) return;
-    tone(300 + Math.random() * 60, 0.1, { type: 'triangle', vol: 0.18, slide: 1.6 });
+    tone(300 * ladder('plant') * (1 + Math.random() * 0.03), 0.1, { type: 'triangle', vol: 0.18, slide: 1.6 });
   },
   plow() {
     if (throttled('plow', 40)) return;
@@ -126,6 +138,10 @@ export const sfx = {
   error() {
     tone(220, 0.12, { type: 'triangle', vol: 0.15 });
     tone(185, 0.18, { type: 'triangle', vol: 0.15, delay: 0.1 });
+  },
+  /** A big sweep: a quick sparkly flourish. */
+  cheer() {
+    [84, 88, 91, 96].forEach((n, i) => tone(NOTE(n), 0.18, { type: 'sine', vol: 0.09, delay: i * 0.05 }));
   },
   quest() {
     [72, 76, 79, 84].forEach((n, i) => tone(NOTE(n), 0.3, { type: 'triangle', vol: 0.14, delay: i * 0.09 }));

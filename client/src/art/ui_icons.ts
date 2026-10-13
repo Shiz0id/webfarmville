@@ -462,6 +462,99 @@ function uiSell(p: Pen): void {
   glint(p, 28.4, 29.4, 1.2, 2, 0.4, 0.8);
 }
 
+/** A wicker basket with a handle, one big strawberry in front and a carrot tucked behind, with two light swoosh arcs on the left for a quick swipe. */
+function uiHarvest(p: Pen): void {
+  p.lineWidth = 1.1;
+  const c = p.ctx;
+  ground(p, 20, 12.5, 36.6);
+  // the handle: a thin clean arch behind everything, its ends hidden under the rim
+  arcBar(p, 20, 21.5, 8.6, Math.PI, Math.PI * 2, 1.8, WOOD);
+  // the carrot, tucked behind the strawberry with its leafy top poking out
+  const top = pt(28.4, 14.6);
+  const tipPt = pt(31.2, 23.4);
+  const dx = tipPt.x - top.x;
+  const dy = tipPt.y - top.y;
+  const len = Math.hypot(dx, dy);
+  const ux = dx / len;
+  const uy = dy / len;
+  const at = (t: number, s: number): Pt => pt(top.x + ux * len * t - uy * s, top.y + uy * len * t + ux * s);
+  p.poly([at(0, -2.2), at(0.25, -2.5), at(0.9, -0.9), at(1, 0), at(0.9, 0.9), at(0.25, 2.5), at(0, 2.2)], ORANGE);
+  leaf(p, top.x, top.y, -2.3, 3.6, LEAF_D);
+  leaf(p, top.x, top.y, -1, 3.8);
+  // the basket body: a tapered wicker bowl, light and warm, outlined at its edges
+  const body = (): void => {
+    c.beginPath();
+    c.moveTo(8.6, 23);
+    c.lineTo(31.4, 23);
+    c.lineTo(29.6, 33.4);
+    c.quadraticCurveTo(29.2, 35.2, 27.2, 35.2);
+    c.lineTo(12.8, 35.2);
+    c.quadraticCurveTo(10.8, 35.2, 10.4, 33.4);
+    c.closePath();
+  };
+  body();
+  c.fillStyle = p.vgrad(23, 35.2, WOOD_L, WOOD);
+  c.fill();
+  c.strokeStyle = O;
+  c.lineWidth = 1.1;
+  c.stroke();
+  // two soft horizontal weave bands, with a few short vertical ticks between them
+  c.save();
+  body();
+  c.clip();
+  for (const y of [27.2, 31.4]) p.line([pt(7, y), pt(33, y)], 'rgba(74,52,38,0.22)', 1);
+  for (const x of [14.6, 20, 25.4]) p.line([pt(x, 28.4), pt(x, 30.2)], 'rgba(74,52,38,0.26)', 0.9);
+  c.restore();
+  // the rim
+  p.roundRect(7, 21.4, 26, 4.2, 2.1, WOOD_L);
+  // the big strawberry, front and centre, overlapping the rim
+  c.beginPath();
+  c.moveTo(20, 25.8);
+  c.bezierCurveTo(16.4, 23.8, 14.2, 20.6, 14.2, 17.8);
+  c.bezierCurveTo(14.2, 16.6, 17, 16.2, 20, 16.6);
+  c.bezierCurveTo(23, 16.2, 25.8, 16.6, 25.8, 17.8);
+  c.bezierCurveTo(25.8, 20.6, 23.6, 23.8, 20, 25.8);
+  c.closePath();
+  c.fillStyle = p.vgrad(16.2, 25.8, '#ff97a5', RED_D);
+  c.fill();
+  c.strokeStyle = O;
+  c.lineWidth = 1.1;
+  c.stroke();
+  for (const [x, y] of [
+    [18.8, 19.6],
+    [23.2, 19.6],
+    [17.4, 22.6],
+    [22.6, 22.6],
+  ] as [number, number][]) {
+    p.circle(x, y, 0.8, CREAM_W, null);
+  }
+  glint(p, 16.2, 19.4, 0.9, 2.2, 0.35, 0.8);
+  // a clear green leafy cap: two spreading leaves and a stubby one up top
+  leaf(p, 20, 17.2, 2.9, 5, LEAF_D);
+  leaf(p, 20, 17.2, 0.24, 5, LEAF_D);
+  leaf(p, 20, 17.2, -1.57, 3.2, LEAF);
+  // two soft motion arcs on the left: quadratic curves whose width swells then tapers, cream with a thin outline
+  const swoosh = (P0: Pt, P1: Pt, P2: Pt, maxW: number): void => {
+    const N = 10;
+    const at = (t: number): Pt =>
+      pt(
+        (1 - t) * (1 - t) * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x,
+        (1 - t) * (1 - t) * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y,
+      );
+    const segs: [Pt, Pt, number][] = [];
+    for (let i = 0; i < N; i++) {
+      segs.push([at(i / N), at((i + 1) / N), 1 + (maxW - 1) * Math.sin((Math.PI * (i + 0.5)) / N)]);
+    }
+    c.lineCap = 'round';
+    // the outline underlay first, so the cream strokes don't show seams
+    for (const [a, b, w] of segs) p.line([a, b], O, w + 1.1);
+    for (const [a, b, w] of segs) p.line([a, b], CREAM_W, w);
+    c.lineCap = 'butt';
+  };
+  swoosh(pt(11.5, 8.8), pt(4.2, 14.6), pt(8.2, 19.2), 2.6);
+  swoosh(pt(5.6, 24.6), pt(1.6, 27.8), pt(4.6, 33.4), 2.2);
+}
+
 // ---------------------------------------------------------------------------
 // Corner buttons
 
@@ -875,6 +968,7 @@ function uiMail(p: Pen): void {
 export const icons: IconSpec[] = [
   // Toolbar
   { key: 'ui:hand', paint: uiHand },
+  { key: 'ui:harvest', paint: uiHarvest },
   { key: 'ui:plow', paint: uiPlow },
   { key: 'ui:water', paint: uiWater },
   { key: 'ui:market', paint: uiMarket },

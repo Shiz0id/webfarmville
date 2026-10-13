@@ -48,7 +48,7 @@ import type { Store } from '../store';
 import { setTool } from '../tools';
 import { fmtDuration, fmtNum, h, nameOf, timeAgo } from '../util';
 import { confetti, openModal, toast } from './dom';
-import { forFingers } from './layout';
+import { forFingers, isTouch } from './layout';
 import { downloadBackup, pickBackup } from './backup';
 import { shareInvite } from '../share';
 import { LOCAL } from '../api';
@@ -1148,13 +1148,13 @@ export function openFarmhouse(): void {
           'ul',
           { class: 'help-list' },
           h('li', null, forFingers('Pick seeds from the Market (or click an empty plot), then click or drag over plots to plant.')),
-          h('li', null, forFingers('Click ripe crops, animals and trees to collect. Drag across a field to harvest it all.')),
+          h('li', null, forFingers('Click ripe crops, animals and trees to collect, or pick up the 🧺 Harvest basket and sweep across the whole farm.')),
           h('li', null, "Crops wither if left too long after they're ready. Neighbors can revive them!"),
           h('li', null, 'Build workshops to turn produce into goods worth much more.'),
           h('li', null, 'Decorations add charm ⭐, which boosts your daily bonus.'),
           h('li', null, 'Seasonal decorations are only sold during their festival. Collect them all!'),
           h('li', null, 'Visit neighbors to fertilize, water and feed their farm for coins & XP.'),
-          h('li', null, 'Drag to pan, scroll or pinch to zoom, WASD/arrows to move, R to flip, Esc to cancel.'),
+          h('li', null, isTouch() ? 'Drag with the Hand to look around (two fingers with any other tool) and pinch to zoom.' : 'Drag with the Hand (or right-drag with any tool) to look around, scroll to zoom, WASD/arrows to move, R to flip, Esc to cancel.'),
         ),
         h(
           'div',
